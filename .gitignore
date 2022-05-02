@@ -1,7 +1,8 @@
 # build output
+build
 dist
-.next
 target
+.serverless
 
 # dependencies
 node_modules
@@ -36,10 +37,6 @@ examples/**/.env*.local
 
 pr-stats.md
 test-timings.json
-
-# Vercel
-.vercel
-.now
 
 # Cache
 *.tsbuildinfo
