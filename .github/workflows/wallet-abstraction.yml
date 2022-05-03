@@ -31,6 +31,12 @@ jobs:
         with:
           node-version: 16
           cache: 'yarn'
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: wallet-abstraction-build
+          path: build
+          retention-days: 5
       - run: yarn install
       - run: yarn build
   deploy:
@@ -51,6 +57,10 @@ jobs:
           node-version: 16
           cache: 'yarn'
       - run: yarn install
+      - name: Download a single artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: wallet-abstraction-build
       - name: Deploy dev
         run: yarn deploy:dev
         env:
