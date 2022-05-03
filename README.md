@@ -1,4 +1,5 @@
 # communion-api-wallet-abstraction
+[![wallet-abstraction](https://github.com/withcommunion/communion-api-wallet-abstraction/actions/workflows/wallet-abstraction.yml/badge.svg)](https://github.com/withcommunion/communion-api-wallet-abstraction/actions/workflows/wallet-abstraction.yml)
 The home for the middle layer wallet abstraction
 
 ## Getting Started
