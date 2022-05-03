@@ -43,7 +43,7 @@ export function generateReturn(
 export const handler: APIGatewayProxyHandler = async () => {
   try {
     return generateReturn(200, {
-      message: 'Hello world',
+      message: 'Hello world!',
     });
   } catch (error) {
     // log.error('Failed to get wallet', {
