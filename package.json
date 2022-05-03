@@ -8,8 +8,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "prepare": "husky install",
-    "deploy:dev": "sls deploy --stage dev --verbose",
-    "deploy:prod": "sls deploy --stage prod --verbose"
+    "deploy:dev": "sls deploy --stage dev --aws-profile communion --verbose",
+    "deploy:prod": "sls deploy --stage prod --aws-profile communion --verbose",
+    "deploy-ci:dev": "sls deploy --stage dev --verbose",
+    "deploy-ci:prod": "sls deploy --stage prod --verbose"
   },
   "dependencies": {
     "aws-lambda": "^1.0.7",
