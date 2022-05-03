@@ -31,14 +31,14 @@ jobs:
         with:
           node-version: 16
           cache: 'yarn'
+      - run: yarn install
+      - run: yarn build
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
         with:
           name: wallet-abstraction-build
           path: build
-          retention-days: 5
-      - run: yarn install
-      - run: yarn build
+          retention-days: 1
   deploy:
     name: Deploy
     # if: github.ref == 'refs/heads/main'
