@@ -1,0 +1,40 @@
+{
+  "root": true,
+  "env": {
+    "es6": true,
+    "node": true
+  },
+  "settings": {
+    // to support @/ path
+    "import/resolver": {
+      "typescript": {} // this loads <rootdir>/tsconfig.json to eslint
+    },
+    "react": {
+      "version": "detect"
+    }
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json", // tells parser relative path of tsconfig.json
+    "ecmaVersion": 12,
+    "sourceType": "module"
+  },
+  // all plugins (eslint-plugin-xxx) go here:
+  "plugins": [
+    "@typescript-eslint",
+    "@next/eslint-plugin-next" // https://github.com/vercel/next.js/blob/canary/packages/eslint-plugin-next/lib/index.js
+  ],
+
+  // all configs (eslint-config-xxx) go here:
+  "extends": [
+    "plugin:import/typescript",
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking", // contains rules that specifically require type information
+    "prettier"
+  ],
+  "rules": {
+    "no-unused-vars": "error",
+    "@typescript-eslint/require-await": "off"
+  }
+}

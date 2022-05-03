@@ -1,0 +1,25 @@
+# Gonna need to use serverless-webpack at some point.  That point isn't now
+service: communion-wallet-abstraction
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  stackName: ${sls:stage}-${self:service}
+  apiName: ${sls:stage}-${self:service}
+  memorySize: 512
+  deploymentPrefix: serverless
+  versionFunctions: true
+  # stackPolicy: # Optional CF stack policy. The example below allows updates to all resources except deleting/replacing EC2 instances (use with caution!)
+  #   - Effect: Allow
+  #     Principal: '*'
+  #     Action: 'Update:*'
+  #     Resource: '*'
+
+functions:
+  getWalletByUserId: # A Function
+    name: getWalletByUserId-${sls:stage}
+    handler: build/getWalletByUserId.handler
+    events: # The Events that trigger this Function
+      - httpApi: 'GET /hello'
