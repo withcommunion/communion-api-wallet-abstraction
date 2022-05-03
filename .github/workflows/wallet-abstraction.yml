@@ -1,4 +1,4 @@
-name: frontend
+name: wallet-abstraction
 on:
   push:
     paths:
