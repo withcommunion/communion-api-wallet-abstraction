@@ -7,7 +7,9 @@
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "deploy:dev": "sls deploy --stage dev",
+    "deploy:prod": "sls deploy --stage prod"
   },
   "dependencies": {
     "aws-lambda": "^1.0.7",
