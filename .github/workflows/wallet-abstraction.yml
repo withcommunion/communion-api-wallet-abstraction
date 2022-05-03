@@ -56,15 +56,6 @@ jobs:
           path: build/
           name: wallet-abstraction-build
 
-      - name: List file system
-        run: ls -al
-
-      - name: List build folder
-        run: ls -al build
-
-      - name: List build folder
-        run: ls -al build/api-create-wallet
-
       - name: Deploy Dev
         run: yarn deploy-ci:dev
         env:
