@@ -1,36 +1,26 @@
+# Gonna need to use serverless-webpack at some point.  That point isn't now
 service: communion-wallet-abstraction
 
 provider:
   name: aws
   runtime: nodejs14.x
-  stage: dev # Set the default stage used. Default is dev
-  region: us-east-1 # Overwrite the default region used. Default is us-east-1
-  stackName: wallet-abstraction-${sls:stage} # Overwrite default CloudFormation stack name. Default is ${self:service}-${sls:stage}
-  apiName: ${sls:stage}-${self:service} # Overwrite default API Gateway name. Default is ${sls:stage}-${self:service}
-  profile: communion # The default profile to use with this service
-  memorySize: 512 # Overwrite the default memory size. Default is 1024
-  deploymentPrefix: serverless # Overwrite the default S3 prefix under which deployed artifacts should be stored. Default is serverless
-  versionFunctions: true # Optional function versioning
-  stackTags: # Optional CF stack tags
-    key: value
-  stackPolicy: # Optional CF stack policy. The example below allows updates to all resources except deleting/replacing EC2 instances (use with caution!)
-    - Effect: Allow
-      Principal: '*'
-      Action: 'Update:*'
-      Resource: '*'
-    - Effect: Deny
-      Principal: '*'
-      Action:
-        - Update:Replace
-        - Update:Delete
-      Resource: '*'
-      Condition:
-        StringEquals:
-          ResourceType:
-            - AWS::EC2::Instance
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  stackName: ${sls:stage}-${self:service}
+  apiName: ${sls:stage}-${self:service}
+  profile: communion # This is the AWS profile located in ~/.aws/credentials
+  memorySize: 512
+  deploymentPrefix: serverless
+  versionFunctions: true
+  # stackPolicy: # Optional CF stack policy. The example below allows updates to all resources except deleting/replacing EC2 instances (use with caution!)
+  #   - Effect: Allow
+  #     Principal: '*'
+  #     Action: 'Update:*'
+  #     Resource: '*'
 
 functions:
   getWalletByUserId: # A Function
+    name: getWalletByUserId-${sls:stage}
     handler: build/getWalletByUserId.handler
     events: # The Events that trigger this Function
       - httpApi: 'GET /hello'
