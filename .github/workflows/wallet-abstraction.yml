@@ -23,6 +23,7 @@ jobs:
       - run: yarn test
   build:
     name: Build
+    needs: [lint_test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -34,7 +35,7 @@ jobs:
   deploy:
     name: Deploy
     # if: github.ref == 'refs/heads/main'
-    needs: [lint_test]
+    needs: [lint_test, build]
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS Credentials
