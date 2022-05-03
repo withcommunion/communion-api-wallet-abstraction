@@ -1,5 +1,6 @@
-# Gonna need to use serverless-webpack at some point.  That point isn't now
+#TODO: Gonna need to use serverless-webpack at some point.  That point isn't now
 service: communion-wallet-abstraction
+configValidationMode: error
 
 provider:
   name: aws
@@ -11,6 +12,10 @@ provider:
   memorySize: 512
   deploymentPrefix: serverless
   versionFunctions: true
+  # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+  httpApi:
+    # View docs above - we will want to make it only accept from our domain
+    cors: true
   # stackPolicy: # Optional CF stack policy. The example below allows updates to all resources except deleting/replacing EC2 instances (use with caution!)
   #   - Effect: Allow
   #     Principal: '*'
@@ -18,8 +23,19 @@ provider:
   #     Resource: '*'
 
 functions:
-  getWalletByUserId: # A Function
+  getWalletByUserId:
     name: getWalletByUserId-${sls:stage}
-    handler: build/getWalletByUserId.handler
-    events: # The Events that trigger this Function
-      - httpApi: 'GET /hello'
+    handler: build/api-get-wallet/getWallet.handler
+    events:
+      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+      - httpApi:
+          method: GET
+          path: /wallet/{userId}
+  createWallet: #TODO: We likely don't want this as an endpoint, instead use the lambda as a trigger on Cognito.
+    name: createWallet-${sls:stage}
+    handler: build/api-create-wallet/createWallet.handler
+    events:
+      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+      - httpApi:
+          method: POST
+          path: /wallet
