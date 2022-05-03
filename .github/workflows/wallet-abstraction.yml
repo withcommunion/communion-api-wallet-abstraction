@@ -53,6 +53,7 @@ jobs:
       - name: Download Build Artifact
         uses: actions/download-artifact@v3
         with:
+          path: build/
           name: wallet-abstraction-build
 
       - name: List file system
