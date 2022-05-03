@@ -8,7 +8,6 @@ provider:
   region: us-east-1
   stackName: ${sls:stage}-${self:service}
   apiName: ${sls:stage}-${self:service}
-  profile: communion # This is the AWS profile located in ~/.aws/credentials
   memorySize: 512
   deploymentPrefix: serverless
   versionFunctions: true
