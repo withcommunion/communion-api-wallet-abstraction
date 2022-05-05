@@ -5,7 +5,7 @@ import { generateReturn } from '../api-util';
 export const handler: APIGatewayProxyHandler = async () => {
   try {
     return generateReturn(200, {
-      wallet_key: 'asdf123',
+      wallet_key: 'asdf1234',
     });
   } catch (error) {
     // log.error('Failed to get wallet', {
