@@ -22,10 +22,19 @@ provider:
   #     Action: 'Update:*'
   #     Resource: '*'
 
+plugins:
+  - serverless-bundle
+
+custom:
+  bundle:
+    externals:
+      - crypto
+      - ethers
+
 functions:
   getWalletByUserId:
     name: getWalletByUserId-${sls:stage}
-    handler: build/api-get-wallet/getWallet.handler
+    handler: src/endpoints/api-get-wallet/getWallet.handler
     events:
       # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
       - httpApi:
@@ -33,7 +42,7 @@ functions:
           path: /wallet/{userId}
   createWallet: #TODO: We likely don't want this as an endpoint, instead use the lambda as a trigger on Cognito.
     name: createWallet-${sls:stage}
-    handler: build/api-create-wallet/createWallet.handler
+    handler: src/endpoints/api-create-wallet/createWallet.handler
     events:
       # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
       - httpApi:
