@@ -27,6 +27,8 @@ package:
 
 plugins:
   - serverless-webpack
+  # https://github.com/AnomalyInnovations/serverless-bundle#getting-started=
+  # - serverless-bundle
 
 custom:
   webpack:
