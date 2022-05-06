@@ -1,20 +1,15 @@
 import type { APIGatewayProxyHandler } from 'aws-lambda';
-import { generateReturn } from '../api-util';
-import { ethers } from 'ethers';
+import { generateReturn } from '../../util/api-util';
+import { getWalletPrivateKeyByUserId } from '../../util/dynamo-util';
+import { generatePrivateEvmKey } from '../../util/avax-wallet-util';
 // import log from 'lambda-log';
 
 export const handler: APIGatewayProxyHandler = async () => {
   try {
-    let wallet;
-
-    try {
-      wallet = ethers.Wallet.createRandom();
-    } catch (error) {
-      console.log(error);
-    }
-
+    const privateKeyWithLeadingHex = await getWalletPrivateKeyByUserId();
     return generateReturn(200, {
-      wallet_key: wallet?.privateKey,
+      privateKeyWithLeadingHex,
+      anotherKey: generatePrivateEvmKey(),
     });
   } catch (error) {
     console.error('Failed to get wallet', {
