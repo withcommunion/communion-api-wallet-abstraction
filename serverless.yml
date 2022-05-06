@@ -31,7 +31,7 @@ plugins:
 custom:
   webpack:
     webpackConfig: 'webpack.config.js' # Name of webpack configuration file
-    includeModules: false # Node modules configuration for packaging
+    includeModules: true # Node modules configuration for packaging
     packager: 'yarn' # Packager that will be used to package your external modules
     excludeFiles: src/**/*.test.ts # Provide a glob for files to ignore
 
