@@ -1,7 +1,7 @@
 import type { APIGatewayProxyHandler } from 'aws-lambda';
 import { generateReturn } from '../../util/api-util';
 import { getWalletPrivateKeyByUserId } from '../../util/dynamo-util';
-import { generatePrivateEvmKey } from '../../util/avax-wallet-util';
+// import { generatePrivateEvmKey } from '../../util/avax-wallet-util';
 // import log from 'lambda-log';
 
 export const handler: APIGatewayProxyHandler = async () => {
@@ -9,7 +9,6 @@ export const handler: APIGatewayProxyHandler = async () => {
     const privateKeyWithLeadingHex = await getWalletPrivateKeyByUserId();
     return generateReturn(200, {
       privateKeyWithLeadingHex,
-      anotherKey: generatePrivateEvmKey(),
     });
   } catch (error) {
     console.error('Failed to get wallet', {
