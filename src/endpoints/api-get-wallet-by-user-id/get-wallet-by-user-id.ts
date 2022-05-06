@@ -12,11 +12,12 @@ export const handler: APIGatewayProxyHandler = async () => {
       anotherKey: generatePrivateEvmKey(),
     });
   } catch (error) {
-    // log.error('Failed to get wallet', {
-    //   error,
-    // });
+    console.error('Failed to get wallet', {
+      error,
+    });
     return generateReturn(500, {
       message: 'Something went wrong trying to get the wallet',
+      error: error,
     });
   }
 };
