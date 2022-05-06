@@ -30,11 +30,12 @@ custom:
     externals:
       - crypto
       - ethers
+      - '@avalabs/avalanche-wallet-sdk'
 
 functions:
   getWalletByUserId:
     name: getWalletByUserId-${sls:stage}
-    handler: src/endpoints/api-get-wallet/get-wallet-by-user-id.handler
+    handler: src/endpoints/api-get-wallet-by-user-id/get-wallet-by-user-id.handler
     events:
       # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
       - httpApi:
