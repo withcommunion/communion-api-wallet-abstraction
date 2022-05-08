@@ -48,6 +48,14 @@ functions:
       - httpApi:
           method: POST
           path: /wallet
+  postConfirmationCreateUserWallet:
+    name: postConfirmationCreateUserWallet-${sls:stage}
+    handler: src/cognitoTriggers/post-confirmation-create-user-wallet.handler
+    events:
+      - cognitoUserPool:
+          pool: communion-users-demo-${sls:stage}
+          trigger: PostConfirmation
+          existing: true
 
 resources:
   Resources:
