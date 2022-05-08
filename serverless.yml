@@ -1,4 +1,3 @@
-#TODO: Gonna need to use serverless-webpack at some point.  That point isn't now
 service: communion-wallet-abstraction
 configValidationMode: error
 
@@ -49,3 +48,37 @@ functions:
       - httpApi:
           method: POST
           path: /wallet
+
+resources:
+  Resources:
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpool.html
+    cognitoCommunionUsersDemo:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: communion-users-demo-${sls:stage}
+        UsernameAttributes:
+          - email
+        EmailConfiguration:
+          EmailSendingAccount: COGNITO_DEFAULT
+        AutoVerifiedAttributes:
+          - email
+        VerificationMessageTemplate:
+          DefaultEmailOption: CONFIRM_WITH_CODE
+        AccountRecoverySetting:
+          RecoveryMechanisms:
+            - Name: verified_email
+              Priority: 1
+        Schema:
+          - AttributeDataType: 'String'
+            Name: 'family_name'
+            Mutable: true
+            Required: true
+          - AttributeDataType: 'String'
+            Name: 'given_name'
+            Mutable: true
+            Required: true
+          - AttributeDataType: 'String'
+            Name: 'organization'
+            Mutable: true
+        UsernameConfiguration:
+          CaseSensitive: false
