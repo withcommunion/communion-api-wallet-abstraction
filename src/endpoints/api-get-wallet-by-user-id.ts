@@ -1,6 +1,6 @@
 import type { APIGatewayProxyHandler } from 'aws-lambda';
-import { generateReturn } from '../../util/api-util';
-import { getWalletPrivateKeyByUserId } from '../../util/dynamo-util';
+import { generateReturn } from '../util/api-util';
+import { getWalletPrivateKeyByUserId } from '../util/dynamo-util';
 // import { generatePrivateEvmKey } from '../../util/avax-wallet-util';
 // import log from 'lambda-log';
 

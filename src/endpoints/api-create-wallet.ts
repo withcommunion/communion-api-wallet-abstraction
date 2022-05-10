@@ -1,6 +1,6 @@
 import type { APIGatewayProxyHandler } from 'aws-lambda';
 
-import { generateReturn } from '../..//util/api-util';
+import { generateReturn } from '../util/api-util';
 
 export const handler: APIGatewayProxyHandler = async () => {
   try {
