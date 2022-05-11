@@ -20,12 +20,19 @@ provider:
   #     Principal: '*'
   #     Action: 'Update:*'
   #     Resource: '*'
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource:
+        - Fn::GetAtt: [usersTable, Arn]
 
 plugins:
   - serverless-bundle
 
 custom:
   bundle:
+    # TODO: Figure out AWS-SDK v3 exclusion. https://aws.amazon.com/blogs/developer/modular-packages-in-aws-sdk-for-javascript/
     externals:
       - crypto
       - ethers
@@ -63,6 +70,10 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: userTable-${sls:stage}
+        # TODO: Make this a Range key + Sort key ordeal?  Can actually query by org or by org + id
+        # TODO: Issue here is that a user may have more than one org
+        # TODO: Query by just ID or ID + Org?  Yes
+        # TODO: Current URN doesn't support a single query for all orgs of user.  Can scan though
         AttributeDefinitions:
           - AttributeName: urn
             AttributeType: S
