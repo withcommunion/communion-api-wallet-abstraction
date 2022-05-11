@@ -1,7 +1,4 @@
-import type {
-  PostConfirmationTriggerEvent,
-  PostConfirmationTriggerHandler,
-} from 'aws-lambda';
+import type { PostConfirmationTriggerEvent } from 'aws-lambda';
 
 import {
   generatePrivateEvmKey,
@@ -19,9 +16,7 @@ const ddbClient = initDynamoClient();
 
 // TODO: Come up with a way to differentiate the chains.  Ask Kathleen this.
 const ORG_JACKS_PIZZA_1 = 'org-jacks-pizza-1';
-export const handler: PostConfirmationTriggerHandler = async (
-  event: PostConfirmationTriggerEvent
-) => {
+export const handler = async (event: PostConfirmationTriggerEvent) => {
   const { request } = event;
   const { userAttributes } = request;
   console.log('Incoming request:', request);

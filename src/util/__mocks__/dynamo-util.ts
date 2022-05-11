@@ -4,4 +4,8 @@ export const awsSdkPromiseResponse = jest
 
 export const insertUser = jest
   .fn()
-  .mockImplementation(() => ({ promise: awsSdkPromiseResponse }));
+  .mockImplementation(async () => ({ SomeValue: 'This just happened' }));
+
+export const initDynamoClient = jest.fn().mockImplementation(() => {
+  return {};
+});
