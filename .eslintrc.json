@@ -16,14 +16,11 @@
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "project": "./tsconfig.json", // tells parser relative path of tsconfig.json
-    "ecmaVersion": 12,
+    "ecmaVersion": "latest",
     "sourceType": "module"
   },
   // all plugins (eslint-plugin-xxx) go here:
-  "plugins": [
-    "@typescript-eslint",
-    "@next/eslint-plugin-next" // https://github.com/vercel/next.js/blob/canary/packages/eslint-plugin-next/lib/index.js
-  ],
+  "plugins": ["@typescript-eslint"],
 
   // all configs (eslint-config-xxx) go here:
   "extends": [

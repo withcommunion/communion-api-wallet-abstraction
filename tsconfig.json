@@ -2,10 +2,6 @@
   "compilerOptions": {
     "strict": true,
     "baseUrl": ".",
-    "paths": {
-      // Enables absolute path @/
-      "@/*": ["./src/*"]
-    },
     "outDir": "build",
     "module": "CommonJS",
     "lib": ["esnext"],
@@ -23,11 +19,6 @@
     // "isolatedModules": true,
     "incremental": true
   },
-  "include": [
-    "next-env.d.ts",
-    "./src/**/*.ts",
-    "./src/**/*.js",
-    "jest.config.ts"
-  ],
+  "include": ["next-env.d.ts", "./src/**/*.ts", "./src/**/*.js"],
   "exclude": ["node_modules", "lib", "out"]
 }
