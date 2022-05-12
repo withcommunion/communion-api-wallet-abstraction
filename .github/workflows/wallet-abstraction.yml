@@ -24,12 +24,13 @@ jobs:
       - run: yarn test
       - run: yarn build
 
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v3
-        with:
-          name: wallet-abstraction-build
-          path: build
-          retention-days: 1
+      # No longer needed as SLS deploy has seperate artifacts with Webpack.  Will need one for prod and DEV
+      # - name: 'Upload Artifact'
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: wallet-abstraction-build
+      #     path: build
+      #     retention-days: 1
   deploy:
     name: Deploy
     # if: github.ref == 'refs/heads/main'
@@ -50,11 +51,11 @@ jobs:
 
       - run: yarn install
 
-      - name: Download Build Artifact
-        uses: actions/download-artifact@v3
-        with:
-          path: build/
-          name: wallet-abstraction-build
+      # - name: Download Build Artifact
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     path: build/
+      #     name: wallet-abstraction-build
 
       - name: Deploy Dev
         run: yarn deploy-ci:dev
