@@ -15,6 +15,15 @@ provider:
   # TODO View docs - we will want to make it only accept from our domain
   httpApi:
     cors: true
+    authorizers:
+      # TODO: Figure out how to make this for different environments (dev + prod)
+      cognitoJwtAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_EXRZZF0cp
+        audience:
+          # TODO: Figure out the implications of this
+          - 4eerlu1taf72c8r20pv2tmmvmt
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -28,6 +37,8 @@ plugins:
   - serverless-bundle
 
 custom:
+  # TODO: Make dev or prod
+  cognitoArn: 'arn:aws:cognito-idp:us-east-1:143056416942:userpool/us-east-1_EXRZZF0cp'
   bundle:
     # TODO: Figure out AWS-SDK v3 exclusion. https://aws.amazon.com/blogs/developer/modular-packages-in-aws-sdk-for-javascript/
     externals:
@@ -44,6 +55,8 @@ functions:
       - httpApi:
           method: GET
           path: /wallet/{userId}
+          authorizer:
+            name: cognitoJwtAuthorizer
   createWallet: #TODO: We likely don't want this as an endpoint, instead use the lambda as a trigger on Cognito.
     name: createWallet-${sls:stage}
     handler: src/endpoints/api-create-wallet.handler
