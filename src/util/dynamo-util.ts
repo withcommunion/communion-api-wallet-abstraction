@@ -4,12 +4,8 @@ import {
   DynamoDBDocumentClient,
   PutCommand,
   PutCommandOutput,
+  GetCommand,
 } from '@aws-sdk/lib-dynamodb';
-
-export async function getWalletPrivateKeyByUserId() {
-  //TODO Actually hit the DB.  This key is super temporary, it's okay to commit
-  return '0x342d126ecba77ef9aa5fe9f28c1fb4443f7a5eb22315f7533a6b03a65d8bfd0a';
-}
 
 const stage = process.env.STAGE || 'dev';
 
@@ -21,11 +17,11 @@ export function initDynamoClient(region: string = REGION) {
 
   const marshallOptions = {
     // Whether to automatically convert empty strings, blobs, and sets to `null`.
-    convertEmptyValues: false, // false, by default.
+    convertEmptyValues: false,
     // Whether to remove undefined values while marshalling.
-    removeUndefinedValues: false, // false, by default.
+    removeUndefinedValues: false,
     // Whether to convert typeof object to map attribute.
-    convertClassInstanceToMap: false, // false, by default.
+    convertClassInstanceToMap: false,
   };
 
   const unmarshallOptions = {
@@ -75,4 +71,33 @@ export async function insertUser(
     console.error('Error in dynamo-util.insertUser', error);
     throw error;
   }
+}
+
+export async function getUserById(
+  ddbClient: DynamoDBDocumentClient,
+  userUrn: string
+): Promise<User> {
+  const itemToGet = new GetCommand({
+    TableName: usersTable,
+    Key: {
+      urn: userUrn,
+    },
+  });
+
+  const res = await ddbClient.send(itemToGet);
+
+  if (!res.Item) {
+    throw new Error('User not found!');
+  }
+
+  const { Item } = res;
+  return {
+    urn: Item.urn as string,
+    id: Item.id as string,
+    email: Item.email as string,
+    first_name: Item.first_name as string,
+    last_name: Item.last_name as string,
+    organization: Item.organization as string,
+    wallet: Item.wallet as BaseUserWallet,
+  };
 }
