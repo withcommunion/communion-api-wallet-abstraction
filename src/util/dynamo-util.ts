@@ -79,10 +79,16 @@ export async function getUserById(
     },
   });
 
-  const res = await ddbClient.send(itemToGet);
+  let res;
+  try {
+    res = await ddbClient.send(itemToGet);
+  } catch (error) {
+    console.error('Failed to dynamo-util.getUserById', error);
+    throw error;
+  }
 
-  if (!res.Item) {
-    throw new Error('User not found!');
+  if (!res || !res.Item) {
+    throw new Error(`User not found! [userUrn:${userUrn}]`);
   }
 
   const { Item } = res;
