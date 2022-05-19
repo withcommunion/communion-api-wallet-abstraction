@@ -3,6 +3,7 @@ build
 dist
 target
 .serverless
+.webpack
 
 # dependencies
 node_modules
