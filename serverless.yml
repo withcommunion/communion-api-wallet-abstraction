@@ -16,14 +16,20 @@ provider:
   httpApi:
     cors: true
     authorizers:
-      # TODO: Figure out how to make this for different environments (dev + prod)
-      cognitoJwtAuthorizer:
+      cognitoJwtAuthorizer-dev:
         type: jwt
         identitySource: $request.header.Authorization
         issuerUrl: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_EXRZZF0cp
         audience:
-          # TODO: Figure out the implications of this
+          # TODO: Figure out the implications of this, is clientId proper?
           - 4eerlu1taf72c8r20pv2tmmvmt
+      cognitoJwtAuthorizer-prod:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_SeeaUyuuH
+        audience:
+          # TODO: Figure out the implications of this, is clientId proper?
+          - 66eoq77778g7d8e36v6pobj0b6
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -37,8 +43,6 @@ plugins:
   - serverless-bundle
 
 custom:
-  # TODO: Make dev or prod
-  cognitoArn: 'arn:aws:cognito-idp:us-east-1:143056416942:userpool/us-east-1_EXRZZF0cp'
   bundle:
     # TODO: Figure out AWS-SDK v3 exclusion. https://aws.amazon.com/blogs/developer/modular-packages-in-aws-sdk-for-javascript/
     externals:
@@ -47,16 +51,16 @@ custom:
       - '@avalabs/avalanche-wallet-sdk'
 
 functions:
-  getWalletByUserId:
-    name: getWalletByUserId-${sls:stage}
-    handler: src/endpoints/api-get-wallet-by-user-id.handler
+  getSelf:
+    name: getSelf-${sls:stage}
+    handler: src/endpoints/api-get-self.handler
     events:
       # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
       - httpApi:
           method: GET
-          path: /wallet/{userId}
+          path: /user/self
           authorizer:
-            name: cognitoJwtAuthorizer
+            name: cognitoJwtAuthorizer-${sls:stage}
   createWallet: #TODO: We likely don't want this as an endpoint, instead use the lambda as a trigger on Cognito.
     name: createWallet-${sls:stage}
     handler: src/endpoints/api-create-wallet.handler
