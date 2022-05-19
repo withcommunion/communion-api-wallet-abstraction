@@ -19,8 +19,7 @@ export const handler = async (
     const user = await getUserById(dynamoClient, userUrn);
 
     return generateReturn(200, {
-      user,
-      privateKeyWithLeadingHex: user.wallet.privateKeyWithLeadingHex,
+      ...user,
     });
   } catch (error) {
     console.error('Failed to get wallet', {
