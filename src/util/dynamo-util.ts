@@ -16,21 +16,16 @@ export function initDynamoClient(region: string = REGION) {
   const ddbClient = new DynamoDBClient({ region });
 
   const marshallOptions = {
-    // Whether to automatically convert empty strings, blobs, and sets to `null`.
     convertEmptyValues: false,
-    // Whether to remove undefined values while marshalling.
     removeUndefinedValues: false,
-    // Whether to convert typeof object to map attribute.
     convertClassInstanceToMap: false,
   };
 
   const unmarshallOptions = {
-    // Whether to return numbers as a string instead of converting them to native JavaScript numbers.
-    wrapNumbers: false, // false, by default.
+    wrapNumbers: false,
   };
 
   const translateConfig = { marshallOptions, unmarshallOptions };
-
   const ddbDocClient = DynamoDBDocumentClient.from(ddbClient, translateConfig);
   return ddbDocClient;
 }
@@ -99,5 +94,5 @@ export async function getUserById(
     last_name: Item.last_name as string,
     organization: Item.organization as string,
     wallet: Item.wallet as BaseUserWallet,
-  };
+  } as User;
 }
