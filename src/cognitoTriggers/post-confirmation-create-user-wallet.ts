@@ -12,7 +12,7 @@ import {
   User,
 } from '../util/dynamo-util';
 
-const ddbClient = initDynamoClient();
+const dynamoClient = initDynamoClient();
 
 // TODO: Come up with a way to differentiate the chains.  Ask Kathleen this.
 const ORG_JACKS_PIZZA_1 = 'org-jacks-pizza-1';
@@ -49,6 +49,7 @@ export const handler = async (event: PostConfirmationTriggerEvent) => {
   }
 
   try {
+    // TODO: Get this from the auth form
     const userOrg = userAttributes['custom:organization'] || ORG_JACKS_PIZZA_1;
     const user: User = {
       urn: `${userOrg}:${userAttributes.sub}`,
@@ -57,7 +58,6 @@ export const handler = async (event: PostConfirmationTriggerEvent) => {
       first_name: userAttributes['given_name'],
       last_name: userAttributes['family_name'],
       /* 
-       * Cognito managed UI cannot send over custom attributes.  Maybe base off the domain?
          TODO: Figure out a better way to get the organization into place.
        */
       organization: userOrg,
@@ -65,7 +65,7 @@ export const handler = async (event: PostConfirmationTriggerEvent) => {
     };
 
     console.log('Attempting to create user', { user });
-    const res = await insertUser(ddbClient, user);
+    const res = await insertUser(dynamoClient, user);
     console.log('User created successfully', res);
 
     return event;
