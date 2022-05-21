@@ -11,7 +11,9 @@
     "deploy:dev": "yarn build && sls deploy --stage dev --aws-profile communion --verbose",
     "deploy:prod": "yarn build && sls deploy --stage prod --aws-profile communion --verbose",
     "deploy-ci:dev": "sls deploy --stage dev --verbose",
-    "deploy-ci:prod": "sls deploy --stage prod --verbose"
+    "deploy-ci:prod": "sls deploy --stage prod --verbose",
+    "invoke:getSelf": "serverless invoke local --function getSelf --stage dev --path ./invokeLocalEvents/getSelfEvent.json",
+    "invoke:postConfirmationCreateUserWallet": "serverless invoke local --function postConfirmationCreateUserWallet --stage dev --path ./invokeLocalEvents/postConfirmationCognitoEvent.json"
   },
   "dependencies": {
     "@avalabs/avalanche-wallet-sdk": "^0.17.2",

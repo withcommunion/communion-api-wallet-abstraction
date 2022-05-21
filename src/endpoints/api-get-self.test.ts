@@ -1,5 +1,5 @@
 import type { APIGatewayProxyHandlerV2 } from 'aws-lambda';
-import { handler } from './api-get-wallet-by-user-id';
+import { handler } from './api-get-self';
 
 const MOCK_EVENT: APIGatewayProxyHandlerV2 = {
   // @ts-expect-error mismatch on the types

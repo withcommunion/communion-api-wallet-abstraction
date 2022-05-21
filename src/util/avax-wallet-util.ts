@@ -27,5 +27,6 @@ export function createSingletonWallet(
 
   const avaxWallet = SingletonWallet.fromEvmKey(evmKeyWithoutLeadingHex);
   const ethersWallet = new ethers.Wallet(evmKeyWithLeadingHex);
+
   return { avaxWallet, ethersWallet };
 }

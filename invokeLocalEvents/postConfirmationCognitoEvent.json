@@ -1,0 +1,23 @@
+{
+  "version": "1",
+  "region": "us-east-1",
+  "userPoolId": "us-east-1_EXRZZF0cp",
+  "userName": "local-invoke-45ff-40a9-9041-1f3d3b864df5",
+  "callerContext": {
+    "awsSdkVersion": "aws-sdk-unknown-unknown",
+    "clientId": "4eerlu1taf72c8r20pv2tmmvmt"
+  },
+  "triggerSource": "PostConfirmation_ConfirmSignUp",
+  "request": {
+    "userAttributes": {
+      "sub": "local-invoke-45ff-40a9-9041-1f3d3b864df5",
+      "email_verified": "true",
+      "cognito:user_status": "CONFIRMED",
+      "cognito:email_alias": "local-invoke@gmail.com",
+      "given_name": "local",
+      "family_name": "invoke",
+      "email": "local-invoke@gmail.com"
+    }
+  },
+  "response": {}
+}
