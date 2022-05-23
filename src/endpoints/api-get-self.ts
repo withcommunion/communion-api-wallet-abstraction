@@ -12,7 +12,7 @@ export const handler = async (
     console.log('incomingEventAuth', event.requestContext.authorizer);
 
     const claims = event.requestContext.authorizer.jwt.claims;
-    // For some reason it tends to go through in two seperate ways
+    // For some reason it can go through in two seperate ways
     const username =
       (claims.username as string) || (claims['cognito:username'] as string);
     // TODO: This is where and why we need to go by pure user key, not by urn
