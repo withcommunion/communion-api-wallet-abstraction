@@ -22,6 +22,7 @@ const MOCK_EVENT: PostConfirmationTriggerEvent = {
       email_verified: 'true',
       'cognito:user_status': 'CONFIRMED',
       'cognito:email_alias': 'someUser@gmail.com',
+      'custom:organization': 'test-org',
       given_name: 'Mike',
       family_name: 'A',
       email: 'someUser@gmail.com',
@@ -58,6 +59,8 @@ describe('postConfirmationCreateUserWallet', () => {
     describe('Inserting user into the database', () => {
       it('should call inserUser with user parsed from event', async () => {
         await handler(MOCK_EVENT);
+        const expectedOrganization =
+          MOCK_EVENT.request.userAttributes['custom:organization'];
 
         expect(insertUser).toHaveBeenCalledTimes(1);
         expect(insertUser).toHaveBeenCalledWith(
@@ -67,8 +70,8 @@ describe('postConfirmationCreateUserWallet', () => {
             first_name: 'Mike',
             id: '21f56d21-45ff-40a9-9041-1f3d3b864df5',
             last_name: 'A',
-            organization: 'org-jacks-pizza-1',
-            urn: 'org-jacks-pizza-1:21f56d21-45ff-40a9-9041-1f3d3b864df5',
+            organization: expectedOrganization,
+            urn: `${expectedOrganization}:21f56d21-45ff-40a9-9041-1f3d3b864df5`,
             wallet: {
               addressC: expect.any(String),
               addressP: expect.any(String),
