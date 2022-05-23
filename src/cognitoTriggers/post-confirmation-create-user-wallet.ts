@@ -9,8 +9,6 @@ import { initDynamoClient, insertUser, User } from '../util/dynamo-util';
 
 const dynamoClient = initDynamoClient();
 
-// TODO: Come up with a way to differentiate the chains.  Ask Kathleen this.
-const ORG_JACKS_PIZZA_1 = 'org-jacks-pizza-1';
 export const handler = async (event: PostConfirmationTriggerEvent) => {
   try {
     console.log('Incoming request:', event.request);
@@ -42,7 +40,7 @@ export const handler = async (event: PostConfirmationTriggerEvent) => {
       addressX: usersWallet.avaxWallet.getAddressX(),
     };
 
-    const userOrg = userAttributes['custom:organization'] || ORG_JACKS_PIZZA_1;
+    const userOrg = userAttributes['custom:organization'];
     const user: User = {
       urn: `${userOrg}:${userAttributes.sub}`,
       id: `${userAttributes.sub}`,
