@@ -30,10 +30,11 @@ export async function getSeedAccountPrivateKey(): Promise<string> {
 }
 
 export async function seedFundsForUser(userCchainAddressToSeed: string) {
+  const BASE_AMOUNT_TO_SEED_USER = '0.01';
   const seedPrivateKey = await getSeedAccountPrivateKey();
   const seedWallet = new ethers.Wallet(seedPrivateKey);
 
-  await sendAvax(seedWallet, '0.01', userCchainAddressToSeed);
+  await sendAvax(seedWallet, BASE_AMOUNT_TO_SEED_USER, userCchainAddressToSeed);
   return true;
 }
 
