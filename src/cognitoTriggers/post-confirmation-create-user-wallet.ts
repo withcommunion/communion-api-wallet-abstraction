@@ -16,20 +16,22 @@ import {
   getUserById,
 } from '../util/dynamo-util';
 
+export const SEED_ACCOUNT_URN =
+  'org-jacks-pizza-1:6e990a06-8f03-42d5-b774-6834d88be017';
+
+export const BASE_AMOUNT_TO_SEED_USER = '0.01';
+
 const dynamoClient = initDynamoClient();
 
 export async function getSeedAccountPrivateKey(): Promise<string> {
   // TODO: We likely want to fetch this from environment or similar
-  const seedAccountUrn =
-    'org-jacks-pizza-1:6e990a06-8f03-42d5-b774-6834d88be017';
-  const seedAccount = await getUserById(dynamoClient, seedAccountUrn);
+  const seedAccount = await getUserById(dynamoClient, SEED_ACCOUNT_URN);
   const seedPrivateKey = seedAccount.wallet.privateKeyWithLeadingHex;
 
   return seedPrivateKey;
 }
 
 export async function seedFundsForUser(userCchainAddressToSeed: string) {
-  const BASE_AMOUNT_TO_SEED_USER = '0.01';
   const seedPrivateKey = await getSeedAccountPrivateKey();
   const seedWallet = new ethers.Wallet(seedPrivateKey);
 
