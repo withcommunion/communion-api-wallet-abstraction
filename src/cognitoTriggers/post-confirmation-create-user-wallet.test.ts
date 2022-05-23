@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 jest.mock('../util/dynamo-util.ts');
+jest.mock('../util/avax-chain-util.ts');
 import type { PostConfirmationTriggerEvent } from 'aws-lambda';
 import { insertUser } from '../util/dynamo-util';
 

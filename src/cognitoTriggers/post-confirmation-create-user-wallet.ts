@@ -20,7 +20,6 @@ const dynamoClient = initDynamoClient();
 
 export async function getSeedAccountPrivateKey(): Promise<string> {
   // TODO: We likely want to fetch this from environment or similar
-  console.log('Fetching seed account');
   const seedAccountUrn =
     'org-jacks-pizza-1:6e990a06-8f03-42d5-b774-6834d88be017';
   const seedAccount = await getUserById(dynamoClient, seedAccountUrn);
@@ -34,8 +33,13 @@ export async function seedFundsForUser(userCchainAddressToSeed: string) {
   const seedPrivateKey = await getSeedAccountPrivateKey();
   const seedWallet = new ethers.Wallet(seedPrivateKey);
 
-  await sendAvax(seedWallet, BASE_AMOUNT_TO_SEED_USER, userCchainAddressToSeed);
-  return true;
+  const res = await sendAvax(
+    seedWallet,
+    BASE_AMOUNT_TO_SEED_USER,
+    userCchainAddressToSeed
+  );
+
+  return res;
 }
 
 export const handler = async (event: PostConfirmationTriggerEvent) => {
