@@ -59,7 +59,7 @@ export const sendAvax = async (
    * Through doing getTransactionCount + 1, we will not wait for previous txns to finish before sending a new one.
    * https://ethereum.stackexchange.com/questions/82456/can-using-gettransactioncount-1-prevent-waiting-for-pending-transactions
    */
-  const nonce = (await HTTPSProvider.getTransactionCount(fromAddress)) + 1;
+  const nonce = await HTTPSProvider.getTransactionCount(fromAddress);
 
   const { maxFeePerGasGwei, maxPriorityFeePerGasGwei } = await calcFeeData();
 
@@ -77,11 +77,11 @@ export const sendAvax = async (
     'gwei'
   );
 
-  const baseTx = {
+  const baseTx: ethers.providers.TransactionRequest = {
     // Type 2 transaction is for EIP1559 (https://eips.ethereum.org/EIPS/eip-1559)
     type: 2,
     nonce,
-    toAddress,
+    to: toAddress,
     maxPriorityFeePerGas: maxPriorityFeePerGasInAvax,
     maxFeePerGas: maxFeePerGasInAvax,
     value: ethers.utils.parseEther(amount),
@@ -89,7 +89,7 @@ export const sendAvax = async (
   };
   const estimatedGasCost = await HTTPSProvider.estimateGas(baseTx);
 
-  const fullTx = {
+  const fullTx: ethers.providers.TransactionRequest = {
     ...baseTx,
     gasLimit: estimatedGasCost,
   };
@@ -98,9 +98,15 @@ export const sendAvax = async (
 
   const signedTx = await fromWallet.signTransaction(fullTx);
   const txHash = ethers.utils.keccak256(signedTx);
+  const explorerUrl = `https://testnet.snowtrace.io/tx/${txHash}`;
 
-  console.log('Sending signed transaction', { signedTx, fullTx });
-  const res = await (await HTTPSProvider.sendTransaction(signedTx)).wait();
+  console.log('Sending signed transaction', {
+    signedTx,
+    fullTx,
+    txHash,
+    explorerUrl,
+  });
+  const res = await HTTPSProvider.sendTransaction(signedTx);
   console.log(
     `View transaction with nonce ${nonce}: https://testnet.snowtrace.io/tx/${txHash}`
   );
@@ -108,6 +114,6 @@ export const sendAvax = async (
   return {
     transaction: res,
     txHash,
-    explorerUrl: `https://testnet.snowtrace.io/tx/${txHash}`,
+    explorerUrl,
   };
 };
