@@ -64,6 +64,7 @@ functions:
   postConfirmationCreateUserWallet:
     name: postConfirmationCreateUserWallet-${sls:stage}
     handler: src/cognitoTriggers/post-confirmation-create-user-wallet.handler
+    timeout: 30
     events:
       - cognitoUserPool:
           pool: communion-users-demo-${sls:stage}
