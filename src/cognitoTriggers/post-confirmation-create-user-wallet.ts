@@ -96,8 +96,6 @@ export const handler = async (event: PostConfirmationTriggerEvent) => {
       });
       const sendAvax = await seedFundsForUser(user.wallet.addressC);
       console.log('Seeded user', sendAvax);
-
-      return event;
     } catch (error) {
       /* Throw error.  We want to stop the lambda and prevent the user from verifying.
      * Something is very wrong here - this is essential for user function.
@@ -106,6 +104,8 @@ export const handler = async (event: PostConfirmationTriggerEvent) => {
       console.error('Failed to create user', error);
       throw error;
     }
+
+    return event;
   } catch (error) {
     console.error(
       'Error in cognito-triggers/post-confirmation-create-user-wallet.ts',
