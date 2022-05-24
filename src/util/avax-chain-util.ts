@@ -106,7 +106,7 @@ export const sendAvax = async (
     txHash,
     explorerUrl,
   });
-  const res = await HTTPSProvider.sendTransaction(signedTx);
+  const res = await (await HTTPSProvider.sendTransaction(signedTx)).wait();
   console.log(
     `View transaction with nonce ${nonce}: https://testnet.snowtrace.io/tx/${txHash}`
   );
