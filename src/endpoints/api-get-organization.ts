@@ -35,6 +35,7 @@ export const handler = async (
     const usersInOrgWithPrivateData = (
       await getUsersInOrganization(requestUsersOrganization, dynamoClient)
     ).filter((user) => user.id !== requestUsername);
+    console.log(usersInOrgWithPrivateData);
 
     const usersInOrgWithPublicData = usersInOrgWithPrivateData.map(
       (user) =>
