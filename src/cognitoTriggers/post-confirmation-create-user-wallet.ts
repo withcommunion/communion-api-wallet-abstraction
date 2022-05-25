@@ -27,6 +27,9 @@ export async function getSeedAccountPrivateKey(): Promise<string> {
   // TODO: We likely want to fetch this from environment or similar
   const seedAccount = await getUserById(dynamoClient, SEED_ACCOUNT_URN);
   const seedPrivateKey = seedAccount.wallet.privateKeyWithLeadingHex;
+  if (!seedPrivateKey) {
+    throw new Error('Seed account has no private key');
+  }
 
   return seedPrivateKey;
 }

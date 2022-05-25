@@ -13,6 +13,7 @@
     "deploy-ci:dev": "sls deploy --stage dev --verbose",
     "deploy-ci:prod": "sls deploy --stage prod --verbose",
     "invoke:getSelf": "serverless invoke local --function getSelf --stage dev --path ./invokeLocalEvents/getSelfEvent.json",
+    "invoke:getOrganization": "serverless invoke local --function getOrganization --stage dev --path ./invokeLocalEvents/getOrganization.json",
     "invoke:postConfirmationCreateUserWallet": "serverless invoke local --function postConfirmationCreateUserWallet --stage dev --path ./invokeLocalEvents/postConfirmationCognitoEvent.json"
   },
   "dependencies": {

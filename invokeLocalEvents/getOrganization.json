@@ -1,0 +1,60 @@
+{
+  "version": "2.0",
+  "routeKey": "GET /organization/{orgId}",
+  "rawPath": "/organization/jacks-pizza",
+  "rawQueryString": "",
+  "headers": {
+    "accept": "*/*",
+    "accept-encoding": "gzip, deflate, br",
+    "authorization": "Bearer eyJraWQiOiJkd3FwYVwveDhCNUtRS0pkN004ZG1lYUhTcU9hcjJyUDZhK1NXTnUrQ0FtUT0iLCJhbGciOiJSUzI1NiJ9.eyJjdXN0b206b3JnYW5pemF0aW9uIjoib3JnLWphY2tzLXBpenphLTEiLCJzdWIiOiIyYzA1NDJlOS1lNjY1LTQ2ZTUtYjUzMC1kNDk3NjJmMzY5ZjYiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tXC91cy1lYXN0LTFfRVhSWlpGMGNwIiwiY29nbml0bzp1c2VybmFtZSI6IjJjMDU0MmU5LWU2NjUtNDZlNS1iNTMwLWQ0OTc2MmYzNjlmNiIsImdpdmVuX25hbWUiOiJNaWtlIiwib3JpZ2luX2p0aSI6IjQxNzM0ZmEwLWE0NGUtNDQyMi1iNDczLWViYzkxZWFiNjdlOCIsImF1ZCI6IjRlZXJsdTF0YWY3MmM4cjIwcHYydG1tdm10IiwiZXZlbnRfaWQiOiI0NzU3ZGY1Ni04OWY5LTQ0ZDAtOWYwMi0wYTljZTRjMDU4YzciLCJ0b2tlbl91c2UiOiJpZCIsImF1dGhfdGltZSI6MTY1MzQyMTYxMywiZXhwIjoxNjUzNTA0NzA0LCJpYXQiOjE2NTM1MDExMDQsImZhbWlseV9uYW1lIjoiQWxpY2VhIiwianRpIjoiZWJhOTM4NjQtZWZiYi00NTE5LWJhNzktZjQ2NzllOWI0OGI2IiwiZW1haWwiOiJtZmFsaWNlYTU4QGdtYWlsLmNvbSJ9.rkPlhYNFI6Oy3ox7uOtiNIIj4hlrNEQ68JPesjT3afrJdZEtcQ80V7IdJZhOe0svQWHU6KqYDdiAM0GOReIaLH-aojGLTXnfqDZqSr_CSX8dAESUTbnSYFujn2yLGZwywhJlnx5l6uYq51Z7leMA01bL_ivN8WRWFLwVJUf_csIUjiv7ja_dL23RJ0h77dlFKhFGiEUOskLIbomuF1cXVRfTpW6xwFAyiOks0o99fi5URwgjF7Ws9qXfZa79rmclvZfz3M4wqOFjZQOtwTNROSunaMM-lOrDlCOIo0QJENj1TM5gWz1V_uQwTuZanw0rxMkbw63UNlWRBRuCG_2_9Q",
+    "content-length": "0",
+    "host": "p0rddetfk8.execute-api.us-east-1.amazonaws.com",
+    "postman-token": "4f9a4433-7eeb-440b-9bf7-51e1cc6b6e45",
+    "user-agent": "PostmanRuntime/7.26.8",
+    "x-amzn-trace-id": "Root=1-628e6d4a-70cacbf857e08f1f6f11e504",
+    "x-forwarded-for": "187.190.175.143",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "requestContext": {
+    "accountId": "143056416942",
+    "apiId": "p0rddetfk8",
+    "authorizer": {
+      "jwt": {
+        "claims": {
+          "auth_time": "1652930349",
+          "client_id": "4eerlu1taf72c8r20pv2tmmvmt",
+          "event_id": "64aa1584-db75-4b3e-917d-fef7afa23dcb",
+          "exp": "1652981715",
+          "iat": "1652978115",
+          "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_EXRZZF0cp",
+          "jti": "5057d1e6-a264-482a-94da-bb06c83a66a6",
+          "origin_jti": "8fedc993-c7e5-4eee-8802-ce7204ebc956",
+          "scope": "aws.cognito.signin.user.admin",
+          "sub": "local-invoke-45ff-40a9-9041-1f3d3b864df5",
+          "token_use": "access",
+          "username": "local-invoke-45ff-40a9-9041-1f3d3b864df5"
+        },
+        "scopes": null
+      }
+    },
+    "domainName": "p0rddetfk8.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "p0rddetfk8",
+    "http": {
+      "method": "GET",
+      "path": "/organization/jacks-pizza",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "187.190.175.143",
+      "userAgent": "PostmanRuntime/7.26.8"
+    },
+    "requestId": "SsYDsjzXIAMEJWA=",
+    "routeKey": "GET /organization/{orgId}",
+    "stage": "$default",
+    "time": "25/May/2022:17:54:18 +0000",
+    "timeEpoch": 1653501258634
+  },
+  "pathParameters": {
+    "orgId": "test-org"
+  },
+  "isBase64Encoded": false
+}
