@@ -20,7 +20,7 @@ export const handler = async (
   const requestUsername =
     (claims.username as string) || (claims['cognito:username'] as string);
 
-  const requestUserUrn = `test-org:${requestUsername}`;
+  const requestUserUrn = `org-jacks-pizza-1:${requestUsername}`;
   const requestUser = await getUserById(dynamoClient, requestUserUrn);
 
   const requestUsersOrganization = requestUser.organization;
@@ -50,10 +50,8 @@ export const handler = async (
     );
 
     return generateReturn(200, {
-      organization: {
-        name: requestedOrganization,
-        users: usersInOrgWithPublicData,
-      },
+      name: requestedOrganization,
+      users: usersInOrgWithPublicData,
     });
   } catch (error) {
     console.error('Failed to getUsersInOrganization', error);
