@@ -52,6 +52,18 @@ export const handler = async (event: PostConfirmationTriggerEvent) => {
 
     const { request } = event;
     const { userAttributes } = request;
+    const userId = userAttributes.sub;
+
+    try {
+      const existingUser = await getUserById(dynamoClient, userId);
+
+      if (existingUser && existingUser.wallet.privateKeyWithLeadingHex) {
+        console.log('Cognito fired twice, there is nothing to do here');
+        return event;
+      }
+    } catch (error) {
+      // Nothing to do here, move on
+    }
 
     let usersPrivateKey;
     let usersWallet;
@@ -79,7 +91,7 @@ export const handler = async (event: PostConfirmationTriggerEvent) => {
 
     const userOrg = userAttributes['custom:organization'];
     const user: User = {
-      id: `${userAttributes.sub}`,
+      id: userId,
       email: userAttributes.email,
       first_name: userAttributes['given_name'],
       last_name: userAttributes['family_name'],
