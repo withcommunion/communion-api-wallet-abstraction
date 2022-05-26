@@ -17,11 +17,10 @@ export const handler = async (
 
   const claims = event.requestContext.authorizer.jwt.claims;
   // For some reason it can go through in two seperate ways
-  const requestUsername =
+  const requestUserId =
     (claims.username as string) || (claims['cognito:username'] as string);
 
-  const requestUserUrn = `org-jacks-pizza-1:${requestUsername}`;
-  const requestUser = await getUserById(dynamoClient, requestUserUrn);
+  const requestUser = await getUserById(dynamoClient, requestUserId);
 
   const requestUsersOrganization = requestUser.organization;
   const requestedOrganization = event.pathParameters?.orgId;
@@ -34,7 +33,7 @@ export const handler = async (
   try {
     const usersInOrgWithPrivateData = (
       await getUsersInOrganization(requestUsersOrganization, dynamoClient)
-    ).filter((user) => user.id !== requestUsername);
+    ).filter((user) => user.id !== requestUserId);
     console.log(usersInOrgWithPrivateData);
 
     const usersInOrgWithPublicData = usersInOrgWithPrivateData.map(

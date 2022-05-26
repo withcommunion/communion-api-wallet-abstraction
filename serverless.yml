@@ -3,6 +3,7 @@ configValidationMode: error
 
 provider:
   name: aws
+  deploymentMethod: direct
   runtime: nodejs14.x
   stage: ${opt:stage, 'dev'}
   region: us-east-1
@@ -30,12 +31,15 @@ provider:
         audience:
           # TODO: Figure out the implications of this, is clientId proper?
           - 66eoq77778g7d8e36v6pobj0b6
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:*
-      Resource:
-        - Fn::GetAtt: [usersTable, Arn]
+  iam:
+    role:
+      statements:
+        - Effect: 'Allow'
+          Action:
+            - 'dynamodb:*'
+          Resource:
+            - Fn::GetAtt: [usersTable, Arn]
+
   environment:
     STAGE: ${sls:stage}
 
@@ -86,18 +90,16 @@ resources:
     usersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: userTable-${sls:stage}
-        # TODO: Make this a Range key + Sort key ordeal?  Can actually query by org or by org + id
-        # TODO: Issue here is that a user may have more than one org
-        # TODO: Query by just ID or ID + Org?  Yes
-        # TODO: Current URN doesn't support a single query for all orgs of user.  Can scan though
+        TableName: usersTable-${sls:stage}
         AttributeDefinitions:
-          - AttributeName: urn
+          - AttributeName: id
             AttributeType: S
         KeySchema:
-          - AttributeName: urn
+          - AttributeName: id
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
+        SSESpecification:
+          SSEEnabled: true
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpool.html
     cognitoCommunionUsersDemo:
       Type: AWS::Cognito::UserPool

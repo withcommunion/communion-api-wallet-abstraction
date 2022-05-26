@@ -8,7 +8,7 @@ import * as avaxWalletUtil from '../util/avax-wallet-util';
 
 import {
   handler,
-  SEED_ACCOUNT_URN,
+  SEED_ACCOUNT_ID,
   BASE_AMOUNT_TO_SEED_USER,
 } from './post-confirmation-create-user-wallet';
 
@@ -72,12 +72,11 @@ describe('postConfirmationCreateUserWallet', () => {
         expect(insertUser).toHaveBeenCalledWith(
           {},
           {
+            id: '21f56d21-45ff-40a9-9041-1f3d3b864df5',
             email: 'someUser@gmail.com',
             first_name: 'Mike',
-            id: '21f56d21-45ff-40a9-9041-1f3d3b864df5',
             last_name: 'A',
             organization: expectedOrganization,
-            urn: `${expectedOrganization}:21f56d21-45ff-40a9-9041-1f3d3b864df5`,
             wallet: {
               addressC: expect.any(String),
               addressP: expect.any(String),
@@ -90,13 +89,13 @@ describe('postConfirmationCreateUserWallet', () => {
     });
 
     describe('Seeding user with Avax', () => {
-      it('should call getUserById with the SEED_ACCOUNT_URN', async () => {
+      it('should call getUserById with the SEED_ACCOUNT_ID', async () => {
         await handler(MOCK_EVENT);
 
         expect(getUserById).toHaveBeenCalledTimes(1);
         expect(getUserById).toHaveBeenCalledWith(
           expect.any(Object),
-          SEED_ACCOUNT_URN
+          SEED_ACCOUNT_ID
         );
       });
 

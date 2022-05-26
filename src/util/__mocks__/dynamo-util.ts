@@ -1,5 +1,5 @@
 export const MOCK_USER_SELF = {
-  urn: 'test-org:local-mock-user-self',
+  id: 'local-mock-user-self',
   organization: 'test-org',
   last_name: 'invoke-self',
   first_name: 'local-self',
@@ -10,12 +10,11 @@ export const MOCK_USER_SELF = {
     privateKeyWithLeadingHex:
       '0xa3a06515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
   },
-  id: 'local-mock-user-self',
   email: 'local-invoke-self@gmail.com',
 };
 
 export const MOCK_USER_A = {
-  urn: 'test-org:local-invoke-mock-user-a',
+  id: 'local-invoke-mock-user-a',
   organization: 'test-org',
   last_name: 'invoke-a',
   first_name: 'local-a',
@@ -26,7 +25,6 @@ export const MOCK_USER_A = {
     privateKeyWithLeadingHex:
       '0xa3a06515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
   },
-  id: 'local-invoke-mock-user-a',
   email: 'local-invoke-user-a@gmail.com',
 };
 

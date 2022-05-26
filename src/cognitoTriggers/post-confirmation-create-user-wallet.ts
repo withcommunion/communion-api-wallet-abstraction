@@ -16,17 +16,16 @@ import {
   getUserById,
 } from '../util/dynamo-util';
 
-export const SEED_ACCOUNT_URN =
-  'org-jacks-pizza-1:6e990a06-8f03-42d5-b774-6834d88be017';
-
+export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
 export const BASE_AMOUNT_TO_SEED_USER = '0.01';
 
 const dynamoClient = initDynamoClient();
 
 export async function getSeedAccountPrivateKey(): Promise<string> {
   // TODO: We likely want to fetch this from environment or similar
-  const seedAccount = await getUserById(dynamoClient, SEED_ACCOUNT_URN);
+  const seedAccount = await getUserById(dynamoClient, SEED_ACCOUNT_ID);
   const seedPrivateKey = seedAccount.wallet.privateKeyWithLeadingHex;
+
   if (!seedPrivateKey) {
     throw new Error('Seed account has no private key');
   }
@@ -80,7 +79,6 @@ export const handler = async (event: PostConfirmationTriggerEvent) => {
 
     const userOrg = userAttributes['custom:organization'];
     const user: User = {
-      urn: `${userOrg}:${userAttributes.sub}`,
       id: `${userAttributes.sub}`,
       email: userAttributes.email,
       first_name: userAttributes['given_name'],

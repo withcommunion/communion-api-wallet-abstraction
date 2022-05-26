@@ -13,12 +13,10 @@ export const handler = async (
 
     const claims = event.requestContext.authorizer.jwt.claims;
     // For some reason it can go through in two seperate ways
-    const username =
+    const userId =
       (claims.username as string) || (claims['cognito:username'] as string);
-    // TODO: This is where and why we need to go by pure user key, not by urn
-    const userUrn = `org-jacks-pizza-1:${username}`;
 
-    const user = await getUserById(dynamoClient, userUrn);
+    const user = await getUserById(dynamoClient, userId);
 
     return generateReturn(200, {
       ...user,

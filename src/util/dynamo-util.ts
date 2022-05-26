@@ -10,7 +10,7 @@ import {
 
 const stage = process.env.STAGE || 'dev';
 
-export const usersTable = `userTable-${stage}`;
+export const usersTable = `usersTable-${stage}`;
 export const REGION = 'us-east-1';
 
 export function initDynamoClient(region: string = REGION) {
@@ -39,7 +39,6 @@ export interface BaseUserWallet {
 }
 
 export interface User {
-  urn: string;
   id: string;
   email?: string;
   first_name: string;
@@ -71,12 +70,12 @@ export async function insertUser(
 
 export async function getUserById(
   ddbClient: DynamoDBDocumentClient,
-  userUrn: string
+  userId: string
 ): Promise<User> {
   const itemToGet = new GetCommand({
     TableName: usersTable,
     Key: {
-      urn: userUrn,
+      id: userId,
     },
   });
 
@@ -89,12 +88,11 @@ export async function getUserById(
   }
 
   if (!res || !res.Item) {
-    throw new Error(`User not found! [userUrn:${userUrn}]`);
+    throw new Error(`User not found! [userId:${userId}]`);
   }
 
   const { Item } = res;
   return {
-    urn: Item.urn as string,
     id: Item.id as string,
     email: Item.email as string,
     first_name: Item.first_name as string,
