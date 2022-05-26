@@ -5,6 +5,7 @@ import {
   PutCommand,
   PutCommandOutput,
   GetCommand,
+  ScanCommand,
 } from '@aws-sdk/lib-dynamodb';
 
 const stage = process.env.STAGE || 'dev';
@@ -31,7 +32,7 @@ export function initDynamoClient(region: string = REGION) {
 }
 
 export interface BaseUserWallet {
-  privateKeyWithLeadingHex: string;
+  privateKeyWithLeadingHex?: string;
   addressC: string;
   addressP: string;
   addressX: string;
@@ -40,7 +41,7 @@ export interface BaseUserWallet {
 export interface User {
   urn: string;
   id: string;
-  email: string;
+  email?: string;
   first_name: string;
   last_name: string;
   organization: string;
@@ -101,4 +102,32 @@ export async function getUserById(
     organization: Item.organization as string,
     wallet: Item.wallet as BaseUserWallet,
   } as User;
+}
+
+export async function getUsersInOrganization(
+  orgId: string,
+  dynamoClient: DynamoDBDocumentClient
+) {
+  const scanParams = {
+    TableName: usersTable,
+    FilterExpression: 'organization = :organization',
+    ExpressionAttributeValues: {
+      ':organization': orgId,
+    },
+  };
+
+  let res;
+  try {
+    res = await dynamoClient.send(new ScanCommand(scanParams));
+  } catch (error) {
+    console.error('Failed to dynamo-util.getUsersInOrganization', error);
+    throw error;
+  }
+
+  if (!res || !res.Items) {
+    throw new Error(`No users found in organization! [orgId:${orgId}]`);
+  }
+
+  const users = res.Items as User[];
+  return users;
 }
