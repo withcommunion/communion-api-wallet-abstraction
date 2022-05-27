@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 jest.mock('../util/dynamo-util.ts');
 jest.mock('../util/avax-chain-util.ts');
+
 import type { PostConfirmationTriggerEvent } from 'aws-lambda';
 import { insertUser, getUserById } from '../util/dynamo-util';
 import { sendAvax } from '../util/avax-chain-util';
@@ -11,6 +12,7 @@ import {
   SEED_ACCOUNT_ID,
   BASE_AMOUNT_TO_SEED_USER,
 } from './post-confirmation-create-user-wallet';
+import { MOCK_USER_SELF } from '../util/__mocks__/dynamo-util';
 
 const MOCK_EVENT: PostConfirmationTriggerEvent = {
   version: '1',
@@ -46,11 +48,38 @@ describe('postConfirmationCreateUserWallet', () => {
     avaxWalletUtil,
     'createSingletonWallet'
   );
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('Happy path', () => {
+    beforeEach(() => {
+      // @ts-expect-error because we're mocking it
+      // eslint-disable-next-line
+      getUserById.mockImplementationOnce(async () => {
+        throw new Error('User not found');
+      });
+    });
+    it('Should call getUserById with the user from the event', async () => {
+      await handler(MOCK_EVENT);
+
+      expect(getUserById).toHaveBeenCalledWith(
+        expect.any(Object),
+        MOCK_EVENT.request.userAttributes.sub
+      );
+    });
+    describe('Seeing if the user already exists', () => {
+      describe('If the user does not already exist', () => {
+        it('Should carry on, calling all the other methods', async () => {
+          await handler(MOCK_EVENT);
+
+          expect(generatePrivateEvmKeySpy).toHaveBeenCalledTimes(1);
+          expect(createSingletonWalletSpy).toHaveBeenCalledTimes(1);
+          expect(insertUser).toHaveBeenCalledTimes(1);
+        });
+      });
+    });
     describe('Avax wallet creation', () => {
       it('Should call generatePrivateEvmKeySpy', async () => {
         await handler(MOCK_EVENT);
@@ -92,7 +121,8 @@ describe('postConfirmationCreateUserWallet', () => {
       it('should call getUserById with the SEED_ACCOUNT_ID', async () => {
         await handler(MOCK_EVENT);
 
-        expect(getUserById).toHaveBeenCalledTimes(1);
+        // Once for the user lookup and another to get the seed account
+        expect(getUserById).toHaveBeenCalledTimes(2);
         expect(getUserById).toHaveBeenCalledWith(
           expect.any(Object),
           SEED_ACCOUNT_ID
@@ -108,6 +138,23 @@ describe('postConfirmationCreateUserWallet', () => {
           BASE_AMOUNT_TO_SEED_USER,
           expect.any(String)
         );
+      });
+    });
+  });
+  describe('Unhappy path', () => {
+    describe('If the user already exists', () => {
+      it('Should return immediately without calling the other methods', async () => {
+        // @ts-expect-error because we're mocking it
+        // eslint-disable-next-line
+        getUserById.mockReset();
+        // @ts-expect-error because we're mocking it
+        // eslint-disable-next-line
+        getUserById.mockImplementationOnce(async () => MOCK_USER_SELF);
+        await handler(MOCK_EVENT);
+
+        expect(generatePrivateEvmKeySpy).toHaveBeenCalledTimes(0);
+        expect(createSingletonWalletSpy).toHaveBeenCalledTimes(0);
+        expect(insertUser).toHaveBeenCalledTimes(0);
       });
     });
   });
