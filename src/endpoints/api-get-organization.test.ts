@@ -1,7 +1,10 @@
 jest.mock('../util/dynamo-util.ts');
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { handler } from './api-get-organization';
-import { MOCK_USER_SELF, MOCK_USER_A } from '../util/__mocks__/dynamo-util';
+import {
+  MOCK_USER_SELF,
+  MOCK_USER_SEEDER,
+} from '../util/__mocks__/dynamo-util';
 import { getUserById, getUsersInOrganization, User } from '../util/dynamo-util';
 
 const MOCK_EVENT: APIGatewayProxyEventV2WithJWTAuthorizer = {
@@ -90,7 +93,6 @@ describe('getWalletByUserId', () => {
       expect(resp.statusCode).toBe(200);
     });
 
-    // TODO: Fix this test once we no longer use URN to fetch user
     it('Should call getUserById with the requester id', async () => {
       await handler(MOCK_EVENT);
       expect(getUserById).toHaveBeenCalledWith({}, `${MOCK_USER_SELF.id}`);
@@ -115,14 +117,25 @@ describe('getWalletByUserId', () => {
       );
     });
 
-    it('Should include all users except the request user in the response', async () => {
+    it('Should not include the requesting user in the response', async () => {
       const res = await handler(MOCK_EVENT);
       // eslint-disable-next-line
       const usersInBody = JSON.parse(res.body).users as User[];
 
       expect(usersInBody).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ id: MOCK_USER_A.id }),
+        expect.not.arrayContaining([
+          expect.objectContaining({ id: MOCK_USER_SELF.id }),
+        ])
+      );
+    });
+    it('Should not include users with role of seeder in the response', async () => {
+      const res = await handler(MOCK_EVENT);
+      // eslint-disable-next-line
+      const usersInBody = JSON.parse(res.body).users as User[];
+
+      expect(usersInBody).toEqual(
+        expect.not.arrayContaining([
+          expect.objectContaining({ id: MOCK_USER_SEEDER.id }),
         ])
       );
     });
