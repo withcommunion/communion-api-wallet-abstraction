@@ -129,5 +129,8 @@ resources:
           - AttributeDataType: 'String'
             Name: 'organization'
             Mutable: true
+          - AttributeDataType: 'String'
+            Name: 'role'
+            Mutable: true
         UsernameConfiguration:
           CaseSensitive: false

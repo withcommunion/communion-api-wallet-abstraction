@@ -15,6 +15,7 @@
       "cognito:user_status": "CONFIRMED",
       "cognito:email_alias": "local-invoke@gmail.com",
       "custom:organization": "test-org",
+      "custom:role": "worker",
       "given_name": "local",
       "family_name": "invoke",
       "email": "local-invoke@gmail.com"

@@ -33,7 +33,7 @@ export const handler = async (
   try {
     const usersInOrgWithPrivateData = (
       await getUsersInOrganization(requestUsersOrganization, dynamoClient)
-    ).filter((user) => user.id !== requestUserId);
+    ).filter((user) => user.id !== requestUserId && user.role !== 'seeder');
     console.log(usersInOrgWithPrivateData);
 
     const usersInOrgWithPublicData = usersInOrgWithPrivateData.map(
