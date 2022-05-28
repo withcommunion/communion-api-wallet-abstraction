@@ -89,13 +89,13 @@ export const handler = async (event: PostConfirmationTriggerEvent) => {
       addressX: usersWallet.avaxWallet.getAddressX(),
     };
 
-    const userOrg = userAttributes['custom:organization'];
     const user: User = {
       id: userId,
       email: userAttributes.email,
       first_name: userAttributes['given_name'],
       last_name: userAttributes['family_name'],
-      organization: userOrg,
+      organization: userAttributes['custom:organization'],
+      role: userAttributes['custom:role'],
       wallet: userWalletInfo,
     };
 

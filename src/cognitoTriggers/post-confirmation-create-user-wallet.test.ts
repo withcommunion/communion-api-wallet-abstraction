@@ -31,6 +31,7 @@ const MOCK_EVENT: PostConfirmationTriggerEvent = {
       'cognito:user_status': 'CONFIRMED',
       'cognito:email_alias': 'someUser@gmail.com',
       'custom:organization': 'test-org',
+      'custom:role': 'worker',
       given_name: 'Mike',
       family_name: 'A',
       email: 'someUser@gmail.com',
@@ -106,6 +107,7 @@ describe('postConfirmationCreateUserWallet', () => {
             first_name: 'Mike',
             last_name: 'A',
             organization: expectedOrganization,
+            role: 'worker',
             wallet: {
               addressC: expect.any(String),
               addressP: expect.any(String),

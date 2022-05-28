@@ -44,6 +44,7 @@ export interface User {
   first_name: string;
   last_name: string;
   organization: string;
+  role: 'worker' | 'manager' | 'owner' | 'seeder' | string;
   wallet: BaseUserWallet;
 }
 
