@@ -56,8 +56,15 @@ export const handler = async (
     const { request } = event;
     const { userAttributes } = request;
     const userId = userAttributes.sub;
+    const requestId = context?.awsRequestId
+      ? (context.awsRequestId as string)
+      : '';
+
     logger.defaultMeta = {
-      _requestId: context?.awsRequestId,
+      _requestId: `${requestId?.substring(0, 8)}...${requestId?.substring(
+        30
+      )}}}`,
+      requestId,
       userId,
     };
 
