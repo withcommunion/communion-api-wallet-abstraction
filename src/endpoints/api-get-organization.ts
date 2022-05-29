@@ -7,18 +7,29 @@ import {
   getUsersInOrganization,
 } from '../util/dynamo-util';
 
+import logger from '../util/winston-logger-util';
+
 const dynamoClient = initDynamoClient();
 
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ) => {
-  console.log('incomingEvent', event);
-  console.log('incomingEventAuth', event.requestContext.authorizer);
-
   const claims = event.requestContext.authorizer.jwt.claims;
   // For some reason it can go through in two seperate ways
   const requestUserId =
     (claims.username as string) || (claims['cognito:username'] as string);
+
+  logger.defaultMeta = {
+    _requestId: event.requestContext.requestId,
+    userId: requestUserId,
+  };
+
+  logger.info('Incoming Event', {
+    values: { event },
+  });
+  logger.verbose('Incoming Event Auth', {
+    values: { authorizer: event.requestContext.authorizer },
+  });
 
   const requestUser = await getUserById(dynamoClient, requestUserId);
 
@@ -26,15 +37,25 @@ export const handler = async (
   const requestedOrganization = event.pathParameters?.orgId;
 
   if (requestUsersOrganization !== requestedOrganization) {
+    logger.verbose('User does not have access to requested organization', {
+      values: {
+        requestUsersOrganization,
+        requestedOrganization,
+      },
+    });
+
     return generateReturn(403, {
       message: 'You are not authorized to access this organization',
     });
   }
   try {
+    logger.verbose('Fetching users in org', { values: requestedOrganization });
+
     const usersInOrgWithPrivateData = (
-      await getUsersInOrganization(requestUsersOrganization, dynamoClient)
+      await getUsersInOrganization(requestedOrganization, dynamoClient)
     ).filter((user) => user.id !== requestUserId && user.role !== 'seeder');
-    console.log(usersInOrgWithPrivateData);
+
+    logger.verbose('Received users', { values: usersInOrgWithPrivateData });
 
     const usersInOrgWithPublicData = usersInOrgWithPrivateData.map(
       (user) =>
@@ -48,12 +69,15 @@ export const handler = async (
         } as User)
     );
 
-    return generateReturn(200, {
+    const returnVal = generateReturn(200, {
       name: requestedOrganization,
       users: usersInOrgWithPublicData,
     });
+
+    logger.verbose('Returning', { values: returnVal });
+    return returnVal;
   } catch (error) {
-    console.error('Failed to getUsersInOrganization', error);
+    logger.error('Failed to getUsersInOrganization', { values: error });
     return generateReturn(500, {
       message: 'Failed to get users in organization',
     });
