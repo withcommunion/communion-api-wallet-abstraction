@@ -74,7 +74,7 @@ export const handler = async (
       users: usersInOrgWithPublicData,
     });
 
-    logger.verbose('Returning', { values: returnVal });
+    logger.info('Returning', { values: returnVal });
     return returnVal;
   } catch (error) {
     logger.error('Failed to getUsersInOrganization', { values: error });

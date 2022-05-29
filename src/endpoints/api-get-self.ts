@@ -31,7 +31,7 @@ export const handler = async (
     const returnValue = generateReturn(200, {
       ...user,
     });
-    logger.verbose('Returning', { values: returnValue });
+    logger.info('Returning', { values: returnValue });
 
     return returnValue;
   } catch (error) {
