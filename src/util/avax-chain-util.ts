@@ -1,6 +1,8 @@
 import Avalanche from 'avalanche';
 import { ethers } from 'ethers';
 
+import logger from '../util/winston-logger-util';
+
 const chainId = 43113;
 const avalanche = new Avalanche(
   'api.avax-test.network',
@@ -64,7 +66,7 @@ export const sendAvax = async (
   const { maxFeePerGasGwei, maxPriorityFeePerGasGwei } = await calcFeeData();
 
   if (maxFeePerGasGwei > MAX_GAS_WILLING_TO_SPEND_GWEI) {
-    console.log(`Spending more than MAX_GWEI_GAS_WILLING_TO_SPEND`, {
+    logger.error(`Spending more than MAX_GWEI_GAS_WILLING_TO_SPEND`, {
       MAX_GAS_WILLING_TO_SPEND_GWEI,
       maxFeePerGasGwei,
     });
@@ -94,22 +96,24 @@ export const sendAvax = async (
     gasLimit: estimatedGasCost,
   };
 
-  console.log('This transaction should cost:', estimatedGasCost);
+  logger.verbose('This transaction should cost:', {
+    values: { estimatedGasCost },
+  });
 
   const signedTx = await fromWallet.signTransaction(fullTx);
   const txHash = ethers.utils.keccak256(signedTx);
   const explorerUrl = `https://testnet.snowtrace.io/tx/${txHash}`;
 
-  console.log('Sending signed transaction', {
-    signedTx,
-    fullTx,
-    txHash,
-    explorerUrl,
+  logger.info('Sending signed transaction', {
+    values: {
+      signedTx,
+      fullTx,
+      txHash,
+      explorerUrl,
+      nonce,
+    },
   });
   const res = await HTTPSProvider.sendTransaction(signedTx);
-  console.log(
-    `View transaction with nonce ${nonce}: https://testnet.snowtrace.io/tx/${txHash}`
-  );
 
   return {
     transaction: res,
