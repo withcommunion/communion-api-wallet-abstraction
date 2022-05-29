@@ -13,13 +13,16 @@ const alignColorsAndTime = winston.format.combine(
   winston.format.printf(
     (info) =>
       // eslint-disable-next-line
-      `[32m${info.timestamp}  ${info.level} : ${info.message}
-       ${JSON.stringify(info.data)}`
+      `[32m${info.timestamp} |  ${info.level} | ${info.message} | ${
+        // eslint-disable-next-line
+        info._requestId
+      }
+       ${JSON.stringify(info.values)}`
   )
 );
 
 const loggerTransports =
-  process.env.NODE_ENV === 'test'
+  process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'local'
     ? [
         new transports.Console({
           format: winston.format.combine(

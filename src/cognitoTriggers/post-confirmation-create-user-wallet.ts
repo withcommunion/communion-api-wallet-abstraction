@@ -70,7 +70,11 @@ export const handler = async (
       logger.verbose('User exists in DB', { values: { existingUser } });
 
       // TODO: Figure out how often this is happening
-      if (existingUser && existingUser.wallet.privateKeyWithLeadingHex) {
+      if (
+        existingUser &&
+        existingUser.wallet.privateKeyWithLeadingHex &&
+        process.env.NODE_ENV !== 'local'
+      ) {
         logger.warn('Cognito fired twice, there is nothing to do here');
         logger.info(
           'User exists in DB and has a wallet.  Nothing to do, lets return',
