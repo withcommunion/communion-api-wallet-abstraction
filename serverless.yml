@@ -102,6 +102,7 @@ resources:
         BillingMode: PAY_PER_REQUEST
         SSESpecification:
           SSEEnabled: true
+        # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_StreamSpecification.html
         StreamSpecification:
           StreamEnabled: true
           StreamViewType: NEW_IMAGE
