@@ -50,6 +50,7 @@ plugins:
 
 custom:
   bundle:
+    packager: yarn
     # TODO: Figure out AWS-SDK v3 exclusion. https://aws.amazon.com/blogs/developer/modular-packages-in-aws-sdk-for-javascript/
     externals:
       - crypto
