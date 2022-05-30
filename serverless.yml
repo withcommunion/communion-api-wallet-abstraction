@@ -104,7 +104,6 @@ resources:
           SSEEnabled: true
         # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_StreamSpecification.html
         StreamSpecification:
-          StreamEnabled: true
           StreamViewType: NEW_IMAGE
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpool.html
     cognitoCommunionUsersDemo:
