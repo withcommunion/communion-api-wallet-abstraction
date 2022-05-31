@@ -1,5 +1,5 @@
 import type { DynamoDBStreamEvent, Context } from 'aws-lambda';
-import { marshall } from '@aws-sdk/util-dynamodb';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 
 // import { initDynamoClient } from '../util/dynamo-util';
 
@@ -30,7 +30,8 @@ export const handler = async (
 
     const newUsers = event.Records.map((record) => {
       if (record && record.dynamodb) {
-        return marshall(record.dynamodb.NewImage);
+        // @ts-expect-error just for testing
+        return unmarshall(record.dynamodb.NewImage);
       }
     }).filter((user) => Boolean(user));
 
