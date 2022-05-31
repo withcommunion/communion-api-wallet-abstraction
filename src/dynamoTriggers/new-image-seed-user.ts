@@ -28,12 +28,18 @@ export const handler = async (
     logger.info('Incoming request event:', { values: { event } });
     logger.verbose('Incoming request context:', { values: { context } });
 
-    const newUsers = event.Records.map((record) => {
-      if (record && record.dynamodb) {
-        // @ts-expect-error just for testing
-        return unmarshall(record.dynamodb.NewImage);
-      }
-    }).filter((user) => Boolean(user));
+    const newlyAddedUsers = event.Records.filter(
+      (record) => record.eventName === 'INSERT'
+    );
+
+    const newUsers = newlyAddedUsers
+      .map((record) => {
+        if (record && record.dynamodb) {
+          // @ts-expect-error just for testing
+          return unmarshall(record.dynamodb.NewImage);
+        }
+      })
+      .filter((user) => Boolean(user));
 
     console.log(newUsers);
 
