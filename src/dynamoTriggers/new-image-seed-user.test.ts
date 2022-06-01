@@ -105,7 +105,7 @@ describe('new-image-seed-user', () => {
     jest.clearAllMocks();
   });
   describe('Happy path', () => {
-    it.skip('Should fetch the seedAccount by calling "getUserById"', async () => {
+    it('Should fetch the seedAccount by calling "getUserById"', async () => {
       await handler(MOCK_EVENT);
       expect(getUserById).toHaveBeenCalledWith(
         expect.any(Object),
@@ -113,7 +113,7 @@ describe('new-image-seed-user', () => {
       );
     });
 
-    it.skip('Should call sendAvax for users with an "INSERT" event name', async () => {
+    it('Should call sendAvax for users with an "INSERT" event name', async () => {
       await handler(MOCK_EVENT);
 
       /**
@@ -123,7 +123,8 @@ describe('new-image-seed-user', () => {
       expect(sendAvax).toBeCalledWith(
         expect.any(Object),
         BASE_AMOUNT_TO_SEED_USER,
-        MOCK_USER_ADDRESS_C
+        MOCK_USER_ADDRESS_C,
+        true
       );
     });
     it('Should not call sendAvax if there are no users with "INSERT" event name', async () => {

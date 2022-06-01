@@ -48,7 +48,8 @@ export const calcFeeData = async () => {
 export const sendAvax = async (
   fromWallet: ethers.Wallet,
   amount: string,
-  toAddress: string
+  toAddress: string,
+  waitForTxnToFinish = false
 ) => {
   const MAX_GAS_WILLING_TO_SPEND_GWEI = '45';
   const chainId = 43113;
@@ -113,7 +114,10 @@ export const sendAvax = async (
       nonce,
     },
   });
-  const res = await HTTPSProvider.sendTransaction(signedTx);
+
+  const res = waitForTxnToFinish
+    ? await (await HTTPSProvider.sendTransaction(signedTx)).wait()
+    : await HTTPSProvider.sendTransaction(signedTx);
 
   return {
     transaction: res,

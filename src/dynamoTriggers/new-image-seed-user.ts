@@ -89,7 +89,8 @@ export const handler = async (
         const transaction = await sendAvax(
           seedWallet,
           BASE_AMOUNT_TO_SEED_USER,
-          user.wallet.addressC
+          user.wallet.addressC,
+          true
         );
 
         logger.info('Seeded user', {
