@@ -71,7 +71,7 @@ export const handler = async (
       .filter((user) => Boolean(user)) as User[];
 
     if (newUsersToSeed.length === 0) {
-      logger.verbose('No new users to seed, returning', { values: { event } });
+      logger.info('No new users to seed, returning', { values: { event } });
       return event;
     }
 

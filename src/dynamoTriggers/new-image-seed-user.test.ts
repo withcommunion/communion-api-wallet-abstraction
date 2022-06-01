@@ -3,14 +3,14 @@ jest.mock('../util/dynamo-util.ts');
 jest.mock('../util/avax-chain-util.ts');
 import type { DynamoDBStreamEvent } from 'aws-lambda';
 
-// import { getUserById } from '../util/dynamo-util';
+import { getUserById } from '../util/dynamo-util';
 import { sendAvax } from '../util/avax-chain-util';
-// import * as avaxWalletUtil from '../util/avax-wallet-util';
+// import {} from '../util/avax-wallet-util';
 
 import {
   handler,
-  //   SEED_ACCOUNT_ID,
-  //   BASE_AMOUNT_TO_SEED_USER,
+  SEED_ACCOUNT_ID,
+  BASE_AMOUNT_TO_SEED_USER,
 } from './new-image-seed-user';
 
 const MOCK_USER_ADDRESS_C = '0xAae44dc10B9bB68205A158224D2207F8900ec841';
@@ -105,15 +105,34 @@ describe('new-image-seed-user', () => {
     jest.clearAllMocks();
   });
   describe('Happy path', () => {
-    it('Should only call sendAvax for users with an "INSERT" event name', async () => {
+    it.skip('Should fetch the seedAccount by calling "getUserById"', async () => {
+      await handler(MOCK_EVENT);
+      expect(getUserById).toHaveBeenCalledWith(
+        expect.any(Object),
+        SEED_ACCOUNT_ID
+      );
+    });
+
+    it.skip('Should call sendAvax for users with an "INSERT" event name', async () => {
       await handler(MOCK_EVENT);
 
+      /**
+       * In our case, there is only 1 insert event
+       */
       expect(sendAvax).toHaveBeenCalledTimes(1);
       expect(sendAvax).toBeCalledWith(
         expect.any(Object),
-        expect.any(String),
+        BASE_AMOUNT_TO_SEED_USER,
         MOCK_USER_ADDRESS_C
       );
+    });
+    it('Should not call sendAvax if there are no users with "INSERT" event name', async () => {
+      const mockEventWithNoInsertEvents = {
+        ...MOCK_EVENT,
+        Records: [MOCK_EVENT.Records[1], MOCK_EVENT.Records[2]],
+      };
+      await handler(mockEventWithNoInsertEvents);
+      expect(sendAvax).toHaveBeenCalledTimes(0);
     });
   });
 });
