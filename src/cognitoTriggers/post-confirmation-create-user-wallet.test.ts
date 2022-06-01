@@ -4,14 +4,9 @@ jest.mock('../util/avax-chain-util.ts');
 
 import type { PostConfirmationTriggerEvent } from 'aws-lambda';
 import { insertUser, getUserById } from '../util/dynamo-util';
-import { sendAvax } from '../util/avax-chain-util';
 import * as avaxWalletUtil from '../util/avax-wallet-util';
 
-import {
-  handler,
-  SEED_ACCOUNT_ID,
-  BASE_AMOUNT_TO_SEED_USER,
-} from './post-confirmation-create-user-wallet';
+import { handler } from './post-confirmation-create-user-wallet';
 import { MOCK_USER_SELF } from '../util/__mocks__/dynamo-util';
 
 const MOCK_EVENT: PostConfirmationTriggerEvent = {
@@ -115,30 +110,6 @@ describe('postConfirmationCreateUserWallet', () => {
               privateKeyWithLeadingHex: expect.any(String),
             },
           }
-        );
-      });
-    });
-
-    describe('Seeding user with Avax', () => {
-      it('should call getUserById with the SEED_ACCOUNT_ID', async () => {
-        await handler(MOCK_EVENT);
-
-        // Once for the user lookup and another to get the seed account
-        expect(getUserById).toHaveBeenCalledTimes(2);
-        expect(getUserById).toHaveBeenCalledWith(
-          expect.any(Object),
-          SEED_ACCOUNT_ID
-        );
-      });
-
-      it('should call sendAvax with the Seed Wallet, BASE_AMOUNT_TO_SEED_USER, and toAddress of the newly created user', async () => {
-        await handler(MOCK_EVENT);
-
-        expect(sendAvax).toHaveBeenCalledTimes(1);
-        expect(sendAvax).toHaveBeenCalledWith(
-          expect.objectContaining({ address: expect.any(String) }),
-          BASE_AMOUNT_TO_SEED_USER,
-          expect.any(String)
         );
       });
     });
