@@ -102,7 +102,7 @@ export const handler = async (
       (record) => record.eventName === 'INSERT'
     );
 
-    const potentialNewUsersToSeed = insertedUsers
+    const insertUserEvents = insertedUsers
       .map((record) => {
         if (!record || !record.dynamodb?.NewImage) {
           return undefined;
@@ -112,15 +112,15 @@ export const handler = async (
       })
       .filter((user) => Boolean(user)) as User[];
 
-    if (potentialNewUsersToSeed.length === 0) {
-      logger.info('No new users to seed, returning', { values: { event } });
+    if (insertUserEvents.length === 0) {
+      logger.info('No insert events, returning', { values: { event } });
       return event;
     }
 
     // Check if user has funds in their wallet
     const newUsersToSeed = (
       await Promise.all(
-        potentialNewUsersToSeed.map(async (user) => {
+        insertUserEvents.map(async (user) => {
           const userHasFunds = Boolean(
             await checkIfUserHasFunds(user.wallet.addressC)
           );
@@ -134,11 +134,19 @@ export const handler = async (
       )
     ).filter((user) => Boolean(user)) as User[];
 
-    logger.info('Seeding users', { values: { potentialNewUsersToSeed } });
+    if (newUsersToSeed.length === 0) {
+      logger.info('No users to seed, returning', {
+        values: { newUsersToSeed },
+      });
+      return event;
+    }
 
+    logger.info('Seeding users', { values: { newUsersToSeed } });
     logger.verbose('Fetching seed wallet');
+
     const seedWalletPrivateKey = await getSeedAccountPrivateKey();
     const seedWallet = new ethers.Wallet(seedWalletPrivateKey, HTTPSProvider);
+
     logger.verbose('Received seed wallet');
 
     const transactions = await Promise.all(
