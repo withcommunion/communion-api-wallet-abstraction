@@ -58,10 +58,6 @@ export const sendAvax = async (
 
   const fromAddress = fromWallet.address;
 
-  /*
-   * Through doing getTransactionCount + 1, we will not wait for previous txns to finish before sending a new one.
-   * https://ethereum.stackexchange.com/questions/82456/can-using-gettransactioncount-1-prevent-waiting-for-pending-transactions
-   */
   const nonce = await HTTPSProvider.getTransactionCount(fromAddress);
 
   const { maxFeePerGasGwei, maxPriorityFeePerGasGwei } = await calcFeeData();
