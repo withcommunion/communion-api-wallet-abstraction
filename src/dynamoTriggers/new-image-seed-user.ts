@@ -1,5 +1,4 @@
 import type { DynamoDBStreamEvent, Context } from 'aws-lambda';
-import { setTimeout } from 'timers/promises';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { ethers } from 'ethers';
 
@@ -43,6 +42,10 @@ export async function seedFundsForUser(
   return res;
 }
 
+function waitXMilliseconds(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
 export async function checkIfUserHasFunds(
   usersCChainAddress: string
 ): Promise<boolean> {
@@ -56,20 +59,23 @@ export async function checkIfUserHasFunds(
     return true;
   }
 
-  let retryUserBalance;
-  if (initialUserBalance.isZero()) {
-    logger.info(
-      'initialUserBalance is zero, waiting 5 seconds to check balance again'
-    );
-    await setTimeout(5000);
+  logger.info(
+    'initialUserBalance is zero, waiting 5 seconds to check balance again'
+  );
 
-    retryUserBalance = await HTTPSProvider.getBalance(usersCChainAddress);
-    logger.verbose('Waited 5 seconds and got balance');
+  await waitXMilliseconds(5000);
 
-    return !retryUserBalance.isZero();
-  }
+  const retryUserBalance = await HTTPSProvider.getBalance(usersCChainAddress);
+  logger.verbose('Waited 5 seconds and got balance', {
+    values: { retryUserBalance },
+  });
 
-  return false;
+  const userHasFunds = !retryUserBalance.isZero();
+
+  logger.verbose(`Returning if user has funds: ${userHasFunds.toString()}`, {
+    values: { userHasFunds },
+  });
+  return userHasFunds;
 }
 
 export const handler = async (
