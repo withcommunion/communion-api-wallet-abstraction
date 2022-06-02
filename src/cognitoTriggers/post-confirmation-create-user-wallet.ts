@@ -2,11 +2,13 @@ import type {
   PostConfirmationTriggerEvent,
   AuthResponseContext,
 } from 'aws-lambda';
+import { ethers } from 'ethers';
 
 import {
   generatePrivateEvmKey,
   createSingletonWallet,
 } from '../util/avax-wallet-util';
+import { sendAvax } from '../util/avax-chain-util';
 import {
   initDynamoClient,
   insertUser,
@@ -16,7 +18,35 @@ import {
 
 import logger from '../util/winston-logger-util';
 
+export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
+export const BASE_AMOUNT_TO_SEED_USER = '0.01';
+
 const dynamoClient = initDynamoClient();
+
+export async function getSeedAccountPrivateKey(): Promise<string> {
+  // TODO: We likely want to fetch this from environment or similar
+  const seedAccount = await getUserById(dynamoClient, SEED_ACCOUNT_ID);
+  const seedPrivateKey = seedAccount.wallet.privateKeyWithLeadingHex;
+
+  if (!seedPrivateKey) {
+    throw new Error('Seed account has no private key');
+  }
+
+  return seedPrivateKey;
+}
+
+export async function seedFundsForUser(userCchainAddressToSeed: string) {
+  const seedPrivateKey = await getSeedAccountPrivateKey();
+  const seedWallet = new ethers.Wallet(seedPrivateKey);
+
+  const res = await sendAvax(
+    seedWallet,
+    BASE_AMOUNT_TO_SEED_USER,
+    userCchainAddressToSeed
+  );
+
+  return res;
+}
 
 export const handler = async (
   event: PostConfirmationTriggerEvent,
@@ -109,6 +139,12 @@ export const handler = async (
       logger.verbose('Attempting to create user', { values: { user } });
       const respFromDb = await insertUser(dynamoClient, user);
       logger.info('Created user', { values: { respFromDb } });
+
+      logger.verbose('Attempting to seed user', {
+        userAddress: user.wallet.addressC,
+      });
+      const sendAvax = await seedFundsForUser(user.wallet.addressC);
+      logger.info('Seeded user', { values: { sendAvax } });
     } catch (error) {
       /* Throw error.  We want to stop the lambda and prevent the user from verifying.
      * Something is very wrong here - this is essential for user function.
@@ -118,7 +154,6 @@ export const handler = async (
       throw error;
     }
 
-    logger.info('Returning', { values: { event } });
     return event;
   } catch (error) {
     logger.error(
