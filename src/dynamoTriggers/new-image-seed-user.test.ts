@@ -159,6 +159,9 @@ const MOCK_EVENT: DynamoDBStreamEvent = {
   ],
 };
 
+/**
+ * TODO: Need to mock timers - these tests are timing dependent and take too long
+ */
 describe('new-image-seed-user', () => {
   beforeEach(() => {
     jest.clearAllMocks();
