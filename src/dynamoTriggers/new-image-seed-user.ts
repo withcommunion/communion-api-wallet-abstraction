@@ -1,4 +1,5 @@
 import type { DynamoDBStreamEvent, Context } from 'aws-lambda';
+import { setTimeout } from 'timers/promises';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { ethers } from 'ethers';
 
@@ -8,6 +9,12 @@ import logger from '../util/winston-logger-util';
 
 export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
 export const BASE_AMOUNT_TO_SEED_USER = '0.01';
+
+export const avaxTestNetworkNodeUrl =
+  'https://api.avax-test.network/ext/bc/C/rpc';
+const HTTPSProvider = new ethers.providers.JsonRpcProvider(
+  avaxTestNetworkNodeUrl
+);
 
 const dynamoClient = initDynamoClient();
 
@@ -36,6 +43,35 @@ export async function seedFundsForUser(
   return res;
 }
 
+export async function checkIfUserHasFunds(
+  usersCChainAddress: string
+): Promise<boolean> {
+  const initialUserBalance = await HTTPSProvider.getBalance(usersCChainAddress);
+  logger.info('Initial user balance', { values: { initialUserBalance } });
+
+  if (!initialUserBalance.isZero()) {
+    logger.verbose('User has funds', {
+      values: { initialUserBalance, usersCChainAddress },
+    });
+    return true;
+  }
+
+  let retryUserBalance;
+  if (initialUserBalance.isZero()) {
+    logger.info(
+      'initialUserBalance is zero, waiting 5 seconds to check balance again'
+    );
+    await setTimeout(5000);
+
+    retryUserBalance = await HTTPSProvider.getBalance(usersCChainAddress);
+    logger.verbose('Waited 5 seconds and got balance');
+
+    return !retryUserBalance.isZero();
+  }
+
+  return false;
+}
+
 export const handler = async (
   event: DynamoDBStreamEvent,
   // eslint-disable-next-line
@@ -60,7 +96,7 @@ export const handler = async (
       (record) => record.eventName === 'INSERT'
     );
 
-    const newUsersToSeed = insertedUsers
+    const potentialNewUsersToSeed = insertedUsers
       .map((record) => {
         if (!record || !record.dynamodb?.NewImage) {
           return undefined;
@@ -70,16 +106,33 @@ export const handler = async (
       })
       .filter((user) => Boolean(user)) as User[];
 
-    if (newUsersToSeed.length === 0) {
+    if (potentialNewUsersToSeed.length === 0) {
       logger.info('No new users to seed, returning', { values: { event } });
       return event;
     }
 
-    logger.info('Seeding users', { values: { newUsersToSeed } });
+    // Check if user has funds in their wallet
+    const newUsersToSeed = (
+      await Promise.all(
+        potentialNewUsersToSeed.map(async (user) => {
+          const userHasFunds = Boolean(
+            await checkIfUserHasFunds(user.wallet.addressC)
+          );
+
+          if (userHasFunds) {
+            return undefined;
+          }
+
+          return user;
+        })
+      )
+    ).filter((user) => Boolean(user)) as User[];
+
+    logger.info('Seeding users', { values: { potentialNewUsersToSeed } });
 
     logger.verbose('Fetching seed wallet');
     const seedWalletPrivateKey = await getSeedAccountPrivateKey();
-    const seedWallet = new ethers.Wallet(seedWalletPrivateKey);
+    const seedWallet = new ethers.Wallet(seedWalletPrivateKey, HTTPSProvider);
     logger.verbose('Received seed wallet');
 
     const transactions = await Promise.all(
