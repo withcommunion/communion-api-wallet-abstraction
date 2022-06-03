@@ -161,6 +161,7 @@ const MOCK_EVENT: DynamoDBStreamEvent = {
 
 /**
  * TODO: Need to mock timers - these tests are timing dependent and take too long
+ * TODO: Need to mock the ethers library getBalance function as it's making a real network call
  */
 describe('new-image-seed-user', () => {
   beforeEach(() => {
