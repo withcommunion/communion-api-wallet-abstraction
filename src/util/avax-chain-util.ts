@@ -48,7 +48,8 @@ export const calcFeeData = async () => {
 export const sendAvax = async (
   fromWallet: ethers.Wallet,
   amount: string,
-  toAddress: string
+  toAddress: string,
+  waitForTxnToFinish = false
 ) => {
   const MAX_GAS_WILLING_TO_SPEND_GWEI = '45';
   const chainId = 43113;
@@ -57,10 +58,6 @@ export const sendAvax = async (
 
   const fromAddress = fromWallet.address;
 
-  /*
-   * Through doing getTransactionCount + 1, we will not wait for previous txns to finish before sending a new one.
-   * https://ethereum.stackexchange.com/questions/82456/can-using-gettransactioncount-1-prevent-waiting-for-pending-transactions
-   */
   const nonce = await HTTPSProvider.getTransactionCount(fromAddress);
 
   const { maxFeePerGasGwei, maxPriorityFeePerGasGwei } = await calcFeeData();
@@ -113,7 +110,10 @@ export const sendAvax = async (
       nonce,
     },
   });
-  const res = await HTTPSProvider.sendTransaction(signedTx);
+
+  const res = waitForTxnToFinish
+    ? await (await HTTPSProvider.sendTransaction(signedTx)).wait()
+    : await HTTPSProvider.sendTransaction(signedTx);
 
   return {
     transaction: res,

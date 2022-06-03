@@ -50,6 +50,7 @@ plugins:
 
 custom:
   bundle:
+    packager: yarn
     # TODO: Figure out AWS-SDK v3 exclusion. https://aws.amazon.com/blogs/developer/modular-packages-in-aws-sdk-for-javascript/
     externals:
       - crypto
@@ -86,6 +87,15 @@ functions:
           pool: communion-users-demo-${sls:stage}
           trigger: PostConfirmation
           existing: true
+  newImageSeedUser:
+    name: newImageSeedUser-${sls:stage}
+    handler: src/dynamoTriggers/new-image-seed-user.handler
+    timeout: 20
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt: [usersTable, StreamArn]
 
 resources:
   Resources:
@@ -102,6 +112,9 @@ resources:
         BillingMode: PAY_PER_REQUEST
         SSESpecification:
           SSEEnabled: true
+        # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_StreamSpecification.html
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpool.html
     cognitoCommunionUsersDemo:
       Type: AWS::Cognito::UserPool
