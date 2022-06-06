@@ -31,13 +31,6 @@ export function initDynamoClient(region: string = REGION) {
   return ddbDocClient;
 }
 
-export interface BaseUserWallet {
-  privateKeyWithLeadingHex?: string;
-  addressC: string;
-  addressP: string;
-  addressX: string;
-}
-
 export interface User {
   id: string;
   email?: string;
@@ -45,7 +38,10 @@ export interface User {
   last_name: string;
   organization: string;
   role: 'worker' | 'manager' | 'owner' | 'seeder' | string;
-  wallet: BaseUserWallet;
+  walletPrivateKeyWithLeadingHex?: string;
+  walletAddressC: string;
+  walletAddressP: string;
+  walletAddressX: string;
 }
 
 // TODO: This will overwrite existing values.  Find proper args to not update existing values.
@@ -99,7 +95,9 @@ export async function getUserById(
     first_name: Item.first_name as string,
     last_name: Item.last_name as string,
     organization: Item.organization as string,
-    wallet: Item.wallet as BaseUserWallet,
+    walletAddressC: Item.walletAddressC as string,
+    walletAddressP: Item.walletAddressP as string,
+    walletAddressX: Item.walletAddressX as string,
   } as User;
 }
 
