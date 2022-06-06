@@ -4,13 +4,11 @@ export const MOCK_USER_SELF = {
   role: 'worker',
   last_name: 'invoke-self',
   first_name: 'local-self',
-  wallet: {
-    addressC: '0x4286d388A796457DBcd8Bcca957E58cCC31aF0bd',
-    addressP: 'P-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
-    addressX: 'X-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
-    privateKeyWithLeadingHex:
-      '0xa3a06515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
-  },
+  walletAddressC: '0x4286d388A796457DBcd8Bcca957E58cCC31aF0bd',
+  walletAddressP: 'P-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
+  walletAddressX: 'X-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
+  walletPrivateKeyWithLeadingHex:
+    '0xa3a06515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
   email: 'local-invoke-self@gmail.com',
 };
 
@@ -20,13 +18,11 @@ export const MOCK_USER_A = {
   role: 'worker',
   last_name: 'invoke-a',
   first_name: 'local-a',
-  wallet: {
-    addressC: '0x4286d388A796457DBcd8Bcca957E58cCC31aF0bd',
-    addressP: 'P-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
-    addressX: 'X-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
-    privateKeyWithLeadingHex:
-      '0xa3a06515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
-  },
+  walletAddressC: '0x4286d388A796457DBcd8Bcca957E58cCC31aF0bd',
+  walletAddressP: 'P-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
+  walletAddressX: 'X-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
+  walletPrivateKeyWithLeadingHex:
+    '0xa3a06515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
   email: 'local-invoke-user-a@gmail.com',
 };
 
@@ -36,13 +32,11 @@ export const MOCK_USER_SEEDER = {
   role: 'seeder',
   last_name: 'invoke-seeder',
   first_name: 'local-seeder',
-  wallet: {
-    addressC: '0x4286d388A796457DBcd8Bcca957E58cCC31aF0bd',
-    addressP: 'P-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
-    addressX: 'X-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
-    privateKeyWithLeadingHex:
-      '0xa3a06515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
-  },
+  walletAddressC: '0x4286d388A796457DBcd8Bcca957E58cCC31aF0bd',
+  walletAddressP: 'P-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
+  walletAddressX: 'X-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
+  walletPrivateKeyWithLeadingHex:
+    '0xa3a06515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
   email: 'local-invoke-user-seeder@gmail.com',
 };
 

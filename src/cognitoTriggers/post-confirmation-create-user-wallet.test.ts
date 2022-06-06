@@ -108,12 +108,10 @@ describe('postConfirmationCreateUserWallet', () => {
             last_name: 'A',
             organization: expectedOrganization,
             role: 'worker',
-            wallet: {
-              addressC: expect.any(String),
-              addressP: expect.any(String),
-              addressX: expect.any(String),
-              privateKeyWithLeadingHex: expect.any(String),
-            },
+            walletAddressC: expect.any(String),
+            walletAddressP: expect.any(String),
+            walletAddressX: expect.any(String),
+            walletPrivateKeyWithLeadingHex: expect.any(String),
           }
         );
       });

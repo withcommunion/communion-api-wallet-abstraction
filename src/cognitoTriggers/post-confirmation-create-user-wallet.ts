@@ -26,7 +26,7 @@ const dynamoClient = initDynamoClient();
 export async function getSeedAccountPrivateKey(): Promise<string> {
   // TODO: We likely want to fetch this from environment or similar
   const seedAccount = await getUserById(dynamoClient, SEED_ACCOUNT_ID);
-  const seedPrivateKey = seedAccount.wallet.privateKeyWithLeadingHex;
+  const seedPrivateKey = seedAccount.walletPrivateKeyWithLeadingHex;
 
   if (!seedPrivateKey) {
     throw new Error('Seed account has no private key');
@@ -79,7 +79,7 @@ export const handler = async (
       // TODO: Figure out how often this is happening
       if (
         existingUser &&
-        existingUser.wallet.privateKeyWithLeadingHex &&
+        existingUser.walletPrivateKeyWithLeadingHex &&
         process.env.NODE_ENV !== 'local'
       ) {
         logger.warn('Cognito fired twice, there is nothing to do here');
@@ -118,13 +118,6 @@ export const handler = async (
       throw error;
     }
 
-    const userWalletInfo = {
-      privateKeyWithLeadingHex: usersPrivateKey.evmKeyWithLeadingHex,
-      addressC: usersWallet.avaxWallet.getAddressC(),
-      addressP: usersWallet.avaxWallet.getAddressP(),
-      addressX: usersWallet.avaxWallet.getAddressX(),
-    };
-
     const user: User = {
       id: userId,
       email: userAttributes.email,
@@ -132,7 +125,10 @@ export const handler = async (
       last_name: userAttributes['family_name'],
       organization: userAttributes['custom:organization'],
       role: userAttributes['custom:role'],
-      wallet: userWalletInfo,
+      walletPrivateKeyWithLeadingHex: usersPrivateKey.evmKeyWithLeadingHex,
+      walletAddressC: usersWallet.avaxWallet.getAddressC(),
+      walletAddressP: usersWallet.avaxWallet.getAddressP(),
+      walletAddressX: usersWallet.avaxWallet.getAddressX(),
     };
 
     try {
@@ -141,9 +137,9 @@ export const handler = async (
       logger.info('Created user', { values: { respFromDb } });
 
       logger.verbose('Attempting to seed user', {
-        userAddress: user.wallet.addressC,
+        userAddress: user.walletAddressC,
       });
-      const sendAvax = await seedFundsForUser(user.wallet.addressC);
+      const sendAvax = await seedFundsForUser(user.walletAddressC);
       logger.info('Seeded user', { values: { sendAvax } });
     } catch (error) {
       /* Throw error.  We want to stop the lambda and prevent the user from verifying.

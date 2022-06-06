@@ -62,10 +62,7 @@ export const handler = async (
         ({
           ...user,
           email: undefined,
-          wallet: {
-            ...user.wallet,
-            privateKeyWithLeadingHex: undefined,
-          },
+          walletPrivateKeyWithLeadingHex: undefined,
         } as User)
     );
 
