@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { generateReturn } from '../util/api-util';
-import { getUserById, initDynamoClient } from '../util/dynamo-util';
+import { getUserById, initDynamoClient, Self } from '../util/dynamo-util';
 import logger from '../util/winston-logger-util';
 
 const dynamoClient = initDynamoClient();
@@ -25,7 +25,7 @@ export const handler = async (
     });
 
     logger.verbose('Fetching user', { values: { userId: userId } });
-    const user = await getUserById(dynamoClient, userId);
+    const user = (await getUserById(dynamoClient, userId)) as Self;
     logger.verbose('Received user', { values: user });
 
     const returnValue = generateReturn(200, {

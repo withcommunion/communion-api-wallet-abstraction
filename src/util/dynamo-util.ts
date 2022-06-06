@@ -44,6 +44,10 @@ export interface User {
   walletAddressX: string;
 }
 
+export interface Self {
+  walletPrivateKeyWithLeadingHex: string;
+}
+
 // TODO: This will overwrite existing values.  Find proper args to not update existing values.
 export async function insertUser(
   ddbClient: DynamoDBDocumentClient,
@@ -88,17 +92,8 @@ export async function getUserById(
     throw new Error(`User not found! [userId:${userId}]`);
   }
 
-  const { Item } = res;
-  return {
-    id: Item.id as string,
-    email: Item.email as string,
-    first_name: Item.first_name as string,
-    last_name: Item.last_name as string,
-    organization: Item.organization as string,
-    walletAddressC: Item.walletAddressC as string,
-    walletAddressP: Item.walletAddressP as string,
-    walletAddressX: Item.walletAddressX as string,
-  } as User;
+  const user = res.Item as User;
+  return user;
 }
 
 export async function getUsersInOrganization(
