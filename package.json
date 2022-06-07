@@ -12,9 +12,10 @@
     "deploy:prod": "sls deploy --stage prod --aws-profile communion --verbose --aws-s3-accelerate",
     "deploy-ci:dev": "sls deploy --stage dev --verbose --aws-s3-accelerate",
     "deploy-ci:prod": "sls deploy --stage prod --verbose --aws-s3-accelerate",
-    "invoke:getSelf": "NODE_ENV=local serverless invoke local --function getSelf --stage dev --path ./invokeLocalEvents/getSelfEvent.json",
-    "invoke:getOrganization": "NODE_ENV=local serverless invoke local --function getOrganization --stage dev --path ./invokeLocalEvents/getOrganization.json",
-    "invoke:postConfirmationCreateUserWallet": "NODE_ENV=local serverless invoke local --function postConfirmationCreateUserWallet --stage dev --path ./invokeLocalEvents/postConfirmationCognitoEvent.json"
+    "invoke:getSelf": "NODE_ENV=local serverless invoke local --function getSelf --stage dev --path ./invokeLocalEvents/getSelfEvent.json -e LOG_LEVEL=verbose",
+    "invoke:getSelfTxs": "NODE_ENV=local serverless invoke local --function getSelfTxs --stage dev --path ./invokeLocalEvents/getSelfEvent.json -e LOG_LEVEL=verbose",
+    "invoke:getOrganization": "NODE_ENV=local serverless invoke local --function getOrganization --stage dev --path ./invokeLocalEvents/getOrganization.json -e LOG_LEVEL=verbose",
+    "invoke:postConfirmationCreateUserWallet": "NODE_ENV=local serverless invoke local --function postConfirmationCreateUserWallet --stage dev --path ./invokeLocalEvents/postConfirmationCognitoEvent.json -e LOG_LEVEL=verbose"
   },
   "dependencies": {
     "@avalabs/avalanche-wallet-sdk": "^0.17.2",
