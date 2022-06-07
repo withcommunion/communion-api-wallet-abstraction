@@ -1,7 +1,7 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { generateReturn } from '../util/api-util';
 import {
-  User,
+  UserWithPublicData,
   initDynamoClient,
   getUserById,
   getUsersInOrganization,
@@ -63,7 +63,7 @@ export const handler = async (
           ...user,
           email: undefined,
           walletPrivateKeyWithLeadingHex: undefined,
-        } as User)
+        } as UserWithPublicData)
     );
 
     const returnVal = generateReturn(200, {
