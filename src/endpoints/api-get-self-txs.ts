@@ -42,13 +42,15 @@ export const handler = async (
     const rawUserTxs = await getAddressTxHistory(usersAddressC);
     logger.verbose('Received txns', { values: { rawUserTxs } });
 
+    logger.info('Creating txAddress array');
     const txAddresses = rawUserTxs
       .reduce((acc, curr) => {
-        acc.push(curr.from);
-        acc.push(curr.to);
+        acc.push(curr.from.toLowerCase());
+        acc.push(curr.to.toLowerCase());
         return acc;
       }, [] as string[])
       .filter((item, _, arr) => arr.includes(item));
+    logger.verbose('Created txAddresses array', { values: { txAddresses } });
 
     /**
      * TODO: This won't work when we have multiple organizations.
@@ -67,8 +69,8 @@ export const handler = async (
 
     logger.verbose('Creating user map based on txCandidates');
     const addressCToUserMap = txCandidates.reduce((acc, curr) => {
-      if (txAddresses.includes(curr.walletAddressC)) {
-        acc[curr.walletAddressC] = curr;
+      if (txAddresses.includes(curr.walletAddressC.toLowerCase())) {
+        acc[curr.walletAddressC.toLowerCase()] = curr;
       }
       return acc;
     }, {} as { [key: string]: User });
@@ -77,13 +79,13 @@ export const handler = async (
     logger.verbose('Matching txns to users');
     const txsWithUserData = rawUserTxs.map((tx) => {
       const fromUser = {
-        ...addressCToUserMap[tx.from],
+        ...addressCToUserMap[tx.from.toLowerCase()],
         walletPrivateKeyWithLeadingHex: undefined,
         email: undefined,
       } as UserWithPublicData;
 
       const toUser = {
-        ...addressCToUserMap[tx.to],
+        ...addressCToUserMap[tx.to.toLowerCase()],
         walletPrivateKeyWithLeadingHex: undefined,
         email: undefined,
       } as UserWithPublicData;
