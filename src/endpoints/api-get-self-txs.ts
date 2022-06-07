@@ -92,9 +92,7 @@ export const handler = async (
     }, []);
     logger.verbose('Matched txns to users', { values: { txsWithUserData } });
 
-    const returnValue = generateReturn(200, {
-      ...txsWithUserData,
-    });
+    const returnValue = generateReturn(200, { txs: txsWithUserData });
 
     logger.info('Returning', { values: returnValue });
 
