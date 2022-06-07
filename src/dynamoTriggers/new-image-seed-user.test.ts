@@ -46,22 +46,18 @@ const MOCK_EVENT: DynamoDBStreamEvent = {
           role: {
             S: 'worker',
           },
-          wallet: {
-            M: {
-              addressC: {
-                S: MOCK_USER_ADDRESS_C_WITH_NO_FUNDS,
-              },
-              addressP: {
-                S: 'P-avax1wz5n43yfa4u308yz9ga8f3xmeflvaegg2fzkxe',
-              },
-              addressX: {
-                S: 'X-avax1wz5n43yfa4u308yz9ga8f3xmeflvaegg2fzkxe',
-              },
-              // Junk key, it's okay to be commited and public
-              privateKeyWithLeadingHex: {
-                S: '0x7d29827ad7f90ab4992ec980f006032b0cfebd466b50a9be30fe44de565bd83e',
-              },
-            },
+          walletAddressC: {
+            S: MOCK_USER_ADDRESS_C_WITH_NO_FUNDS,
+          },
+          walletAddressP: {
+            S: 'P-avax1wz5n43yfa4u308yz9ga8f3xmeflvaegg2fzkxe',
+          },
+          walletAddressX: {
+            S: 'X-avax1wz5n43yfa4u308yz9ga8f3xmeflvaegg2fzkxe',
+          },
+          // Junk key, it's okay to be commited and public
+          walletPrivateKeyWithLeadingHex: {
+            S: '0x7d29827ad7f90ab4992ec980f006032b0cfebd466b50a9be30fe44de565bd83e',
           },
         },
         SequenceNumber: '21584000000000007748657723',
@@ -103,22 +99,18 @@ const MOCK_EVENT: DynamoDBStreamEvent = {
           role: {
             S: 'worker',
           },
-          wallet: {
-            M: {
-              addressC: {
-                S: MOCK_USER_ADDRESS_C,
-              },
-              addressP: {
-                S: 'P-avax1wz5n43yfa4u308yz9ga8f3xmeflvaegg2fzkxe',
-              },
-              addressX: {
-                S: 'X-avax1wz5n43yfa4u308yz9ga8f3xmeflvaegg2fzkxe',
-              },
-              // Junk key, it's okay to be commited and public
-              privateKeyWithLeadingHex: {
-                S: '0x7d29827ad7f90ab4992ec980f006032b0cfebd466b50a9be30fe44de565bd83e',
-              },
-            },
+          walletAddressC: {
+            S: MOCK_USER_ADDRESS_C,
+          },
+          walletAddressP: {
+            S: 'P-avax1wz5n43yfa4u308yz9ga8f3xmeflvaegg2fzkxe',
+          },
+          walletAddressX: {
+            S: 'X-avax1wz5n43yfa4u308yz9ga8f3xmeflvaegg2fzkxe',
+          },
+          // Junk key, it's okay to be commited and public
+          walletPrivateKeyWithLeadingHex: {
+            S: '0x7d29827ad7f90ab4992ec980f006032b0cfebd466b50a9be30fe44de565bd83e',
           },
         },
         SequenceNumber: '21584000000000007748657723',

@@ -20,7 +20,7 @@ const dynamoClient = initDynamoClient();
 export async function getSeedAccountPrivateKey(): Promise<string> {
   // TODO: We likely want to fetch this from environment or similar
   const seedAccount = await getUserById(dynamoClient, SEED_ACCOUNT_ID);
-  const seedPrivateKey = seedAccount.wallet.privateKeyWithLeadingHex;
+  const seedPrivateKey = seedAccount.walletPrivateKeyWithLeadingHex;
 
   if (!seedPrivateKey) {
     throw new Error('Seed account has no private key');
@@ -122,7 +122,7 @@ export const handler = async (
       await Promise.all(
         insertUserEvents.map(async (user) => {
           const userHasFunds = Boolean(
-            await checkIfUserHasFunds(user.wallet.addressC)
+            await checkIfUserHasFunds(user.walletAddressC)
           );
 
           if (userHasFunds) {
@@ -156,7 +156,7 @@ export const handler = async (
         const transaction = await sendAvax(
           seedWallet,
           BASE_AMOUNT_TO_SEED_USER,
-          user.wallet.addressC,
+          user.walletAddressC,
           true
         );
 
