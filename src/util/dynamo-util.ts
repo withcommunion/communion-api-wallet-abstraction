@@ -44,6 +44,11 @@ export interface User {
   walletAddressX: string;
 }
 
+export interface UserWithPublicData extends User {
+  walletPrivateKeyWithLeadingHex: undefined;
+  email: undefined;
+}
+
 export interface Self {
   walletPrivateKeyWithLeadingHex: string;
 }

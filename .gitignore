@@ -4,6 +4,7 @@ dist
 target
 .serverless
 .webpack
+.serverless-bundle
 
 # dependencies
 node_modules

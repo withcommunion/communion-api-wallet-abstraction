@@ -68,6 +68,16 @@ functions:
           path: /user/self
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
+  getSelfTxs:
+    name: getSelfTxs-${sls:stage}
+    handler: src/endpoints/api-get-self-txs.handler
+    events:
+      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+      - httpApi:
+          method: GET
+          path: /user/self/tx
+          authorizer:
+            name: cognitoJwtAuthorizer-${sls:stage}
   getOrganization:
     name: getOrganization-${sls:stage}
     handler: src/endpoints/api-get-organization.handler

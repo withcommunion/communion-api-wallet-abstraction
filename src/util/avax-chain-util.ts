@@ -1,5 +1,6 @@
 import Avalanche from 'avalanche';
 import { ethers } from 'ethers';
+import axios from 'axios';
 
 import logger from '../util/winston-logger-util';
 
@@ -121,3 +122,47 @@ export const sendAvax = async (
     explorerUrl,
   };
 };
+
+export interface HistoricalTxn {
+  blockNumber: string;
+  timeStamp: string;
+  hash: string;
+  nonce: string;
+  blockHash: string;
+  transactionIndex: string;
+  from: string;
+  to: string;
+  value: string;
+  gas: string;
+  gasPrice: string;
+  isError: string;
+  txreceipt_status: string;
+  input: string;
+  contractAddress: string;
+  cumulativeGasUsed: string;
+  gasUsed: string;
+  confirmations: string;
+}
+export async function getAddressTxHistory(address: string) {
+  interface TxListResponse {
+    message: string;
+    result: HistoricalTxn[];
+    status: string;
+  }
+  const rawHistoryResp = await axios.get<TxListResponse>(
+    // TODO: Support dev and prod environment
+    'https://api-testnet.snowtrace.io/api',
+    {
+      params: {
+        module: 'account',
+        action: 'txlist',
+        address,
+        startblock: 1,
+        endblock: 99999999,
+        sort: 'desc',
+      },
+    }
+  );
+
+  return rawHistoryResp.data.result;
+}
