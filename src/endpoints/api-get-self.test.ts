@@ -75,7 +75,7 @@ const MOCK_EVENT: APIGatewayProxyEventV2WithJWTAuthorizer = {
   isBase64Encoded: false,
 };
 
-describe('getWalletByUserId', () => {
+describe('api-get-self', () => {
   it('Should return a 200 status code', async () => {
     await handler(MOCK_EVENT);
     expect(true).toBe(true);
