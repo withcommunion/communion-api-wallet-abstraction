@@ -49,7 +49,7 @@ export interface UserWithPublicData extends User {
   email: undefined;
 }
 
-export interface Self {
+export interface Self extends User {
   walletPrivateKeyWithLeadingHex: string;
 }
 
