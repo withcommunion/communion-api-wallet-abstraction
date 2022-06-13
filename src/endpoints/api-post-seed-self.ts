@@ -16,7 +16,7 @@ const HTTPSProvider = new ethers.providers.JsonRpcProvider(
 
 export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
 export const BASE_AMOUNT_TO_SEED_USER = '0.01';
-export const MIN_AMOUNT_TO_SEED = '.005';
+export const MIN_AMOUNT_TO_SEED = '0.005';
 
 export async function getSeedAccountPrivateKey(): Promise<string> {
   // TODO: We likely want to fetch this from environment or similar
@@ -47,6 +47,7 @@ export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ) => {
   try {
+    console.log('here?');
     const claims = event.requestContext.authorizer.jwt.claims;
     // For some reason it can go through in two seperate ways
     const userId =
@@ -69,19 +70,20 @@ export const handler = async (
     const userWallet = getEthersWallet(user.walletPrivateKeyWithLeadingHex);
     const usersBalance = await userWallet.getBalance();
 
-    if (usersBalance.gt(MIN_AMOUNT_TO_SEED)) {
+    if (usersBalance.gt(ethers.utils.parseEther(MIN_AMOUNT_TO_SEED))) {
       const message =
         'Users balance is higher than MIN_AMOUNT_TO_SEED, no need to seed, returning';
       logger.info(message, {
         values: {
-          usersBalance,
+          usersBalance: ethers.utils.formatEther(usersBalance),
           MIN_AMOUNT_TO_SEED,
         },
       });
 
       return generateReturn(304, {
         message,
-        balance: usersBalance.toNumber(),
+        userBalance: ethers.utils.formatEther(usersBalance),
+        MIN_AMOUNT_TO_SEED,
       });
     }
 
@@ -110,9 +112,10 @@ export const handler = async (
 
     return generateReturn(200, { ...transaction });
   } catch (error) {
+    console.log(error);
     logger.error('Failed to seed self', { values: { error } });
     return generateReturn(500, {
-      message: 'Something went wrong trying to get the wallet',
+      message: 'Something went wrong trying to seed user',
       error: error,
     });
   }

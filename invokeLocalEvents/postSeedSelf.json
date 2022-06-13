@@ -1,0 +1,61 @@
+{
+  "headers": {
+    "accept": "*/*",
+    "accept-encoding": "gzip, deflate, br",
+    "authorization": "Bearer eyJraWQiOiJkd3FwYVwveDhCNUtRS0pkN004ZG1lYUhTcU9hcjJyUDZhK1NXTnUrQ0FtUT0iLCJhbGciOiJSUzI1NiJ9.eyJjdXN0b206b3JnYW5pemF0aW9uIjoib3JnLWphY2tzLXBpenphLTEiLCJzdWIiOiI2MjgxZDkxOC1kZjM2LTQ4YmYtYjhhNC0zZWUxZjJiODMwNWUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tXC91cy1lYXN0LTFfRVhSWlpGMGNwIiwiY29nbml0bzp1c2VybmFtZSI6IjYyODFkOTE4LWRmMzYtNDhiZi1iOGE0LTNlZTFmMmI4MzA1ZSIsImdpdmVuX25hbWUiOiJNaWtlIiwib3JpZ2luX2p0aSI6IjMwOTNiMGY0LTBhMTctNGFiNy04ZjhkLWExOThlZDVkNWI0YSIsImF1ZCI6IjRlZXJsdTF0YWY3MmM4cjIwcHYydG1tdm10IiwiZXZlbnRfaWQiOiI3Y2Y4MjQwOS1hZWU4LTQ5N2QtODZlZC00NGM2YmJmNTlmNTQiLCJ0b2tlbl91c2UiOiJpZCIsImF1dGhfdGltZSI6MTY1NDYxNzgyMiwiZXhwIjoxNjU1MTU4MDcyLCJpYXQiOjE2NTUxNTQ0NzIsImZhbWlseV9uYW1lIjoiQWxpY2VhIiwianRpIjoiMTVmYWViZmMtZjQ1Ni00YzJiLTk1MTgtMDA2MTZhNmUyYzIxIiwiZW1haWwiOiJtZmFsaWNlYTU4QGdtYWlsLmNvbSJ9.eSKBNJrujePbyQRF7Z-INDWO050jxf57U2OEEei3OGBt9rr7m0sgT_2mSdEl9A1iFZFcPi_E-XICdXumWgAgCXIbSBety9fNa6Se4P0SyypOvpVpUcLNG2D1AqR0LzHMYd2L5X9__n4NP6108BAqZqrrAldbnWC2NZRcJk_NspLHHLy0P_Hq5Bx33y38eso67RawixPcIkofsloOyEKVIJunb1pSDn58uzffBlwYCJxdHBHSmfy70eIK1Ggp4rblsPDN-w8yMuToFxR7EMRK82kFJBrrzuaRI06lXI_wNRWlvk8BrEoCXxzoQWopLqey8nCtMG3W5YNPsa-sHd1csw",
+    "content-length": "0",
+    "host": "p0rddetfk8.execute-api.us-east-1.amazonaws.com",
+    "postman-token": "05bc98b7-0262-4e82-9d0f-9d6c064b551f",
+    "user-agent": "PostmanRuntime/7.26.8",
+    "x-amzn-trace-id": "Root=1-62a7a77e-79083cf51e3515cf6bb7c575",
+    "x-forwarded-for": "187.171.17.132",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "isBase64Encoded": false,
+  "rawPath": "/user/self/seed",
+  "rawQueryString": "",
+  "requestContext": {
+    "accountId": "143056416942",
+    "apiId": "p0rddetfk8",
+    "authorizer": {
+      "jwt": {
+        "claims": {
+          "aud": "4eerlu1taf72c8r20pv2tmmvmt",
+          "auth_time": "1654617822",
+          "cognito:username": "6281d918-df36-48bf-b8a4-3ee1f2b8305e",
+          "custom:organization": "org-jacks-pizza-1",
+          "email": "mfalicea58@gmail.com",
+          "email_verified": "true",
+          "event_id": "7cf82409-aee8-497d-86ed-44c6bbf59f54",
+          "exp": "1655158072",
+          "family_name": "Alicea",
+          "given_name": "Mike",
+          "iat": "1655154472",
+          "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_EXRZZF0cp",
+          "jti": "15faebfc-f456-4c2b-9518-00616a6e2c21",
+          "origin_jti": "3093b0f4-0a17-4ab7-8f8d-a198ed5d5b4a",
+          "sub": "6281d918-df36-48bf-b8a4-3ee1f2b8305e",
+          "token_use": "id"
+        },
+        "scopes": null
+      }
+    },
+    "domainName": "p0rddetfk8.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "p0rddetfk8",
+    "http": {
+      "method": "POST",
+      "path": "/user/self/seed",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "187.171.17.132",
+      "userAgent": "PostmanRuntime/7.26.8"
+    },
+    "requestId": "Trcb1jV6IAMEVVA=",
+    "routeKey": "POST /user/self/seed",
+    "stage": "$default",
+    "time": "13/Jun/2022:21:09:18 +0000",
+    "timeEpoch": 1655154558721
+  },
+  "routeKey": "POST /user/self/seed",
+  "version": "2.0"
+}

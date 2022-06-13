@@ -15,7 +15,8 @@
     "invoke:getSelf": "NODE_ENV=local serverless invoke local --function getSelf --stage dev --path ./invokeLocalEvents/getSelfEvent.json -e LOG_LEVEL=verbose",
     "invoke:getSelfTxs": "NODE_ENV=local serverless invoke local --function getSelfTxs --stage dev --path ./invokeLocalEvents/getSelfEvent.json -e LOG_LEVEL=verbose",
     "invoke:getOrganization": "NODE_ENV=local serverless invoke local --function getOrganization --stage dev --path ./invokeLocalEvents/getOrganization.json -e LOG_LEVEL=verbose",
-    "invoke:postConfirmationCreateUserWallet": "NODE_ENV=local serverless invoke local --function postConfirmationCreateUserWallet --stage dev --path ./invokeLocalEvents/postConfirmationCognitoEvent.json -e LOG_LEVEL=verbose"
+    "invoke:postConfirmationCreateUserWallet": "NODE_ENV=local serverless invoke local --function postConfirmationCreateUserWallet --stage dev --path ./invokeLocalEvents/postConfirmationCognitoEvent.json -e LOG_LEVEL=verbose",
+    "invoke:postSeedSelf": "NODE_ENV=local serverless invoke local --function postSeedSelf --stage dev --path ./invokeLocalEvents/postSeedSelf.json -e LOG_LEVEL=verbose"
   },
   "dependencies": {
     "@avalabs/avalanche-wallet-sdk": "^0.17.2",
