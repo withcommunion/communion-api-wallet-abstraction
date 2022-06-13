@@ -16,7 +16,7 @@ const HTTPSProvider = new ethers.providers.JsonRpcProvider(
 
 export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
 export const BASE_AMOUNT_TO_SEED_USER = '0.01';
-export const MIN_AMOUNT_TO_SEED = '0.005';
+export const MIN_BALANCE_TO_SEED = '0.005';
 
 export async function getSeedAccountPrivateKey(): Promise<string> {
   // TODO: We likely want to fetch this from environment or similar
@@ -70,20 +70,20 @@ export const handler = async (
     const userWallet = getEthersWallet(user.walletPrivateKeyWithLeadingHex);
     const usersBalance = await userWallet.getBalance();
 
-    if (usersBalance.gt(ethers.utils.parseEther(MIN_AMOUNT_TO_SEED))) {
+    if (usersBalance.gt(ethers.utils.parseEther(MIN_BALANCE_TO_SEED))) {
       const message =
         'Users balance is higher than MIN_AMOUNT_TO_SEED, no need to seed, returning';
       logger.info(message, {
         values: {
           usersBalance: ethers.utils.formatEther(usersBalance),
-          MIN_AMOUNT_TO_SEED,
+          MIN_BALANCE_TO_SEED,
         },
       });
 
       return generateReturn(304, {
         message,
         userBalance: ethers.utils.formatEther(usersBalance),
-        MIN_AMOUNT_TO_SEED,
+        MIN_BALANCE_TO_SEED,
       });
     }
 
