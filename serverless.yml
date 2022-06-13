@@ -78,7 +78,7 @@ functions:
           path: /user/self/tx
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
-  seedSelf:
+  postSeedSelf:
     name: postSeedSelf-${sls:stage}
     handler: src/endpoints/api-post-seed-self.handler
     timeout: 30
