@@ -1,6 +1,14 @@
 import { SingletonWallet } from '@avalabs/avalanche-wallet-sdk';
 import { ethers } from 'ethers';
 
+// TODO: Deal with prod and dev
+export const avaxTestNetworkNodeUrl =
+  'https://api.avax-test.network/ext/bc/C/rpc';
+
+const HTTPSProvider = new ethers.providers.JsonRpcProvider(
+  avaxTestNetworkNodeUrl
+);
+
 export function generatePrivateEvmKey(): {
   evmKeyWithLeadingHex: string;
   evmKeyWithoutLeadingHex: string;
@@ -29,4 +37,10 @@ export function createSingletonWallet(
   const ethersWallet = new ethers.Wallet(evmKeyWithLeadingHex);
 
   return { avaxWallet, ethersWallet };
+}
+
+export function getEthersWallet(
+  privateKeyWithLeadingHex: string
+): ethers.Wallet {
+  return new ethers.Wallet(privateKeyWithLeadingHex, HTTPSProvider);
 }
