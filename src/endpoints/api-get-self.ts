@@ -36,7 +36,7 @@ export const handler = async (
     return returnValue;
   } catch (error) {
     logger.error('Failed to get wallet', {
-      values: error,
+      values: { error },
     });
     return generateReturn(500, {
       message: 'Something went wrong trying to get the wallet',
