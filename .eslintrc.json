@@ -24,8 +24,8 @@
 
   // all configs (eslint-config-xxx) go here:
   "extends": [
-    "plugin:import/typescript",
     "eslint:recommended",
+    "plugin:import/typescript",
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking", // contains rules that specifically require type information
     "prettier"
