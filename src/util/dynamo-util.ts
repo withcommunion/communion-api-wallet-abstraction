@@ -11,6 +11,7 @@ import {
 const stage = process.env.STAGE || 'dev';
 
 export const usersTable = `usersTable-${stage}`;
+export const orgsTable = `orgsTable-${stage}`;
 export const REGION = 'us-east-1';
 
 export function initDynamoClient(region: string = REGION) {
@@ -140,7 +141,7 @@ export enum Roles {
   owner = 'owner',
   seeder = 'seeder',
 }
-export interface Organization {
+export interface OrgWithPrivateData {
   id: string;
   actions: OrgAction[];
   roles: Roles[];
@@ -149,4 +150,33 @@ export interface Organization {
     address: string;
     privateKeyWithLeadingHex: string;
   };
+}
+
+export type OrgWithPublicData = Omit<OrgWithPrivateData, 'seeder'>;
+
+export async function getOrgById(
+  orgId: string,
+  ddbClient: DynamoDBDocumentClient
+): Promise<OrgWithPrivateData> {
+  const itemToGet = new GetCommand({
+    TableName: orgsTable,
+    Key: {
+      id: orgId,
+    },
+  });
+
+  let res;
+  try {
+    res = await ddbClient.send(itemToGet);
+  } catch (error) {
+    console.error('Failed to dynamo-util.getOrgById', error);
+    throw error;
+  }
+
+  if (!res || !res.Item) {
+    throw new Error(`Org not found! [orgId:${orgId}]`);
+  }
+
+  const org = res.Item as OrgWithPrivateData;
+  return org;
 }
