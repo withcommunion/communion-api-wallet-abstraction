@@ -128,3 +128,25 @@ export async function getUsersInOrganization(
   const users = res.Items as User[];
   return users;
 }
+
+export interface OrgAction {
+  name: string;
+  amount: string;
+  allowed_roles: string[];
+}
+export enum Roles {
+  worker = 'worker',
+  manager = 'manager',
+  owner = 'owner',
+  seeder = 'seeder',
+}
+export interface Organization {
+  id: string;
+  actions: OrgAction[];
+  roles: Roles[];
+  member_ids: string[];
+  seeder: {
+    address: string;
+    privateKeyWithLeadingHex: string;
+  };
+}
