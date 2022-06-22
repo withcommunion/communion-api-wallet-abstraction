@@ -4,6 +4,7 @@ import {
   initDynamoClient,
   getOrgById,
   OrgWithPublicData,
+  batchGetUsersById,
 } from '../util/dynamo-util';
 
 import logger from '../util/winston-logger-util';
@@ -39,6 +40,7 @@ export const handler = async (
   }
 
   try {
+    logger.info('Getting org by id', { values: { orgId } });
     const org = await getOrgById(orgId, dynamoClient);
     const orgWithPublicData: OrgWithPublicData = {
       id: org.id,
@@ -46,6 +48,16 @@ export const handler = async (
       roles: org.roles,
       member_ids: org.member_ids,
     };
+    logger.verbose('Received org', { values: { org } });
+
+    logger.info('Fetching all users in org', {
+      values: { member_ids: orgWithPublicData.member_ids },
+    });
+    const usersInOrg = await batchGetUsersById(
+      orgWithPublicData.member_ids,
+      dynamoClient
+    );
+    logger.verbose('Received users', { values: { usersInOrg } });
 
     return generateReturn(200, { ...orgWithPublicData });
   } catch (error) {

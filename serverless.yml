@@ -99,6 +99,16 @@ functions:
           path: /organization/{orgId}
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
+  getOrgById:
+    name: getOrgById-${sls:stage}
+    handler: src/endpoints/api-get-org-by-id.handler
+    events:
+      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+      - httpApi:
+          method: GET
+          path: /org/{orgId}
+          authorizer:
+            name: cognitoJwtAuthorizer-${sls:stage}
   postConfirmationCreateUserWallet:
     name: postConfirmationCreateUserWallet-${sls:stage}
     handler: src/cognitoTriggers/post-confirmation-create-user-wallet.handler

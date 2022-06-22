@@ -1,4 +1,5 @@
 // Docs: https://github.com/aws/aws-sdk-js-v3/tree/main/lib/lib-dynamodb
+// Examples: https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/javascript_dynamodb_code_examples.html
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
@@ -6,6 +7,7 @@ import {
   PutCommandOutput,
   GetCommand,
   ScanCommand,
+  BatchGetCommand,
 } from '@aws-sdk/lib-dynamodb';
 
 const stage = process.env.STAGE || 'dev';
@@ -100,6 +102,38 @@ export async function getUserById(
 
   const user = res.Item as User;
   return user;
+}
+
+export async function batchGetUsersById(
+  userIds: string[],
+  ddbClient: DynamoDBDocumentClient
+): Promise<User[]> {
+  const batchItemsToGet = new BatchGetCommand({
+    RequestItems: {
+      [orgsTable]: {
+        Keys: userIds.map((userId) => ({ id: { N: userId } })),
+        ProjectionExpression: 'ATTRIBUTE_NAME',
+      },
+    },
+  });
+
+  let res;
+  try {
+    res = await ddbClient.send(batchItemsToGet);
+    console.log(res);
+  } catch (error) {
+    console.error('Failed to dynamo-util.getUserById', error);
+    throw error;
+  }
+
+  if (!res || !res.Responses) {
+    throw new Error(`Users not found! [userIds:${userIds.toString()}]`);
+  }
+
+  const users = res.Responses;
+  console.log(users);
+  // @ts-expect-error Just for now
+  return users;
 }
 
 export async function getUsersInOrganization(
