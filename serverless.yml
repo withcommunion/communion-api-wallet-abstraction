@@ -107,8 +107,8 @@ functions:
       - httpApi:
           method: GET
           path: /org/{orgId}
-          authorizer:
-            name: cognitoJwtAuthorizer-${sls:stage}
+          # authorizer:
+          # name: cognitoJwtAuthorizer-${sls:stage}
   postConfirmationCreateUserWallet:
     name: postConfirmationCreateUserWallet-${sls:stage}
     handler: src/cognitoTriggers/post-confirmation-create-user-wallet.handler
