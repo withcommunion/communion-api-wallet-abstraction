@@ -136,6 +136,19 @@ resources:
         # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_StreamSpecification.html
         StreamSpecification:
           StreamViewType: NEW_IMAGE
+    orgsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: orgsTable-${sls:stage}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        SSESpecification:
+          SSEEnabled: true
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpool.html
     cognitoCommunionUsersDemo:
       Type: AWS::Cognito::UserPool
