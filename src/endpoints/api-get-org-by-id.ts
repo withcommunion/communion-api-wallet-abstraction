@@ -5,6 +5,7 @@ import {
   getOrgById,
   OrgWithPublicData,
   batchGetUsersById,
+  UserWithPublicData,
 } from '../util/dynamo-util';
 
 import logger from '../util/winston-logger-util';
@@ -42,24 +43,55 @@ export const handler = async (
   try {
     logger.info('Getting org by id', { values: { orgId } });
     const org = await getOrgById(orgId, dynamoClient);
+    logger.verbose('Received org', { values: { org } });
+
+    if (!org) {
+      return generateReturn(404, {
+        message: `${orgId} organization not found`,
+      });
+    }
+
     const orgWithPublicData: OrgWithPublicData = {
       id: org.id,
       actions: org.actions,
       roles: org.roles,
       member_ids: org.member_ids,
     };
-    logger.verbose('Received org', { values: { org } });
 
     logger.info('Fetching all users in org', {
       values: { member_ids: orgWithPublicData.member_ids },
     });
-    const usersInOrg = await batchGetUsersById(
+    const allUsersInOrgWithPrivateData = await batchGetUsersById(
       orgWithPublicData.member_ids,
       dynamoClient
     );
-    logger.verbose('Received users', { values: { usersInOrg } });
 
-    return generateReturn(200, { ...orgWithPublicData });
+    logger.verbose('Received users', {
+      values: { usersInOrg: allUsersInOrgWithPrivateData },
+    });
+
+    const filteredUsersInOrgWithPrivateData =
+      allUsersInOrgWithPrivateData.filter(
+        (user) => user.id !== requestUserId && user.role !== 'seeder'
+      );
+
+    const usersInOrgWithPublicData = filteredUsersInOrgWithPrivateData.map(
+      (user) =>
+        ({
+          ...user,
+          email: undefined,
+          walletPrivateKeyWithLeadingHex: undefined,
+        } as UserWithPublicData)
+    );
+
+    logger.verbose('Removed Self, Seeder and private data', {
+      values: { usersInOrgWithPublicData },
+    });
+
+    return generateReturn(200, {
+      ...orgWithPublicData,
+      members: usersInOrgWithPublicData,
+    });
   } catch (error) {
     logger.error('Failed to get org', {
       values: { error },
