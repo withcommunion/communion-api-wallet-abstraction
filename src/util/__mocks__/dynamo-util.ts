@@ -40,6 +40,23 @@ export const MOCK_USER_SEEDER = {
   email: 'local-invoke-user-seeder@gmail.com',
 };
 
+export const MOCK_ORG = {
+  id: 'jacks-pizza-1',
+  actions: [
+    {
+      allowed_roles: ['worker', 'manager', 'owner'],
+      amount: '0.05',
+      name: 'Kindness',
+    },
+  ],
+  member_ids: [MOCK_USER_SELF.id, MOCK_USER_A.id],
+  roles: ['worker', 'manager', 'owner', 'seeder'],
+  seeder: {
+    privateKeyWithLeadingHex: '0xf9c...294c',
+    walletAddressC: '0xfE96DA...965f',
+  },
+};
+
 export const awsSdkPromiseResponse = jest
   .fn()
   .mockReturnValue(Promise.resolve(true));
@@ -63,3 +80,10 @@ export const getUsersInOrganization = jest
     MOCK_USER_A,
     MOCK_USER_SEEDER,
   ]);
+
+export const batchGetUsersById = jest.fn(async () => [
+  MOCK_USER_SELF,
+  MOCK_USER_A,
+]);
+
+export const getOrgById = jest.fn(async () => MOCK_ORG);

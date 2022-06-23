@@ -40,6 +40,7 @@ provider:
             - 'dynamodb:*'
           Resource:
             - Fn::GetAtt: [usersTable, Arn]
+            - Fn::GetAtt: [orgsTable, Arn]
 
   environment:
     STAGE: ${sls:stage}
@@ -99,6 +100,16 @@ functions:
           path: /organization/{orgId}
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
+  getOrgById:
+    name: getOrgById-${sls:stage}
+    handler: src/endpoints/api-get-org-by-id.handler
+    events:
+      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+      - httpApi:
+          method: GET
+          path: /org/{orgId}
+          authorizer:
+            name: cognitoJwtAuthorizer-${sls:stage}
   postConfirmationCreateUserWallet:
     name: postConfirmationCreateUserWallet-${sls:stage}
     handler: src/cognitoTriggers/post-confirmation-create-user-wallet.handler
@@ -136,6 +147,19 @@ resources:
         # https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_StreamSpecification.html
         StreamSpecification:
           StreamViewType: NEW_IMAGE
+    orgsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: orgsTable-${sls:stage}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        SSESpecification:
+          SSEEnabled: true
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpool.html
     cognitoCommunionUsersDemo:
       Type: AWS::Cognito::UserPool

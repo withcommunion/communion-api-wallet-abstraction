@@ -1,0 +1,65 @@
+{
+  "headers": {
+    "accept": "*/*",
+    "accept-encoding": "gzip, deflate, br",
+    "authorization": "Bearer ey",
+    "content-length": "0",
+    "host": "p0rddetfk8.execute-api.us-east-1.amazonaws.com",
+    "postman-token": "bc915041-5a6c-46ba-91bb-198abca8940b",
+    "user-agent": "PostmanRuntime/7.26.8",
+    "x-amzn-trace-id": "Root=1-62b3cee4-022a11c4700cca9572af32cd",
+    "x-forwarded-for": "187.171.26.64",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "isBase64Encoded": false,
+  "pathParameters": {
+    "orgId": "jacks-pizza-1"
+  },
+  "rawPath": "/org/jacks-pizza-1",
+  "rawQueryString": "",
+  "requestContext": {
+    "accountId": "143056416942",
+    "apiId": "p0rddetfk8",
+    "authorizer": {
+      "jwt": {
+        "claims": {
+          "aud": "4eerlu1taf72c8r20pv2tmmvmt",
+          "auth_time": "1655231244",
+          "cognito:username": "c7530d06-208a-45fe-a83d-147b146cb257",
+          "custom:organization": "org-jacks-pizza-1",
+          "custom:role": "worker",
+          "email": "mfalicea58+8@gmail.com",
+          "email_verified": "true",
+          "event_id": "2ca1abf8-d8f9-4ea6-84ea-a7372bc1fe3e",
+          "exp": "1655954448",
+          "family_name": "Euler",
+          "given_name": "George",
+          "iat": "1655950848",
+          "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_EXRZZF0cp",
+          "jti": "e14f5743-0fda-4c7d-a9d7-02d6d9676906",
+          "origin_jti": "17de6adc-7b16-4019-924d-0299ac94ab99",
+          "sub": "c7530d06-208a-45fe-a83d-147b146cb257",
+          "token_use": "id"
+        },
+        "scopes": null
+      }
+    },
+    "domainName": "p0rddetfk8.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "p0rddetfk8",
+    "http": {
+      "method": "GET",
+      "path": "/org/jacks-pizza-1",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "187.171.26.64",
+      "userAgent": "PostmanRuntime/7.26.8"
+    },
+    "requestId": "UJ1Dyi-3oAMEM6Q=",
+    "routeKey": "GET /org/{orgId}",
+    "stage": "$default",
+    "time": "23/Jun/2022:02:24:36 +0000",
+    "timeEpoch": 1655951076898
+  },
+  "routeKey": "GET /org/{orgId}",
+  "version": "2.0"
+}
