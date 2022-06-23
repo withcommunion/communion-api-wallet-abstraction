@@ -110,30 +110,18 @@ export async function batchGetUsersById(
 ): Promise<User[]> {
   const batchItemsToGet = new BatchGetCommand({
     RequestItems: {
-      [orgsTable]: {
-        Keys: userIds.map((userId) => ({ id: { N: userId } })),
-        ProjectionExpression: 'ATTRIBUTE_NAME',
+      [usersTable]: {
+        Keys: userIds.map((userId) => ({ id: userId })),
       },
     },
   });
 
-  let res;
-  try {
-    res = await ddbClient.send(batchItemsToGet);
-    console.log(res);
-  } catch (error) {
-    console.error('Failed to dynamo-util.getUserById', error);
-    throw error;
+  const res = await ddbClient.send(batchItemsToGet);
+  if (res.Responses && res.Responses[usersTable]) {
+    return res.Responses[usersTable] as User[];
+  } else {
+    return [];
   }
-
-  if (!res || !res.Responses) {
-    throw new Error(`Users not found! [userIds:${userIds.toString()}]`);
-  }
-
-  const users = res.Responses;
-  console.log(users);
-  // @ts-expect-error Just for now
-  return users;
 }
 
 export async function getUsersInOrganization(
@@ -191,7 +179,7 @@ export type OrgWithPublicData = Omit<OrgWithPrivateData, 'seeder'>;
 export async function getOrgById(
   orgId: string,
   ddbClient: DynamoDBDocumentClient
-): Promise<OrgWithPrivateData> {
+): Promise<OrgWithPrivateData | null> {
   const itemToGet = new GetCommand({
     TableName: orgsTable,
     Key: {
@@ -199,16 +187,10 @@ export async function getOrgById(
     },
   });
 
-  let res;
-  try {
-    res = await ddbClient.send(itemToGet);
-  } catch (error) {
-    console.error('Failed to dynamo-util.getOrgById', error);
-    throw error;
-  }
+  const res = await ddbClient.send(itemToGet);
 
   if (!res || !res.Item) {
-    throw new Error(`Org not found! [orgId:${orgId}]`);
+    return null;
   }
 
   const org = res.Item as OrgWithPrivateData;
