@@ -51,6 +51,12 @@ export const handler = async (
       });
     }
 
+    if (!org.member_ids.includes(requestUserId)) {
+      return generateReturn(403, {
+        message: `${requestUserId} is not a member of ${orgId}`,
+      });
+    }
+
     const orgWithPublicData: OrgWithPublicData = {
       id: org.id,
       actions: org.actions,

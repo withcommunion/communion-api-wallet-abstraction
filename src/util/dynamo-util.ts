@@ -172,6 +172,7 @@ export interface OrgWithPrivateData {
     address: string;
     privateKeyWithLeadingHex: string;
   };
+  members?: UserWithPublicData[];
 }
 
 export type OrgWithPublicData = Omit<OrgWithPrivateData, 'seeder'>;
