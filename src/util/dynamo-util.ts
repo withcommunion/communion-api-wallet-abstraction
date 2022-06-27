@@ -5,6 +5,8 @@ import {
   DynamoDBDocumentClient,
   PutCommand,
   PutCommandOutput,
+  UpdateCommand,
+  UpdateCommandOutput,
   GetCommand,
   ScanCommand,
   BatchGetCommand,
@@ -40,6 +42,7 @@ export interface User {
   first_name: string;
   last_name: string;
   organization: string;
+  organizations: { orgId: string; role: string }[];
   role: 'worker' | 'manager' | 'owner' | 'seeder' | string;
   walletPrivateKeyWithLeadingHex?: string;
   walletAddressC: string;
@@ -196,4 +199,28 @@ export async function getOrgById(
 
   const org = res.Item as OrgWithPrivateData;
   return org;
+}
+
+export async function addUserToOrg(
+  userId: string,
+  orgId: string,
+  ddbClient: DynamoDBDocumentClient
+): Promise<UpdateCommandOutput> {
+  const params = new UpdateCommand({
+    TableName: orgsTable,
+    Key: {
+      id: orgId,
+    },
+    ReturnValues: 'ALL_NEW',
+    UpdateExpression: 'SET member_ids = list_append(member_ids, :userId)',
+    ConditionExpression: 'NOT contains (member_ids, :userIdStr)',
+    ExpressionAttributeValues: {
+      ':userId': [userId],
+      ':userIdStr': userId,
+    },
+  });
+
+  const resp = await ddbClient.send(params);
+
+  return resp;
 }

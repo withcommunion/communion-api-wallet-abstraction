@@ -3,7 +3,12 @@ jest.mock('../util/dynamo-util.ts');
 jest.mock('../util/avax-chain-util.ts');
 
 import type { PostConfirmationTriggerEvent } from 'aws-lambda';
-import { insertUser, getUserById } from '../util/dynamo-util';
+import {
+  insertUser,
+  getUserById,
+  getOrgById,
+  addUserToOrg,
+} from '../util/dynamo-util';
 import { sendAvax } from '../util/avax-chain-util';
 import * as avaxWalletUtil from '../util/avax-wallet-util';
 
@@ -14,6 +19,7 @@ import {
 } from './post-confirmation-create-user-wallet';
 import { MOCK_USER_SELF } from '../util/__mocks__/dynamo-util';
 
+const MOCK_ORG_NAME = 'test-org';
 const MOCK_EVENT: PostConfirmationTriggerEvent = {
   version: '1',
   region: 'us-east-1',
@@ -30,7 +36,7 @@ const MOCK_EVENT: PostConfirmationTriggerEvent = {
       email_verified: 'true',
       'cognito:user_status': 'CONFIRMED',
       'cognito:email_alias': 'someUser@gmail.com',
-      'custom:organization': 'test-org',
+      'custom:organization': MOCK_ORG_NAME,
       'custom:role': 'worker',
       given_name: 'Mike',
       family_name: 'A',
@@ -62,6 +68,16 @@ describe('postConfirmationCreateUserWallet', () => {
         throw new Error('User not found');
       });
     });
+
+    describe('Fetching the organization', () => {
+      it('Should call getOrgById with the id passed in from the event', async () => {
+        await handler(MOCK_EVENT);
+        expect(getOrgById).toHaveBeenCalledWith(
+          MOCK_EVENT.request.userAttributes['custom:organization'],
+          expect.any(Object)
+        );
+      });
+    });
     it('Should call getUserById with the user from the event', async () => {
       await handler(MOCK_EVENT);
 
@@ -81,6 +97,19 @@ describe('postConfirmationCreateUserWallet', () => {
         });
       });
     });
+
+    describe('Adding the user to the organization', () => {
+      it('Should call addUserToOrg with the user and org', async () => {
+        await handler(MOCK_EVENT);
+
+        expect(addUserToOrg).toHaveBeenCalledWith(
+          MOCK_EVENT.request.userAttributes.sub,
+          MOCK_ORG_NAME,
+          expect.any(Object)
+        );
+      });
+    });
+
     describe('Avax wallet creation', () => {
       it('Should call generatePrivateEvmKeySpy', async () => {
         await handler(MOCK_EVENT);
@@ -95,8 +124,13 @@ describe('postConfirmationCreateUserWallet', () => {
     describe('Inserting user into the database', () => {
       it('should call inserUser with user parsed from event', async () => {
         await handler(MOCK_EVENT);
-        const expectedOrganization =
+
+        const expectedOrgId =
           MOCK_EVENT.request.userAttributes['custom:organization'];
+        const expectedOrg = {
+          orgId: expectedOrgId,
+          role: 'worker',
+        };
 
         expect(insertUser).toHaveBeenCalledTimes(1);
         expect(insertUser).toHaveBeenCalledWith(
@@ -106,7 +140,8 @@ describe('postConfirmationCreateUserWallet', () => {
             email: 'someUser@gmail.com',
             first_name: 'Mike',
             last_name: 'A',
-            organization: expectedOrganization,
+            organization: expectedOrgId,
+            organizations: [expectedOrg],
             role: 'worker',
             walletAddressC: expect.any(String),
             walletAddressP: expect.any(String),
@@ -155,6 +190,24 @@ describe('postConfirmationCreateUserWallet', () => {
         expect(generatePrivateEvmKeySpy).toHaveBeenCalledTimes(0);
         expect(createSingletonWalletSpy).toHaveBeenCalledTimes(0);
         expect(insertUser).toHaveBeenCalledTimes(0);
+      });
+    });
+
+    describe('If there was no organization passed in', () => {
+      it('Should throw an error', async () => {
+        const event = {
+          ...MOCK_EVENT,
+          request: {
+            ...MOCK_EVENT.request,
+            userAttributes: {
+              ...MOCK_EVENT.request.userAttributes,
+              'custom:organization': '',
+            },
+          },
+        };
+        await expect(handler(event)).rejects.toThrow(
+          'Payload has no organization'
+        );
       });
     });
   });

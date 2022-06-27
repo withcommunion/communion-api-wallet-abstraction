@@ -41,9 +41,6 @@ const loggerTransports =
         }),
       ];
 
-console.log('-------------');
-console.log(process.env.LOG_LEVEL);
-console.log('-------------');
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: format.json(),
