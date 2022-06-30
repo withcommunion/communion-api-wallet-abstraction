@@ -34,6 +34,9 @@ export const handler = async (
 
     logger.info('Fetching user', { values: { userId: userId } });
     const user = await getUserById(userId, dynamoClient);
+    if (!user) {
+      throw new Error('User not found, something bigger is wrong');
+    }
     logger.verbose('Received user', { values: user });
 
     const usersAddressC = user.walletAddressC;

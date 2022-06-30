@@ -69,6 +69,9 @@ export const handler = async (
 
     logger.info('Fetching user', { values: { userId } });
     const user = (await getUserById(userId, dynamoClient)) as Self;
+    if (!user) {
+      throw new Error('User not found, something bigger is wrong');
+    }
     logger.verbose('Received user', { values: { user } });
 
     // TODO - No need to fetch wallet, I just need the users address

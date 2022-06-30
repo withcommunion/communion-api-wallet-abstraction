@@ -34,6 +34,10 @@ export const handler = async (
 
   const requestUser = await getUserById(requestUserId, dynamoClient);
 
+  if (!requestUser) {
+    throw new Error('User not found, something bigger is wrong');
+  }
+
   const requestUsersOrganization = requestUser.organization;
   const requestedOrganization = event.pathParameters?.orgId;
 

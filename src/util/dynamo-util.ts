@@ -61,20 +61,15 @@ export async function insertUser(
   user: User,
   ddbClient: DynamoDBDocumentClient
 ): Promise<PutCommandOutput> {
-  try {
-    const itemToInsert = new PutCommand({
-      TableName: usersTable,
-      Item: {
-        ...user,
-      },
-    });
-    const res = await ddbClient.send(itemToInsert);
+  const itemToInsert = new PutCommand({
+    TableName: usersTable,
+    Item: {
+      ...user,
+    },
+  });
+  const res = await ddbClient.send(itemToInsert);
 
-    return res;
-  } catch (error) {
-    console.error('Error in dynamo-util.insertUser', error);
-    throw error;
-  }
+  return res;
 }
 
 export async function getUserById(
@@ -88,18 +83,7 @@ export async function getUserById(
     },
   });
 
-  let res;
-  try {
-    res = await ddbClient.send(itemToGet);
-  } catch (error) {
-    console.error('Failed to dynamo-util.getUserById', error);
-    throw error;
-  }
-
-  if (!res || !res.Item) {
-    throw new Error(`User not found! [userId:${userId}]`);
-  }
-
+  const res = await ddbClient.send(itemToGet);
   const user = res.Item as User;
   return user;
 }

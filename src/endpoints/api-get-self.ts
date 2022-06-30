@@ -27,6 +27,9 @@ export const handler = async (
 
     logger.verbose('Fetching user', { values: { userId: userId } });
     const user = (await getUserById(userId, dynamoClient)) as Self;
+    if (!user) {
+      throw new Error('User not found, something bigger is wrong');
+    }
     logger.verbose('Received user', { values: user });
 
     const returnValue = generateReturn(200, {

@@ -30,6 +30,10 @@ export async function getSeedAccountPrivateKey(): Promise<string> {
   const seedAccount = await getUserById(SEED_ACCOUNT_ID, dynamoClient);
   const seedPrivateKey = seedAccount.walletPrivateKeyWithLeadingHex;
 
+  if (!seedAccount) {
+    throw new Error('Seed account not found - that is really weird');
+  }
+
   if (!seedPrivateKey) {
     throw new Error('Seed account has no private key');
   }
