@@ -67,12 +67,12 @@ export const handler = async (
       values: { authorizer: event.requestContext.authorizer },
     });
 
-    logger.info('Fetching user', { values: { userId } });
+    logger.verbose('Fetching user', { values: { userId } });
     const user = (await getUserById(userId, dynamoClient)) as Self;
     if (!user) {
       throw new Error('User not found, something bigger is wrong');
     }
-    logger.verbose('Received user', { values: { user } });
+    logger.info('Received user', { values: { user } });
 
     // TODO - No need to fetch wallet, I just need the users address
     const userWallet = getEthersWallet(user.walletPrivateKeyWithLeadingHex);
@@ -99,12 +99,12 @@ export const handler = async (
       values: { user, usersBalance },
     });
 
-    logger.info('Fetching seed wallet');
+    logger.verbose('Fetching seed wallet');
     const seedWalletPrivateKey = await getSeedAccountPrivateKey();
     const seedWallet = new ethers.Wallet(seedWalletPrivateKey, HTTPSProvider);
-    logger.verbose('Received seed wallet');
+    logger.info('Received seed wallet');
 
-    logger.info('Seeding user', { values: { user } });
+    logger.verbose('Seeding user', { values: { user } });
     const transaction = await sendAvax(
       seedWallet,
       BASE_AMOUNT_TO_SEED_USER,

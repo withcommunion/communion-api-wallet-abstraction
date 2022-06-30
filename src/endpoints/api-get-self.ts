@@ -30,7 +30,7 @@ export const handler = async (
     if (!user) {
       throw new Error('User not found, something bigger is wrong');
     }
-    logger.verbose('Received user', { values: user });
+    logger.info('Received user', { values: user });
 
     const returnValue = generateReturn(200, {
       ...user,

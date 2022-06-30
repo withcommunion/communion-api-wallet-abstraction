@@ -32,20 +32,20 @@ export const handler = async (
       values: { authorizer: event.requestContext.authorizer },
     });
 
-    logger.info('Fetching user', { values: { userId: userId } });
+    logger.verbose('Fetching user', { values: { userId: userId } });
     const user = await getUserById(userId, dynamoClient);
     if (!user) {
       throw new Error('User not found, something bigger is wrong');
     }
-    logger.verbose('Received user', { values: user });
+    logger.info('Received user', { values: user });
 
     const usersAddressC = user.walletAddressC;
 
-    logger.info('Fetching user transactions', { values: { usersAddressC } });
+    logger.verbose('Fetching user transactions', { values: { usersAddressC } });
     const rawUserTxs = await getAddressTxHistory(usersAddressC);
-    logger.verbose('Received txns', { values: { rawUserTxs } });
+    logger.info('Received txns', { values: { rawUserTxs } });
 
-    logger.info('Creating txAddress array');
+    logger.verbose('Creating txAddress array');
     const txAddresses = rawUserTxs
       .reduce((acc, curr) => {
         acc.push(curr.from.toLowerCase());
@@ -53,7 +53,7 @@ export const handler = async (
         return acc;
       }, [] as string[])
       .filter((item, _, arr) => arr.includes(item));
-    logger.verbose('Created txAddresses array', { values: { txAddresses } });
+    logger.info('Created txAddresses array', { values: { txAddresses } });
 
     /**
      * TODO - This API endpoint will be /org/id/self/txs
@@ -70,14 +70,14 @@ export const handler = async (
      * I need to reshape the DB to effectively support querying for multiple users by their Address
      * It's becoming clear that DynamoDB may not be the best choice.  A shift to Aurora may need to happen.
      */
-    logger.info('Fetching users in Organization', {
+    logger.verbose('Fetching users in Organization', {
       values: { orgId: user.organization },
     });
     const txCandidates = await getUsersInOrganization(
       user.organization,
       dynamoClient
     );
-    logger.verbose('Received users in org', { values: txCandidates });
+    logger.info('Received users in org', { values: txCandidates });
 
     logger.verbose('Creating user map based on txCandidates');
     const addressCToUserMap = txCandidates.reduce((acc, curr) => {
@@ -86,7 +86,7 @@ export const handler = async (
       }
       return acc;
     }, {} as { [key: string]: User });
-    logger.verbose('Created user map', { values: { addressCToUserMap } });
+    logger.info('Created user map', { values: { addressCToUserMap } });
 
     // TODO - This should be a helper function
     logger.verbose('Matching txns to users');
@@ -105,7 +105,7 @@ export const handler = async (
 
       return { ...tx, fromUser, toUser };
     }, []);
-    logger.verbose('Matched txns to users', { values: { txsWithUserData } });
+    logger.info('Matched txns to users', { values: { txsWithUserData } });
 
     const returnValue = generateReturn(200, { txs: txsWithUserData });
 

@@ -153,12 +153,10 @@ export const handler = async (
       return event;
     }
 
-    logger.info('Seeding users', { values: { newUsersToSeed } });
+    logger.verbose('Seeding users', { values: { newUsersToSeed } });
     logger.verbose('Fetching seed wallet');
-
     const seedWalletPrivateKey = await getSeedAccountPrivateKey();
     const seedWallet = new ethers.Wallet(seedWalletPrivateKey, HTTPSProvider);
-
     logger.verbose('Received seed wallet');
 
     // TODO - Move to helper function
@@ -184,7 +182,7 @@ export const handler = async (
       })
     );
 
-    logger.verbose('Successfully seeded all users', {
+    logger.info('Successfully seeded all users', {
       values: { transactions },
     });
 

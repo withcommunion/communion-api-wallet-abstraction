@@ -42,17 +42,23 @@ export const handler = async (
   }
 
   try {
-    logger.info('Getting org by id', { values: { orgId } });
+    logger.verbose('Getting org by id', { values: { orgId } });
     const org = await getOrgById(orgId, dynamoClient);
-    logger.verbose('Received org', { values: { org } });
+    logger.info('Received org', { values: { org } });
 
     if (!org) {
+      logger.verbose('Returing 404, the org was not found', {
+        values: { orgId },
+      });
       return generateReturn(404, {
         message: `${orgId} organization not found`,
       });
     }
 
     if (!org.member_ids.includes(requestUserId)) {
+      logger.warn('User is not a member of this org, why are they here?', {
+        values: { requestUserId, orgId },
+      });
       return generateReturn(403, {
         message: `${requestUserId} is not a member of ${orgId}`,
       });
@@ -65,15 +71,15 @@ export const handler = async (
       member_ids: org.member_ids,
     };
 
-    logger.info('Fetching all users in org', {
+    logger.verbose('Fetching all users in org', {
       values: { member_ids: orgWithPublicData.member_ids },
     });
     const allUsersInOrgWithPrivateData = await batchGetUsersById(
       orgWithPublicData.member_ids,
       dynamoClient
     );
-    logger.verbose('Received users', {
-      values: { usersInOrg: allUsersInOrgWithPrivateData },
+    logger.verbose('Received users in org', {
+      values: { orgId, usersInOrg: allUsersInOrgWithPrivateData },
     });
 
     // TODO - This can be a util function
@@ -92,7 +98,7 @@ export const handler = async (
         } as UserWithPublicData)
     );
 
-    logger.verbose('Removed Self, Seeder and private data', {
+    logger.info('Removed Self, Seeder and private data', {
       values: { usersInOrgWithPublicData },
     });
 
