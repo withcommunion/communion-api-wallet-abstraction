@@ -120,19 +120,8 @@ export async function getUsersInOrganization(
     },
   };
 
-  let res;
-  try {
-    res = await dynamoClient.send(new ScanCommand(scanParams));
-  } catch (error) {
-    console.error('Failed to dynamo-util.getUsersInOrganization', error);
-    throw error;
-  }
-
-  if (!res || !res.Items) {
-    throw new Error(`No users found in organization! [orgId:${orgId}]`);
-  }
-
-  const users = res.Items as User[];
+  const res = await dynamoClient.send(new ScanCommand(scanParams));
+  const users = (res.Items as User[]) || [];
   return users;
 }
 
