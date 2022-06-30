@@ -95,7 +95,7 @@ describe('getWalletByUserId', () => {
 
     it('Should call getUserById with the requester id', async () => {
       await handler(MOCK_EVENT);
-      expect(getUserById).toHaveBeenCalledWith({}, `${MOCK_USER_SELF.id}`);
+      expect(getUserById).toHaveBeenCalledWith(`${MOCK_USER_SELF.id}`, {});
     });
     it('Should call getOrganization with the organization that was passed in', async () => {
       await handler(MOCK_EVENT);

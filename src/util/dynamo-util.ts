@@ -58,8 +58,8 @@ export interface Self extends User {
 
 // TODO: This will overwrite existing values.  Find proper args to not update existing values.
 export async function insertUser(
-  ddbClient: DynamoDBDocumentClient,
-  user: User
+  user: User,
+  ddbClient: DynamoDBDocumentClient
 ): Promise<PutCommandOutput> {
   try {
     const itemToInsert = new PutCommand({
@@ -78,8 +78,8 @@ export async function insertUser(
 }
 
 export async function getUserById(
-  ddbClient: DynamoDBDocumentClient,
-  userId: string
+  userId: string,
+  ddbClient: DynamoDBDocumentClient
 ): Promise<User> {
   const itemToGet = new GetCommand({
     TableName: usersTable,

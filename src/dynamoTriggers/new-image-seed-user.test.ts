@@ -164,8 +164,8 @@ describe('new-image-seed-user', () => {
       it('Should fetch the seedAccount by calling "getUserById"', async () => {
         await handler(MOCK_EVENT);
         expect(getUserById).toHaveBeenCalledWith(
-          expect.any(Object),
-          SEED_ACCOUNT_ID
+          SEED_ACCOUNT_ID,
+          expect.any(Object)
         );
       }, 10000);
 

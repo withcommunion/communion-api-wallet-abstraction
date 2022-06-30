@@ -33,7 +33,7 @@ export const handler = async (
     });
 
     logger.info('Fetching user', { values: { userId: userId } });
-    const user = await getUserById(dynamoClient, userId);
+    const user = await getUserById(userId, dynamoClient);
     logger.verbose('Received user', { values: user });
 
     const usersAddressC = user.walletAddressC;
@@ -52,6 +52,15 @@ export const handler = async (
       .filter((item, _, arr) => arr.includes(item));
     logger.verbose('Created txAddresses array', { values: { txAddresses } });
 
+    /**
+     * TODO - This API endpoint will be /org/id/self/txs
+     * And then a user can view their history within the context of an org
+     * Or we can create a table that has user wallet addy as the primary key with user id as attribute
+     * Then we can batch fetch
+     * And then batch fetch again
+     * This will support the user viewing their own history across multiple orgs
+     *
+     */
     /**
      * TODO: This won't work when we have multiple organizations.
      * I cannot SCAN for multiple users by their walletAddressC </3
@@ -76,6 +85,7 @@ export const handler = async (
     }, {} as { [key: string]: User });
     logger.verbose('Created user map', { values: { addressCToUserMap } });
 
+    // TODO - This should be a helper function
     logger.verbose('Matching txns to users');
     const txsWithUserData = rawUserTxs.map((tx) => {
       const fromUser = {

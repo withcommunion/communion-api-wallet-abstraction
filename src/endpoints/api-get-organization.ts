@@ -1,3 +1,4 @@
+// TODO - This function is going away and replaced by get-org-by-id
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { generateReturn } from '../util/api-util';
 import {
@@ -31,7 +32,7 @@ export const handler = async (
     values: { authorizer: event.requestContext.authorizer },
   });
 
-  const requestUser = await getUserById(dynamoClient, requestUserId);
+  const requestUser = await getUserById(requestUserId, dynamoClient);
 
   const requestUsersOrganization = requestUser.organization;
   const requestedOrganization = event.pathParameters?.orgId;

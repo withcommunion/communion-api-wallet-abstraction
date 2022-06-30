@@ -14,13 +14,16 @@ const HTTPSProvider = new ethers.providers.JsonRpcProvider(
   avaxTestNetworkNodeUrl
 );
 
+// TODO - This is bad, lets fetch it from the organization
 export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
+// TODO - This value is used in multiple places - let's move to own function
 export const BASE_AMOUNT_TO_SEED_USER = '0.01';
 export const MIN_BALANCE_TO_SEED = '0.005';
 
+// TODO - this can be a util function as it is used in multiple places
 export async function getSeedAccountPrivateKey(): Promise<string> {
   // TODO: We likely want to fetch this from environment or similar
-  const seedAccount = await getUserById(dynamoClient, SEED_ACCOUNT_ID);
+  const seedAccount = await getUserById(SEED_ACCOUNT_ID, dynamoClient);
   const seedPrivateKey = seedAccount.walletPrivateKeyWithLeadingHex;
 
   if (!seedPrivateKey) {
@@ -30,6 +33,7 @@ export async function getSeedAccountPrivateKey(): Promise<string> {
   return seedPrivateKey;
 }
 
+// TODO - this can be a util function as it is used in multiple places
 export async function seedFundsForUser(
   seedWallet: ethers.Wallet,
   userCchainAddressToSeed: string
@@ -47,12 +51,12 @@ export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ) => {
   try {
-    console.log('here?');
     const claims = event.requestContext.authorizer.jwt.claims;
     // For some reason it can go through in two seperate ways
     const userId =
       (claims.username as string) || (claims['cognito:username'] as string);
 
+    // TODO - This can be a util function
     logger.defaultMeta = {
       _requestId: event.requestContext.requestId,
       userId,
@@ -64,9 +68,10 @@ export const handler = async (
     });
 
     logger.info('Fetching user', { values: { userId } });
-    const user = (await getUserById(dynamoClient, userId)) as Self;
+    const user = (await getUserById(userId, dynamoClient)) as Self;
     logger.verbose('Received user', { values: { user } });
 
+    // TODO - No need to fetch wallet, I just need the users address
     const userWallet = getEthersWallet(user.walletPrivateKeyWithLeadingHex);
     const usersBalance = await userWallet.getBalance();
 

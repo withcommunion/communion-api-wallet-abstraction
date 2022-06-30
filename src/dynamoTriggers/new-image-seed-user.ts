@@ -6,7 +6,9 @@ import { initDynamoClient, User, getUserById } from '../util/dynamo-util';
 import { sendAvax } from '../util/avax-chain-util';
 import logger from '../util/winston-logger-util';
 
+// TODO - This is bad, lets fetch it from the organization
 export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
+// TODO - This value is used in multiple places - let's move to own folder
 export const BASE_AMOUNT_TO_SEED_USER = '0.01';
 
 export const avaxTestNetworkNodeUrl =
@@ -19,7 +21,7 @@ const dynamoClient = initDynamoClient();
 
 export async function getSeedAccountPrivateKey(): Promise<string> {
   // TODO: We likely want to fetch this from environment or similar
-  const seedAccount = await getUserById(dynamoClient, SEED_ACCOUNT_ID);
+  const seedAccount = await getUserById(SEED_ACCOUNT_ID, dynamoClient);
   const seedPrivateKey = seedAccount.walletPrivateKeyWithLeadingHex;
 
   if (!seedPrivateKey) {
@@ -29,6 +31,7 @@ export async function getSeedAccountPrivateKey(): Promise<string> {
   return seedPrivateKey;
 }
 
+// TODO - this can be a util function as it is used in multiple places
 export async function seedFundsForUser(
   seedWallet: ethers.Wallet,
   userCchainAddressToSeed: string
@@ -75,6 +78,7 @@ export async function checkIfUserHasFunds(
   logger.verbose(`Returning if user has funds: ${userHasFunds.toString()}`, {
     values: { userHasFunds },
   });
+
   return userHasFunds;
 }
 
@@ -98,10 +102,12 @@ export const handler = async (
     logger.info('Incoming request event:', { values: { event } });
     logger.verbose('Incoming request context:', { values: { context } });
 
+    // TODO - Move to helper function, this is verbose and essential
     const insertedUsers = event.Records.filter(
       (record) => record.eventName === 'INSERT'
     );
 
+    // TODO - Move to helper function, this is verbose and essential
     const insertUserEvents = insertedUsers
       .map((record) => {
         if (!record || !record.dynamodb?.NewImage) {
@@ -112,12 +118,14 @@ export const handler = async (
       })
       .filter((user) => Boolean(user)) as User[];
 
+    // TODO - Move to helper function, this is verbose and essential
     if (insertUserEvents.length === 0) {
       logger.info('No insert events, returning', { values: { event } });
       return event;
     }
 
     // Check if user has funds in their wallet
+    // TODO - Move to helper function
     const newUsersToSeed = (
       await Promise.all(
         insertUserEvents.map(async (user) => {
@@ -149,6 +157,7 @@ export const handler = async (
 
     logger.verbose('Received seed wallet');
 
+    // TODO - Move to helper function
     const transactions = await Promise.all(
       newUsersToSeed.map(async (user) => {
         logger.verbose('Seeding user', { values: { user } });

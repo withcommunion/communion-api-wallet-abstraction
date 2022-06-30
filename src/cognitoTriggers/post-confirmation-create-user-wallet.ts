@@ -18,14 +18,16 @@ import {
 
 import logger from '../util/winston-logger-util';
 
+// TODO - this is bad, lets fetch it from the organization
 export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
+// TODO - This value is used in multiple places - let's move to own folder
 export const BASE_AMOUNT_TO_SEED_USER = '0.01';
 
 const dynamoClient = initDynamoClient();
 
 export async function getSeedAccountPrivateKey(): Promise<string> {
   // TODO: We likely want to fetch this from environment or similar
-  const seedAccount = await getUserById(dynamoClient, SEED_ACCOUNT_ID);
+  const seedAccount = await getUserById(SEED_ACCOUNT_ID, dynamoClient);
   const seedPrivateKey = seedAccount.walletPrivateKeyWithLeadingHex;
 
   if (!seedPrivateKey) {
@@ -35,6 +37,7 @@ export async function getSeedAccountPrivateKey(): Promise<string> {
   return seedPrivateKey;
 }
 
+// TODO - this can be a util function as it is used in multiple places
 export async function seedFundsForUser(userCchainAddressToSeed: string) {
   const seedPrivateKey = await getSeedAccountPrivateKey();
   const seedWallet = new ethers.Wallet(seedPrivateKey);
@@ -60,6 +63,7 @@ export const handler = async (
       ? (context.awsRequestId as string)
       : '';
 
+    // TODO - This can be a util function
     logger.defaultMeta = {
       _requestId: `${requestId?.substring(0, 8)}...${requestId?.substring(
         30
@@ -73,10 +77,10 @@ export const handler = async (
 
     try {
       logger.verbose('Checking if user exists in DB', { values: { userId } });
-      const existingUser = await getUserById(dynamoClient, userId);
+      const existingUser = await getUserById(userId, dynamoClient);
       logger.verbose('User exists in DB', { values: { existingUser } });
 
-      // TODO: Figure out how often this is happening
+      // TODO: Figure out how often this is happening, move to helper function
       if (
         existingUser &&
         existingUser.walletPrivateKeyWithLeadingHex &&
@@ -93,6 +97,7 @@ export const handler = async (
       // Nothing to do here, move on
     }
 
+    // TODO - Move to helper function, it's noisy and should be a single function call
     let usersPrivateKey;
     let usersWallet;
     try {
@@ -118,6 +123,7 @@ export const handler = async (
       throw error;
     }
 
+    // TODO move to helper function
     const user: User = {
       id: userId,
       email: userAttributes.email,
@@ -133,7 +139,7 @@ export const handler = async (
 
     try {
       logger.verbose('Attempting to create user', { values: { user } });
-      const respFromDb = await insertUser(dynamoClient, user);
+      const respFromDb = await insertUser(user, dynamoClient);
       logger.info('Created user', { values: { respFromDb } });
 
       logger.verbose('Attempting to seed user', {
@@ -152,6 +158,7 @@ export const handler = async (
 
     return event;
   } catch (error) {
+    // TODO - We likely want to just move on.  When this errors the user is already confirmed - our dynamo trigger will catch it
     logger.error(
       'Error in cognito-triggers/post-confirmation-create-user-wallet.ts',
       { values: { error } }

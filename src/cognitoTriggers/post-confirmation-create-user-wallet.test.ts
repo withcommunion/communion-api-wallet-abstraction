@@ -66,8 +66,8 @@ describe('postConfirmationCreateUserWallet', () => {
       await handler(MOCK_EVENT);
 
       expect(getUserById).toHaveBeenCalledWith(
-        expect.any(Object),
-        MOCK_EVENT.request.userAttributes.sub
+        MOCK_EVENT.request.userAttributes.sub,
+        expect.any(Object)
       );
     });
     describe('Seeing if the user already exists', () => {
@@ -100,7 +100,6 @@ describe('postConfirmationCreateUserWallet', () => {
 
         expect(insertUser).toHaveBeenCalledTimes(1);
         expect(insertUser).toHaveBeenCalledWith(
-          {},
           {
             id: '21f56d21-45ff-40a9-9041-1f3d3b864df5',
             email: 'someUser@gmail.com',
@@ -112,7 +111,8 @@ describe('postConfirmationCreateUserWallet', () => {
             walletAddressP: expect.any(String),
             walletAddressX: expect.any(String),
             walletPrivateKeyWithLeadingHex: expect.any(String),
-          }
+          },
+          {}
         );
       });
     });
@@ -124,8 +124,8 @@ describe('postConfirmationCreateUserWallet', () => {
         // Once for the user lookup and another to get the seed account
         expect(getUserById).toHaveBeenCalledTimes(2);
         expect(getUserById).toHaveBeenCalledWith(
-          expect.any(Object),
-          SEED_ACCOUNT_ID
+          SEED_ACCOUNT_ID,
+          expect.any(Object)
         );
       });
 

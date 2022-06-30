@@ -14,6 +14,7 @@ export const handler = async (
     const userId =
       (claims.username as string) || (claims['cognito:username'] as string);
 
+    // TODO - This can be a util function
     logger.defaultMeta = {
       _requestId: event.requestContext.requestId,
       userId,
@@ -25,7 +26,7 @@ export const handler = async (
     });
 
     logger.verbose('Fetching user', { values: { userId: userId } });
-    const user = (await getUserById(dynamoClient, userId)) as Self;
+    const user = (await getUserById(userId, dynamoClient)) as Self;
     logger.verbose('Received user', { values: user });
 
     const returnValue = generateReturn(200, {

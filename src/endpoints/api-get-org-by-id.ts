@@ -20,6 +20,7 @@ export const handler = async (
   const requestUserId =
     (claims.username as string) || (claims['cognito:username'] as string);
 
+  // TODO - This can be a util function
   logger.defaultMeta = {
     _requestId: event.requestContext.requestId,
     userId: requestUserId,
@@ -71,16 +72,17 @@ export const handler = async (
       orgWithPublicData.member_ids,
       dynamoClient
     );
-
     logger.verbose('Received users', {
       values: { usersInOrg: allUsersInOrgWithPrivateData },
     });
 
+    // TODO - This can be a util function
     const filteredUsersInOrgWithPrivateData =
       allUsersInOrgWithPrivateData.filter(
         (user) => user.id !== requestUserId && user.role !== 'seeder'
       );
 
+    // TODO - This can be a util function
     const usersInOrgWithPublicData = filteredUsersInOrgWithPrivateData.map(
       (user) =>
         ({
