@@ -76,7 +76,7 @@ export const handler = async (
     logger.verbose('Fetching user', { values: { userId: userId } });
     const user = await getUserById(userId, dynamoClient);
     if (!user) {
-      return generateReturn(400, { message: 'User not found' });
+      return generateReturn(404, { message: 'User not found' });
     }
     logger.info('Received user', { values: user });
 
