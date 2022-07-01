@@ -1,4 +1,4 @@
-import type { DynamoDBStreamEvent, Context } from 'aws-lambda';
+import type { DynamoDBStreamEvent, Context, DynamoDBRecord } from 'aws-lambda';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { ethers } from 'ethers';
 
@@ -63,6 +63,73 @@ function setDefaultLoggerMeta(context?: Context) {
   };
 }
 
+function getInsertedUsersFromEventHelper(records: DynamoDBRecord[]) {
+  const insertEvents = records.filter(
+    (record) => record.eventName === 'INSERT'
+  );
+
+  const insertedUsers = insertEvents
+    .map((record) => {
+      if (!record || !record.dynamodb?.NewImage) {
+        return undefined;
+      }
+      // @ts-expect-error NewImage may have undefined, unmarshall doesn't like that.  But it will handle it.
+      return unmarshall(record.dynamodb.NewImage) as User;
+    })
+    .filter((user) => Boolean(user)) as User[];
+
+  return insertedUsers;
+}
+
+async function filterForUsersThatNeedSeeding(usersToSeed: User[]) {
+  const newUsersToSeed = (
+    await Promise.all(
+      usersToSeed.map(async (user) => {
+        const userHasFunds = Boolean(
+          await checkIfUserHasFunds(user.walletAddressC)
+        );
+
+        if (userHasFunds) {
+          return undefined;
+        }
+
+        return user;
+      })
+    )
+  ).filter((user) => Boolean(user)) as User[];
+
+  return newUsersToSeed;
+}
+
+async function seedUsersHelper(usersToSeed: User[]) {
+  logger.verbose('Seeding users', { values: { usersToSeed } });
+
+  const transactions = await Promise.all(
+    usersToSeed.map(async (user) => {
+      logger.verbose('Seeding user', { values: { user } });
+
+      const transaction = await seedFundsForUser(
+        user.walletAddressC,
+        dynamoClient,
+        true
+      );
+
+      logger.info('Seeded user', {
+        values: {
+          user,
+          transaction,
+        },
+      });
+
+      return { user, transaction };
+    })
+  );
+  logger.info('Successfully seeded all users', {
+    values: { transactions },
+  });
+  return transactions;
+}
+
 export const handler = async (
   event: DynamoDBStreamEvent,
   // eslint-disable-next-line
@@ -73,45 +140,16 @@ export const handler = async (
     logger.info('Incoming request event:', { values: { event } });
     logger.verbose('Incoming request context:', { values: { context } });
 
-    // TODO - Move to helper function, this is verbose and essential
-    const insertedUsers = event.Records.filter(
-      (record) => record.eventName === 'INSERT'
-    );
+    const newlyInsertedUsers = getInsertedUsersFromEventHelper(event.Records);
 
-    // TODO - Move to helper function, this is verbose and essential
-    const insertUserEvents = insertedUsers
-      .map((record) => {
-        if (!record || !record.dynamodb?.NewImage) {
-          return undefined;
-        }
-        // @ts-expect-error NewImage may have undefined, unmarshall doesn't like that.  But it will handle it.
-        return unmarshall(record.dynamodb.NewImage) as User;
-      })
-      .filter((user) => Boolean(user)) as User[];
-
-    // TODO - Move to helper function, this is verbose and essential
-    if (insertUserEvents.length === 0) {
+    if (newlyInsertedUsers.length === 0) {
       logger.info('No insert events, returning', { values: { event } });
       return event;
     }
 
-    // Check if user has funds in their wallet
-    // TODO - Move to helper function
-    const newUsersToSeed = (
-      await Promise.all(
-        insertUserEvents.map(async (user) => {
-          const userHasFunds = Boolean(
-            await checkIfUserHasFunds(user.walletAddressC)
-          );
-
-          if (userHasFunds) {
-            return undefined;
-          }
-
-          return user;
-        })
-      )
-    ).filter((user) => Boolean(user)) as User[];
+    const newUsersToSeed = await filterForUsersThatNeedSeeding(
+      newlyInsertedUsers
+    );
 
     if (newUsersToSeed.length === 0) {
       logger.info('No users to seed, returning', {
@@ -120,33 +158,7 @@ export const handler = async (
       return event;
     }
 
-    logger.verbose('Seeding users', { values: { newUsersToSeed } });
-
-    // TODO - Move to helper function
-    const transactions = await Promise.all(
-      newUsersToSeed.map(async (user) => {
-        logger.verbose('Seeding user', { values: { user } });
-
-        const transaction = await seedFundsForUser(
-          user.walletAddressC,
-          dynamoClient,
-          true
-        );
-
-        logger.info('Seeded user', {
-          values: {
-            user,
-            transaction,
-          },
-        });
-
-        return { user, transaction };
-      })
-    );
-
-    logger.info('Successfully seeded all users', {
-      values: { transactions },
-    });
+    await seedUsersHelper(newUsersToSeed);
 
     return event;
   } catch (error) {
