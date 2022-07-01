@@ -2,13 +2,14 @@ import type {
   PostConfirmationTriggerEvent,
   AuthResponseContext,
 } from 'aws-lambda';
-import { ethers } from 'ethers';
 
 import {
   generatePrivateEvmKey,
   createSingletonWallet,
 } from '../util/avax-wallet-util';
-import { sendAvax } from '../util/avax-chain-util';
+
+import { seedFundsForUser } from '../util/seed-util';
+
 import {
   initDynamoClient,
   insertUser,
@@ -18,42 +19,7 @@ import {
 
 import logger from '../util/winston-logger-util';
 
-// TODO - this is bad, lets fetch it from the organization
-export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
-// TODO - This value is used in multiple places - let's move to own folder
-export const BASE_AMOUNT_TO_SEED_USER = '0.01';
-
 const dynamoClient = initDynamoClient();
-
-export async function getSeedAccountPrivateKey(): Promise<string> {
-  // TODO: We likely want to fetch this from environment or similar
-  const seedAccount = await getUserById(SEED_ACCOUNT_ID, dynamoClient);
-  const seedPrivateKey = seedAccount.walletPrivateKeyWithLeadingHex;
-
-  if (!seedAccount) {
-    throw new Error('Seed account not found - that is really weird');
-  }
-
-  if (!seedPrivateKey) {
-    throw new Error('Seed account has no private key');
-  }
-
-  return seedPrivateKey;
-}
-
-// TODO - this can be a util function as it is used in multiple places
-export async function seedFundsForUser(userCchainAddressToSeed: string) {
-  const seedPrivateKey = await getSeedAccountPrivateKey();
-  const seedWallet = new ethers.Wallet(seedPrivateKey);
-
-  const res = await sendAvax(
-    seedWallet,
-    BASE_AMOUNT_TO_SEED_USER,
-    userCchainAddressToSeed
-  );
-
-  return res;
-}
 
 export const handler = async (
   event: PostConfirmationTriggerEvent,
@@ -149,7 +115,10 @@ export const handler = async (
       logger.verbose('Attempting to seed user', {
         userAddress: user.walletAddressC,
       });
-      const sendAvax = await seedFundsForUser(user.walletAddressC);
+      const sendAvax = await seedFundsForUser(
+        user.walletAddressC,
+        dynamoClient
+      );
       logger.info('Seeded user', { values: { sendAvax } });
     } catch (error) {
       /* Throw error.  We want to stop the lambda and prevent the user from verifying.
