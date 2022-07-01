@@ -8,18 +8,61 @@ import {
   initDynamoClient,
   getUsersInOrganization,
 } from '../util/dynamo-util';
-import { getAddressTxHistory } from '../util/avax-chain-util';
+import { getAddressTxHistory, HistoricalTxn } from '../util/avax-chain-util';
 import logger, {
   setDefaultLoggerMetaForApi,
 } from '../util/winston-logger-util';
 
 const dynamoClient = initDynamoClient();
 
+function createUserTxnHistoryHelper(
+  rawUserTxs: HistoricalTxn[],
+  txCandidates: User[]
+) {
+  logger.verbose('Creating txAddress array');
+  const txAddresses = rawUserTxs
+    .reduce((acc, curr) => {
+      acc.push(curr.from.toLowerCase());
+      acc.push(curr.to.toLowerCase());
+      return acc;
+    }, [] as string[])
+    .filter((item, _, arr) => arr.includes(item));
+  logger.info('Created txAddresses array', { values: { txAddresses } });
+
+  logger.verbose('Creating user map based on txCandidates');
+  const addressCToUserMap = txCandidates.reduce((acc, curr) => {
+    if (txAddresses.includes(curr.walletAddressC.toLowerCase())) {
+      acc[curr.walletAddressC.toLowerCase()] = curr;
+    }
+    return acc;
+  }, {} as { [key: string]: User });
+  logger.info('Created user map', { values: { addressCToUserMap } });
+
+  logger.verbose('Matching txns to users');
+  const txsWithUserData = rawUserTxs.map((tx) => {
+    const fromUser = {
+      ...addressCToUserMap[tx.from.toLowerCase()],
+      walletPrivateKeyWithLeadingHex: undefined,
+      email: undefined,
+    } as UserWithPublicData;
+
+    const toUser = {
+      ...addressCToUserMap[tx.to.toLowerCase()],
+      walletPrivateKeyWithLeadingHex: undefined,
+      email: undefined,
+    } as UserWithPublicData;
+
+    return { ...tx, fromUser, toUser };
+  }, []);
+  logger.info('Matched txns to users', { values: { txsWithUserData } });
+  return txsWithUserData;
+}
+
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ) => {
-  setDefaultLoggerMetaForApi(event, logger);
   try {
+    setDefaultLoggerMetaForApi(event, logger);
     const claims = event.requestContext.authorizer.jwt.claims;
     // For some reason it can go through in two seperate ways
     const userId =
@@ -33,26 +76,11 @@ export const handler = async (
     logger.verbose('Fetching user', { values: { userId: userId } });
     const user = await getUserById(userId, dynamoClient);
     if (!user) {
-      throw new Error('User not found, something bigger is wrong');
+      return generateReturn(400, { message: 'User not found' });
     }
     logger.info('Received user', { values: user });
 
     const usersAddressC = user.walletAddressC;
-
-    logger.verbose('Fetching user transactions', { values: { usersAddressC } });
-    const rawUserTxs = await getAddressTxHistory(usersAddressC);
-    logger.info('Received txns', { values: { rawUserTxs } });
-
-    logger.verbose('Creating txAddress array');
-    const txAddresses = rawUserTxs
-      .reduce((acc, curr) => {
-        acc.push(curr.from.toLowerCase());
-        acc.push(curr.to.toLowerCase());
-        return acc;
-      }, [] as string[])
-      .filter((item, _, arr) => arr.includes(item));
-    logger.info('Created txAddresses array', { values: { txAddresses } });
-
     /**
      * TODO - This API endpoint will be /org/id/self/txs
      * And then a user can view their history within the context of an org
@@ -77,33 +105,14 @@ export const handler = async (
     );
     logger.info('Received users in org', { values: txCandidates });
 
-    logger.verbose('Creating user map based on txCandidates');
-    const addressCToUserMap = txCandidates.reduce((acc, curr) => {
-      if (txAddresses.includes(curr.walletAddressC.toLowerCase())) {
-        acc[curr.walletAddressC.toLowerCase()] = curr;
-      }
-      return acc;
-    }, {} as { [key: string]: User });
-    logger.info('Created user map', { values: { addressCToUserMap } });
+    logger.verbose('Fetching user transactions', { values: { usersAddressC } });
+    const rawUserTxs = await getAddressTxHistory(usersAddressC);
+    logger.info('Received txns', { values: { rawUserTxs } });
 
-    // TODO - This should be a helper function
-    logger.verbose('Matching txns to users');
-    const txsWithUserData = rawUserTxs.map((tx) => {
-      const fromUser = {
-        ...addressCToUserMap[tx.from.toLowerCase()],
-        walletPrivateKeyWithLeadingHex: undefined,
-        email: undefined,
-      } as UserWithPublicData;
-
-      const toUser = {
-        ...addressCToUserMap[tx.to.toLowerCase()],
-        walletPrivateKeyWithLeadingHex: undefined,
-        email: undefined,
-      } as UserWithPublicData;
-
-      return { ...tx, fromUser, toUser };
-    }, []);
-    logger.info('Matched txns to users', { values: { txsWithUserData } });
+    const txsWithUserData = createUserTxnHistoryHelper(
+      rawUserTxs,
+      txCandidates
+    );
 
     const returnValue = generateReturn(200, { txs: txsWithUserData });
 
