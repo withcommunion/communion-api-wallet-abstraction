@@ -1,17 +1,33 @@
 jest.mock('../util/dynamo-util.ts');
-import { generateApiGatewayEvent } from '../util/jest-mock-util';
-import { handler } from './api-get-org-by-id';
 import {
-  MOCK_ORG,
-  //   MOCK_USER_A,
-  MOCK_USER_SELF,
-} from '../util/__mocks__/dynamo-util';
+  generateApiGatewayEvent,
+  generateMockUser,
+  generateMockOrg,
+} from '../util/jest-mock-util';
+import { handler } from './api-get-org-by-id';
 import * as dynamoUtil from '../util/dynamo-util';
-import { User, getOrgById, batchGetUsersById } from '../util/dynamo-util';
+import { User } from '../util/dynamo-util';
 
-const MOCK_EVENT = generateApiGatewayEvent({ userId: MOCK_USER_SELF.id });
+const MOCK_USER_SELF = generateMockUser({ id: 'self' });
+const MOCK_ORG = generateMockOrg({
+  id: 'someOrg',
+  member_ids: [MOCK_USER_SELF.id],
+});
+const MOCK_EVENT = generateApiGatewayEvent({
+  userId: MOCK_USER_SELF.id,
+  orgId: MOCK_ORG.id,
+});
 
 describe('getOrgById', () => {
+  const getOrgByIdSpy = jest.spyOn(dynamoUtil, 'getOrgById');
+  // @ts-expect-error it's okay
+  getOrgByIdSpy.mockImplementation(() => Promise.resolve(MOCK_ORG));
+
+  const batchGetUsersByIdSpy = jest.spyOn(dynamoUtil, 'batchGetUsersById');
+  batchGetUsersByIdSpy.mockImplementation(() =>
+    Promise.resolve([MOCK_USER_SELF])
+  );
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -30,13 +46,16 @@ describe('getOrgById', () => {
       // @ts-expect-error This is ok
       delete expectedOrg.seeder;
 
-      expect(getOrgById).toHaveBeenCalledWith('jacks-pizza-1', {});
+      expect(getOrgByIdSpy).toHaveBeenCalledWith(
+        MOCK_EVENT.pathParameters?.orgId,
+        {}
+      );
       expect(org).toEqual(expect.objectContaining(MOCK_ORG));
     });
 
     it('Should call getOrgById with the org in the path param', async () => {
       await handler(MOCK_EVENT);
-      expect(getOrgById).toHaveBeenCalledWith(
+      expect(getOrgByIdSpy).toHaveBeenCalledWith(
         MOCK_EVENT.pathParameters?.orgId,
         {}
       );
@@ -44,7 +63,10 @@ describe('getOrgById', () => {
 
     it('Should call batchGetUsersById with all users returned from the org', async () => {
       await handler(MOCK_EVENT);
-      expect(batchGetUsersById).toHaveBeenCalledWith(MOCK_ORG.member_ids, {});
+      expect(batchGetUsersByIdSpy).toHaveBeenCalledWith(
+        MOCK_ORG.member_ids,
+        {}
+      );
     });
 
     it('Should not include the requesting user in the response', async () => {
