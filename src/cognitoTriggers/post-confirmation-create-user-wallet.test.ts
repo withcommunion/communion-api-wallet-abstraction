@@ -8,6 +8,7 @@ import type { PostConfirmationTriggerEvent } from 'aws-lambda';
 import { insertUser, getUserById, addUserToOrg } from '../util/dynamo-util';
 import * as avaxWalletUtil from '../util/avax-wallet-util';
 import * as seedUtil from '../util/seed-util';
+import * as dynamoUtil from '../util/dynamo-util';
 
 import { handler } from './post-confirmation-create-user-wallet';
 import { MOCK_USER_SELF } from '../util/__mocks__/dynamo-util';
@@ -137,6 +138,17 @@ describe('postConfirmationCreateUserWallet', () => {
           expectedOrganization,
           {}
         );
+      });
+
+      describe('If the user is for some reason already in the org', () => {
+        it('Should handle it gracefully', async () => {
+          const addUserToOrgSpy = jest.spyOn(dynamoUtil, 'addUserToOrg');
+          addUserToOrgSpy.mockImplementationOnce(() =>
+            Promise.reject({ name: 'ConditionalCheckFailedException' })
+          );
+          await handler(MOCK_EVENT);
+          expect(addUserToOrg).toHaveBeenCalledTimes(1);
+        });
       });
     });
 

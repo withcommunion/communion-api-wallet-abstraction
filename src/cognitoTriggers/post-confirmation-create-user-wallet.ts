@@ -95,11 +95,23 @@ async function addUserToOrgHelper(user: User) {
       values: { orgId: user.organization, respFromDb },
     });
   } catch (error) {
-    // TODO: Alert - this is bad
-    logger.error('Fatal: Failed to add user to org', {
-      values: { user, orgId: user.organization, error },
-    });
-    throw error;
+    // @ts-expect-error error.name does exist here
+    if (error.name === 'ConditionalCheckFailedException') {
+      logger.warn(
+        `User already exists in org ${user.organization}, this is weird - but it is okay.`,
+        {
+          values: { userId: user.id, orgId: user.organization },
+        }
+      );
+
+      return null;
+    } else {
+      // TODO: Alert - this is bad
+      logger.error('Fatal: Failed to add user to org', {
+        values: { user, orgId: user.organization, error },
+      });
+      throw error;
+    }
   }
 }
 
