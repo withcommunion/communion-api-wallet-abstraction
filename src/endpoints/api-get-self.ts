@@ -12,20 +12,27 @@ export const handler = async (
 ) => {
   try {
     setDefaultLoggerMetaForApi(event, logger);
-    const claims = event.requestContext.authorizer.jwt.claims;
-    // For some reason it can go through in two seperate ways
-    const userId =
-      (claims.username as string) || (claims['cognito:username'] as string);
 
     logger.info('incomingEvent', { values: { event } });
     logger.verbose('incomingEventAuth', {
       values: { authorizer: event.requestContext.authorizer },
     });
 
+    const claims = event.requestContext.authorizer.jwt.claims;
+    // For some reason it can come through in two seperate ways
+    const userId =
+      (claims.username as string) || (claims['cognito:username'] as string);
+
     logger.verbose('Fetching user', { values: { userId: userId } });
     const user = (await getUserById(userId, dynamoClient)) as Self;
     if (!user) {
-      throw new Error('User not found, something bigger is wrong');
+      logger.error(
+        'User not found on getSelf - something is wrong, user is Authd and exists in Cognito but not in our DB',
+        {
+          values: { userId },
+        }
+      );
+      return generateReturn(404, { message: 'User not found' });
     }
     logger.info('Received user', { values: user });
 
