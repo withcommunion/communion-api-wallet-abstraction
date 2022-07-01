@@ -7,47 +7,11 @@ import logger, {
 } from '../util/winston-logger-util';
 import { getUserById, initDynamoClient, Self } from '../util/dynamo-util';
 import { getEthersWallet } from '../util/avax-wallet-util';
-import { sendAvax } from '../util/avax-chain-util';
+import { seedFundsForUser } from '../util/seed-util';
 
 const dynamoClient = initDynamoClient();
-export const avaxTestNetworkNodeUrl =
-  'https://api.avax-test.network/ext/bc/C/rpc';
-const HTTPSProvider = new ethers.providers.JsonRpcProvider(
-  avaxTestNetworkNodeUrl
-);
 
-// TODO - This is bad, lets fetch it from the organization
-export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
-// TODO - This value is used in multiple places - let's move to own function
-export const BASE_AMOUNT_TO_SEED_USER = '0.01';
 export const MIN_BALANCE_TO_SEED = '0.005';
-
-// TODO - this can be a util function as it is used in multiple places
-export async function getSeedAccountPrivateKey(): Promise<string> {
-  // TODO: We likely want to fetch this from environment or similar
-  const seedAccount = await getUserById(SEED_ACCOUNT_ID, dynamoClient);
-  const seedPrivateKey = seedAccount.walletPrivateKeyWithLeadingHex;
-
-  if (!seedPrivateKey) {
-    throw new Error('Seed account has no private key');
-  }
-
-  return seedPrivateKey;
-}
-
-// TODO - this can be a util function as it is used in multiple places
-export async function seedFundsForUser(
-  seedWallet: ethers.Wallet,
-  userCchainAddressToSeed: string
-) {
-  const res = await sendAvax(
-    seedWallet,
-    BASE_AMOUNT_TO_SEED_USER,
-    userCchainAddressToSeed
-  );
-
-  return res;
-}
 
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
@@ -96,18 +60,13 @@ export const handler = async (
       values: { user, usersBalance },
     });
 
-    logger.verbose('Fetching seed wallet');
-    const seedWalletPrivateKey = await getSeedAccountPrivateKey();
-    const seedWallet = new ethers.Wallet(seedWalletPrivateKey, HTTPSProvider);
-    logger.info('Received seed wallet');
-
     logger.verbose('Seeding user', { values: { user } });
-    const transaction = await sendAvax(
-      seedWallet,
-      BASE_AMOUNT_TO_SEED_USER,
+    const transaction = seedFundsForUser(
       user.walletAddressC,
+      dynamoClient,
       true
     );
+
     logger.info('Seeded user', {
       values: {
         user,
