@@ -6,7 +6,7 @@ import logger, {
   setDefaultLoggerMetaForApi,
 } from '../util/winston-logger-util';
 import { getUserById, initDynamoClient, Self } from '../util/dynamo-util';
-import { getEthersWallet } from '../util/avax-wallet-util';
+import { ethersAvaxProvider } from '../util/avax-wallet-util';
 import { seedFundsForUser } from '../util/seed-util';
 
 const dynamoClient = initDynamoClient();
@@ -18,26 +18,32 @@ export const handler = async (
 ) => {
   try {
     setDefaultLoggerMetaForApi(event, logger);
-    const claims = event.requestContext.authorizer.jwt.claims;
-    // For some reason it can go through in two seperate ways
-    const userId =
-      (claims.username as string) || (claims['cognito:username'] as string);
-
     logger.info('incomingEvent', { values: { event } });
     logger.verbose('incomingEventAuth', {
       values: { authorizer: event.requestContext.authorizer },
     });
 
+    const claims = event.requestContext.authorizer.jwt.claims;
+    // For some reason it can go through in two seperate ways
+    const userId =
+      (claims.username as string) || (claims['cognito:username'] as string);
+
     logger.verbose('Fetching user', { values: { userId } });
     const user = (await getUserById(userId, dynamoClient)) as Self;
     if (!user) {
-      throw new Error('User not found, something bigger is wrong');
+      logger.error(
+        'User not found on getSelf - something is wrong, user is Authd and exists in Cognito but not in our DB',
+        {
+          values: { userId },
+        }
+      );
+      return generateReturn(404, { message: 'User not found' });
     }
     logger.info('Received user', { values: { user } });
 
-    // TODO - No need to fetch wallet, I just need the users address
-    const userWallet = getEthersWallet(user.walletPrivateKeyWithLeadingHex);
-    const usersBalance = await userWallet.getBalance();
+    const usersBalance = await ethersAvaxProvider.getBalance(
+      user.walletAddressC
+    );
 
     if (usersBalance.gt(ethers.utils.parseEther(MIN_BALANCE_TO_SEED))) {
       const message =
