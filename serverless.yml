@@ -111,7 +111,7 @@ functions:
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
   postJoinOrgById:
-    name: postJoinOrgById=${sls:stage}
+    name: postJoinOrgById-${sls:stage}
     handler: src/endpoints/api-post-join-org-by-id.handler
     events:
       # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
