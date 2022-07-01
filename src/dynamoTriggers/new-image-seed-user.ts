@@ -18,6 +18,36 @@ function waitXMilliseconds(milliseconds: number) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+function setDefaultLoggerMeta(context?: Context) {
+  const requestId =
+    context &&
+    `${context.awsRequestId?.substring(0, 3)}-${context.awsRequestId?.substring(
+      32
+    )}}}`;
+
+  logger.defaultMeta = {
+    _requestId: requestId,
+  };
+}
+
+function getInsertedUsersFromEventHelper(records: DynamoDBRecord[]) {
+  const insertEvents = records.filter(
+    (record) => record.eventName === 'INSERT'
+  );
+
+  const insertedUsers = insertEvents
+    .map((record) => {
+      if (!record || !record.dynamodb?.NewImage) {
+        return undefined;
+      }
+      // @ts-expect-error NewImage may have undefined, unmarshall doesn't like that.  But it will handle it.
+      return unmarshall(record.dynamodb.NewImage) as User;
+    })
+    .filter((user) => Boolean(user)) as User[];
+
+  return insertedUsers;
+}
+
 export async function checkIfUserHasFunds(
   usersCChainAddress: string
 ): Promise<boolean> {
@@ -49,36 +79,6 @@ export async function checkIfUserHasFunds(
   });
 
   return userHasFunds;
-}
-
-function setDefaultLoggerMeta(context?: Context) {
-  const requestId =
-    context &&
-    `${context.awsRequestId?.substring(0, 3)}-${context.awsRequestId?.substring(
-      32
-    )}}}`;
-
-  logger.defaultMeta = {
-    _requestId: requestId,
-  };
-}
-
-function getInsertedUsersFromEventHelper(records: DynamoDBRecord[]) {
-  const insertEvents = records.filter(
-    (record) => record.eventName === 'INSERT'
-  );
-
-  const insertedUsers = insertEvents
-    .map((record) => {
-      if (!record || !record.dynamodb?.NewImage) {
-        return undefined;
-      }
-      // @ts-expect-error NewImage may have undefined, unmarshall doesn't like that.  But it will handle it.
-      return unmarshall(record.dynamodb.NewImage) as User;
-    })
-    .filter((user) => Boolean(user)) as User[];
-
-  return insertedUsers;
 }
 
 async function filterForUsersThatNeedSeeding(usersToSeed: User[]) {
