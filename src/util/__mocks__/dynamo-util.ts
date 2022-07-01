@@ -87,3 +87,33 @@ export const batchGetUsersById = jest.fn(async () => [
 ]);
 
 export const getOrgById = jest.fn(async () => MOCK_ORG);
+
+const mockUpdateResp = {
+  $metadata: {
+    httpStatusCode: 200,
+    requestId: 'ROQNH6OCGHFP5HN1QBV29HTPDNVV4KQNSO5AEMVJF66Q9ASUAAJG',
+    attempts: 1,
+    totalRetryDelay: 0,
+  },
+  Attributes: {
+    roles: ['worker', 'manager', 'owner', 'seeder'],
+    id: 'test-org',
+    actions: [
+      {
+        name: 'Kindness',
+        allowed_roles: ['worker', 'manager', 'owner'],
+        amount: '0.05',
+      },
+    ],
+    member_ids: [
+      '6281d918-df36-48bf-b8a4-3ee1f2b8305e',
+      'f3c9e512-b5fe-4b68-a664-15fc23ca49d5',
+      'local-invoke-45ff-40a9-9041-1f3d3b864df5',
+    ],
+    seeder: {
+      walletAddressC: '0xfE96DAa883AbB9ec84d30A134A4CBE3C9069465f',
+      privateKeyWithLeadingHex: '0xf9c86e83794c',
+    },
+  },
+};
+export const addUserToOrg = jest.fn(async () => mockUpdateResp);
