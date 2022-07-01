@@ -151,7 +151,13 @@ export const handler = async (
 
     return event;
   } catch (error) {
-    // TODO - We likely want to just move on.  When this errors the user is already confirmed - our dynamo trigger will catch it
+    //
+    /**
+     * We likely want to just move on.
+     * When this errors the user is already confirmed. And we cannot block them
+     * If the seed fails
+     * Our dynamo trigger will catch it and seed the user
+     */
     logger.error(
       'Error in cognito-triggers/post-confirmation-create-user-wallet.ts',
       { values: { error } }
