@@ -28,7 +28,8 @@ export async function getSeedAccountPrivateKey(
 
 export async function seedFundsForUser(
   userCchainAddressToSeed: string,
-  dynamoClient: DynamoDBDocumentClient
+  dynamoClient: DynamoDBDocumentClient,
+  waitForTxnToFinish = false
 ) {
   const seedPrivateKey = await getSeedAccountPrivateKey(dynamoClient);
   const seedWallet = new ethers.Wallet(seedPrivateKey);
@@ -36,7 +37,8 @@ export async function seedFundsForUser(
   const res = await sendAvax(
     seedWallet,
     BASE_AMOUNT_TO_SEED_USER,
-    userCchainAddressToSeed
+    userCchainAddressToSeed,
+    waitForTxnToFinish
   );
 
   return res;
