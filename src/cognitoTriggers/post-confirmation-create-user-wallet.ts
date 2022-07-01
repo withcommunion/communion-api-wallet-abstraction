@@ -39,7 +39,7 @@ function setDefaultLoggerMeta(
   };
 }
 
-function setupUserWallet() {
+function setupUserWalletHelper() {
   try {
     logger.verbose('Generating keys and wallets for user');
     const usersPrivateKey = generatePrivateEvmKey();
@@ -66,6 +66,36 @@ function setupUserWallet() {
   }
 }
 
+async function insertUserHelper(user: User) {
+  try {
+    logger.verbose('Attempting to create user', { values: { user } });
+    const respFromDb = await insertUser(user, dynamoClient);
+    logger.info('Created user', { values: { respFromDb } });
+  } catch (error) {
+    // TODO: Alert - this is bad
+    logger.error('Fatal: Failed to insert user into DB', {
+      values: { user, error },
+    });
+    throw error;
+  }
+}
+
+async function seedUserHelper(userWalletAddressC: string) {
+  try {
+    logger.verbose('Attempting to seed user', {
+      userAddress: userWalletAddressC,
+    });
+    const sendAvax = await seedFundsForUser(userWalletAddressC, dynamoClient);
+    logger.info('Seeded user', { values: { sendAvax } });
+  } catch (error) {
+    logger.error(
+      'Failed to seed user - should be okay as it will be caught in the Dynamo insert trigger',
+      { values: { error } }
+    );
+    throw error;
+  }
+}
+
 export const handler = async (
   event: PostConfirmationTriggerEvent,
   context?: AuthResponseContext
@@ -85,7 +115,6 @@ export const handler = async (
       const existingUser = await getUserById(userId, dynamoClient);
       logger.info('User exists in DB', { values: { existingUser } });
 
-      // TODO: Figure out how often this is happening, move to helper function
       if (
         existingUser &&
         existingUser.walletPrivateKeyWithLeadingHex &&
@@ -102,9 +131,8 @@ export const handler = async (
       // Nothing to do here, move on
     }
 
-    const { usersPrivateKey, usersWallet } = setupUserWallet();
+    const { usersPrivateKey, usersWallet } = setupUserWalletHelper();
 
-    // TODO move to helper function
     const user: User = {
       id: userId,
       email: userAttributes.email,
@@ -118,27 +146,8 @@ export const handler = async (
       walletAddressX: usersWallet.avaxWallet.getAddressX(),
     };
 
-    try {
-      logger.verbose('Attempting to create user', { values: { user } });
-      const respFromDb = await insertUser(user, dynamoClient);
-      logger.info('Created user', { values: { respFromDb } });
-
-      logger.verbose('Attempting to seed user', {
-        userAddress: user.walletAddressC,
-      });
-      const sendAvax = await seedFundsForUser(
-        user.walletAddressC,
-        dynamoClient
-      );
-      logger.info('Seeded user', { values: { sendAvax } });
-    } catch (error) {
-      /* Throw error.  We want to stop the lambda and prevent the user from verifying.
-     * Something is very wrong here - this is essential for user function.
-       TODO: Alert on this
-     */
-      logger.error('Failed to create and seed user', { values: { error } });
-      throw error;
-    }
+    await insertUserHelper(user);
+    await seedUserHelper(user.walletAddressC);
 
     return event;
   } catch (error) {
