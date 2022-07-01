@@ -2,14 +2,9 @@ import type { DynamoDBStreamEvent, Context } from 'aws-lambda';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { ethers } from 'ethers';
 
-import { initDynamoClient, User, getUserById } from '../util/dynamo-util';
-import { sendAvax } from '../util/avax-chain-util';
+import { initDynamoClient, User } from '../util/dynamo-util';
 import logger from '../util/winston-logger-util';
-
-// TODO - This is bad, lets fetch it from the organization
-export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
-// TODO - This value is used in multiple places - let's move to own folder
-export const BASE_AMOUNT_TO_SEED_USER = '0.01';
+import { seedFundsForUser } from '../util/seed-util';
 
 export const avaxTestNetworkNodeUrl =
   'https://api.avax-test.network/ext/bc/C/rpc';
@@ -18,36 +13,6 @@ const HTTPSProvider = new ethers.providers.JsonRpcProvider(
 );
 
 const dynamoClient = initDynamoClient();
-
-export async function getSeedAccountPrivateKey(): Promise<string> {
-  // TODO: We likely want to fetch this from environment or similar
-  const seedAccount = await getUserById(SEED_ACCOUNT_ID, dynamoClient);
-  const seedPrivateKey = seedAccount.walletPrivateKeyWithLeadingHex;
-
-  if (!seedAccount) {
-    throw new Error('Seed account not found - that is really weird');
-  }
-
-  if (!seedPrivateKey) {
-    throw new Error('Seed account has no private key');
-  }
-
-  return seedPrivateKey;
-}
-
-// TODO - this can be a util function as it is used in multiple places
-export async function seedFundsForUser(
-  seedWallet: ethers.Wallet,
-  userCchainAddressToSeed: string
-) {
-  const res = await sendAvax(
-    seedWallet,
-    BASE_AMOUNT_TO_SEED_USER,
-    userCchainAddressToSeed
-  );
-
-  return res;
-}
 
 function waitXMilliseconds(milliseconds: number) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -154,20 +119,15 @@ export const handler = async (
     }
 
     logger.verbose('Seeding users', { values: { newUsersToSeed } });
-    logger.verbose('Fetching seed wallet');
-    const seedWalletPrivateKey = await getSeedAccountPrivateKey();
-    const seedWallet = new ethers.Wallet(seedWalletPrivateKey, HTTPSProvider);
-    logger.verbose('Received seed wallet');
 
     // TODO - Move to helper function
     const transactions = await Promise.all(
       newUsersToSeed.map(async (user) => {
         logger.verbose('Seeding user', { values: { user } });
 
-        const transaction = await sendAvax(
-          seedWallet,
-          BASE_AMOUNT_TO_SEED_USER,
+        const transaction = await seedFundsForUser(
           user.walletAddressC,
+          dynamoClient,
           true
         );
 

@@ -4,15 +4,9 @@ jest.mock('../util/avax-chain-util.ts');
 import { ethers } from 'ethers';
 import type { DynamoDBStreamEvent } from 'aws-lambda';
 
-import { getUserById } from '../util/dynamo-util';
-import { sendAvax } from '../util/avax-chain-util';
+import * as seedUtil from '../util/seed-util';
 
-import {
-  handler,
-  checkIfUserHasFunds,
-  SEED_ACCOUNT_ID,
-  BASE_AMOUNT_TO_SEED_USER,
-} from './new-image-seed-user';
+import { handler, checkIfUserHasFunds } from './new-image-seed-user';
 
 const MOCK_USER_ADDRESS_C = '0xAae44dc10B9bB68205A158224D2207F8900ec841';
 const MOCK_USER_ADDRESS_C_WITH_NO_FUNDS = ethers.Wallet.createRandom().address;
@@ -156,30 +150,30 @@ const MOCK_EVENT: DynamoDBStreamEvent = {
  * TODO: Need to mock the ethers library getBalance function as it's making a real network call
  */
 describe('new-image-seed-user', () => {
+  const seedFundsForUserSpy = jest.spyOn(seedUtil, 'seedFundsForUser');
+  seedFundsForUserSpy.mockImplementation(() =>
+    Promise.resolve({
+      transaction: {} as ethers.providers.TransactionResponse,
+      txHash: '0x123',
+      explorerUrl: 'https://etherscan.io/tx/0x123',
+    })
+  );
+
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
   describe('handler', () => {
     describe('Happy path', () => {
-      it('Should fetch the seedAccount by calling "getUserById"', async () => {
-        await handler(MOCK_EVENT);
-        expect(getUserById).toHaveBeenCalledWith(
-          SEED_ACCOUNT_ID,
-          expect.any(Object)
-        );
-      }, 10000);
-
       it('Should call sendAvax for users with an "INSERT" event name and no funds on the account', async () => {
         await handler(MOCK_EVENT);
 
         /**
          * In our case, there is only 1 insert event
          */
-        expect(sendAvax).toHaveBeenCalledTimes(1);
-        expect(sendAvax).toBeCalledWith(
-          expect.any(Object),
-          BASE_AMOUNT_TO_SEED_USER,
+        expect(seedFundsForUserSpy).toHaveBeenCalledTimes(1);
+        expect(seedFundsForUserSpy).toHaveBeenCalledWith(
           MOCK_USER_ADDRESS_C_WITH_NO_FUNDS,
+          expect.any(Object),
           true
         );
       }, 10000);
@@ -189,7 +183,7 @@ describe('new-image-seed-user', () => {
           Records: [MOCK_EVENT.Records[1], MOCK_EVENT.Records[2]],
         };
         await handler(mockEventWithNoInsertEvents);
-        expect(sendAvax).toHaveBeenCalledTimes(0);
+        expect(seedFundsForUserSpy).toHaveBeenCalledTimes(0);
       }, 10000);
     });
   });
