@@ -2,7 +2,7 @@
 jest.mock('../util/dynamo-util.ts');
 jest.mock('../util/avax-chain-util.ts');
 
-import ethers from 'ethers';
+import { ethers } from 'ethers';
 
 import type { PostConfirmationTriggerEvent } from 'aws-lambda';
 import { insertUser, getUserById } from '../util/dynamo-util';

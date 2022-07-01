@@ -1,6 +1,6 @@
 import type { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
-import ethers from 'ethers';
+import { ethers } from 'ethers';
 import { sendAvax } from './avax-chain-util';
 import { getUserById } from './dynamo-util';
 
