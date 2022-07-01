@@ -6,6 +6,7 @@ import {
   OrgWithPublicData,
   batchGetUsersById,
   UserWithPublicData,
+  User,
 } from '../util/dynamo-util';
 
 import logger, {
@@ -14,32 +15,51 @@ import logger, {
 
 const dynamoClient = initDynamoClient();
 
+function removePrivateDataFromUsersHelper(
+  usersInOrg: User[]
+): UserWithPublicData[] {
+  const usersInOrgWithPublicData = usersInOrg.map(
+    (user) =>
+      ({
+        ...user,
+        email: undefined,
+        walletPrivateKeyWithLeadingHex: undefined,
+      } as UserWithPublicData)
+  );
+
+  logger.info('Removed Self, Seeder and private data', {
+    values: { usersInOrgWithPublicData },
+  });
+
+  return usersInOrgWithPublicData;
+}
+
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ) => {
-  setDefaultLoggerMetaForApi(event, logger);
-
-  const claims = event.requestContext.authorizer.jwt.claims;
-  // For some reason it can go through in two seperate ways
-  const requestUserId =
-    (claims.username as string) || (claims['cognito:username'] as string);
-
-  logger.info('Incoming Event', {
-    values: { event },
-  });
-  logger.verbose('Incoming Event Auth', {
-    values: { authorizer: event.requestContext.authorizer },
-  });
-
-  const orgId = event.pathParameters?.orgId;
-
-  if (!orgId) {
-    return generateReturn(400, {
-      message: 'Missing orgId',
-    });
-  }
-
   try {
+    setDefaultLoggerMetaForApi(event, logger);
+
+    const claims = event.requestContext.authorizer.jwt.claims;
+    // For some reason it can go through in two seperate ways
+    const requestUserId =
+      (claims.username as string) || (claims['cognito:username'] as string);
+
+    logger.info('Incoming Event', {
+      values: { event },
+    });
+    logger.verbose('Incoming Event Auth', {
+      values: { authorizer: event.requestContext.authorizer },
+    });
+
+    const orgId = event.pathParameters?.orgId;
+
+    if (!orgId) {
+      return generateReturn(400, {
+        message: 'Missing orgId',
+      });
+    }
+
     logger.verbose('Getting org by id', { values: { orgId } });
     const org = await getOrgById(orgId, dynamoClient);
     logger.info('Received org', { values: { org } });
@@ -80,25 +100,13 @@ export const handler = async (
       values: { orgId, usersInOrg: allUsersInOrgWithPrivateData },
     });
 
-    // TODO - This can be a util function
-    const filteredUsersInOrgWithPrivateData =
-      allUsersInOrgWithPrivateData.filter(
-        (user) => user.id !== requestUserId && user.role !== 'seeder'
-      );
-
-    // TODO - This can be a util function
-    const usersInOrgWithPublicData = filteredUsersInOrgWithPrivateData.map(
-      (user) =>
-        ({
-          ...user,
-          email: undefined,
-          walletPrivateKeyWithLeadingHex: undefined,
-        } as UserWithPublicData)
+    const usersInOrgWithoutSelfAndSeeder = allUsersInOrgWithPrivateData.filter(
+      (user) => user.id !== requestUserId && user.role !== 'seeder'
     );
 
-    logger.info('Removed Self, Seeder and private data', {
-      values: { usersInOrgWithPublicData },
-    });
+    const usersInOrgWithPublicData = removePrivateDataFromUsersHelper(
+      usersInOrgWithoutSelfAndSeeder
+    );
 
     return generateReturn(200, {
       ...orgWithPublicData,
