@@ -70,6 +70,7 @@ export function generateApiGatewayEvent(
 interface MockUserParamOverrides {
   id?: string;
   organization?: string;
+  organizations?: { orgId: string; role: string }[];
   role?: string;
   last_name?: string;
   first_name?: string;
@@ -84,6 +85,9 @@ export function generateMockUser(paramOverrides: MockUserParamOverrides): User {
   return {
     id: paramOverrides.id || 'local-mock-user-self',
     organization: paramOverrides.organization || 'test-org',
+    organizations: paramOverrides.organizations || [
+      { orgId: 'test-org', role: 'worker' },
+    ],
     role: paramOverrides.role || 'worker',
     last_name: paramOverrides.last_name || 'invoke-self',
     first_name: paramOverrides.first_name || 'local-self',
