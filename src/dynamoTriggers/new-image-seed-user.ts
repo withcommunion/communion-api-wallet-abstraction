@@ -51,7 +51,7 @@ export async function checkIfUserHasFunds(
   return userHasFunds;
 }
 
-function setDefaultLoggerMeta(event: DynamoDBStreamEvent, context?: Context) {
+function setDefaultLoggerMeta(context?: Context) {
   const requestId =
     context &&
     `${context.awsRequestId?.substring(0, 3)}-${context.awsRequestId?.substring(
@@ -69,7 +69,7 @@ export const handler = async (
   context?: Context
 ) => {
   try {
-    setDefaultLoggerMeta(event, context);
+    setDefaultLoggerMeta(context);
     logger.info('Incoming request event:', { values: { event } });
     logger.verbose('Incoming request context:', { values: { context } });
 
