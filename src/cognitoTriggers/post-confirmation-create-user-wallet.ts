@@ -39,6 +39,33 @@ function setDefaultLoggerMeta(
   };
 }
 
+function setupUserWallet() {
+  try {
+    logger.verbose('Generating keys and wallets for user');
+    const usersPrivateKey = generatePrivateEvmKey();
+    const usersWallet = createSingletonWallet(
+      usersPrivateKey.evmKeyWithLeadingHex,
+      true
+    );
+
+    logger.verbose('Generated keys and wallets for user', {
+      values: {
+        usersPrivateKey,
+        usersWallet,
+      },
+    });
+
+    return { usersPrivateKey, usersWallet };
+  } catch (error) {
+    /* Throw error.  We want to stop the lambda and prevent the user from verifying.
+       * Something is very wrong here - this is essential for user function.
+         TODO: Alert on this
+     */
+    logger.error('Error creating user wallet:', error);
+    throw error;
+  }
+}
+
 export const handler = async (
   event: PostConfirmationTriggerEvent,
   context?: AuthResponseContext
@@ -75,31 +102,7 @@ export const handler = async (
       // Nothing to do here, move on
     }
 
-    // TODO - Move to helper function, it's noisy and should be a single function call
-    let usersPrivateKey;
-    let usersWallet;
-    try {
-      logger.verbose('Generating keys and wallets for user');
-      usersPrivateKey = generatePrivateEvmKey();
-      usersWallet = createSingletonWallet(
-        usersPrivateKey.evmKeyWithLeadingHex,
-        true
-      );
-
-      logger.verbose('Generated keys and wallets for user', {
-        values: {
-          usersPrivateKey,
-          usersWallet,
-        },
-      });
-    } catch (error) {
-      /* Throw error.  We want to stop the lambda and prevent the user from verifying.
-       * Something is very wrong here - this is essential for user function.
-         TODO: Alert on this
-     */
-      logger.error('Error creating user wallet:', error);
-      throw error;
-    }
+    const { usersPrivateKey, usersWallet } = setupUserWallet();
 
     // TODO move to helper function
     const user: User = {
