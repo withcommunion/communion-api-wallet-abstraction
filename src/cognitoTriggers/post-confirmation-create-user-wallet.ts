@@ -83,7 +83,7 @@ async function insertUserHelper(user: User) {
 async function seedUserHelper(userWalletAddressC: string) {
   try {
     logger.verbose('Attempting to seed user', {
-      userAddress: userWalletAddressC,
+      values: { userWalletAddressC },
     });
     const sendAvax = await seedFundsForUser(userWalletAddressC, dynamoClient);
     logger.info('Seeded user', { values: { sendAvax } });
