@@ -5,7 +5,7 @@ jest.mock('../util/avax-chain-util.ts');
 import { ethers } from 'ethers';
 
 import type { PostConfirmationTriggerEvent } from 'aws-lambda';
-import { insertUser, getUserById } from '../util/dynamo-util';
+import { insertUser, getUserById, addUserToOrg } from '../util/dynamo-util';
 import * as avaxWalletUtil from '../util/avax-wallet-util';
 import * as seedUtil from '../util/seed-util';
 
@@ -113,12 +113,28 @@ describe('postConfirmationCreateUserWallet', () => {
             first_name: 'Mike',
             last_name: 'A',
             organization: expectedOrganization,
+            organizations: [],
             role: 'worker',
             walletAddressC: expect.any(String),
             walletAddressP: expect.any(String),
             walletAddressX: expect.any(String),
             walletPrivateKeyWithLeadingHex: expect.any(String),
           },
+          {}
+        );
+      });
+    });
+
+    describe('Inserting user into org database', () => {
+      it('should call addUserToOrg with users org parsed from event', async () => {
+        await handler(MOCK_EVENT);
+        const expectedOrganization =
+          MOCK_EVENT.request.userAttributes['custom:organization'];
+
+        expect(addUserToOrg).toHaveBeenCalledTimes(1);
+        expect(addUserToOrg).toHaveBeenCalledWith(
+          MOCK_EVENT.userName,
+          expectedOrganization,
           {}
         );
       });

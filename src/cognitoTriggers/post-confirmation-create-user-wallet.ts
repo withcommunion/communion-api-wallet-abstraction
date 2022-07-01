@@ -15,6 +15,7 @@ import {
   insertUser,
   User,
   getUserById,
+  addUserToOrg,
 } from '../util/dynamo-util';
 
 import logger from '../util/winston-logger-util';
@@ -80,6 +81,28 @@ async function insertUserHelper(user: User) {
   }
 }
 
+async function addUserToOrgHelper(user: User) {
+  try {
+    logger.verbose('Attempting to add user to org', {
+      values: { user, userId: user.id, orgId: user.organization },
+    });
+    const respFromDb = await addUserToOrg(
+      user.id,
+      user.organization,
+      dynamoClient
+    );
+    logger.info('Added user to org', {
+      values: { orgId: user.organization, respFromDb },
+    });
+  } catch (error) {
+    // TODO: Alert - this is bad
+    logger.error('Fatal: Failed to add user to org', {
+      values: { user, orgId: user.organization, error },
+    });
+    throw error;
+  }
+}
+
 async function seedUserHelper(userWalletAddressC: string) {
   try {
     logger.verbose('Attempting to seed user', {
@@ -139,6 +162,7 @@ export const handler = async (
       first_name: userAttributes['given_name'],
       last_name: userAttributes['family_name'],
       organization: userAttributes['custom:organization'],
+      organizations: [],
       role: userAttributes['custom:role'],
       walletPrivateKeyWithLeadingHex: usersPrivateKey.evmKeyWithLeadingHex,
       walletAddressC: usersWallet.avaxWallet.getAddressC(),
@@ -147,6 +171,11 @@ export const handler = async (
     };
 
     await insertUserHelper(user);
+    /**
+     * TODO: This will go away once we start using the endpoint and users join orgs manually
+     * This is okay for jacks pizza, right now
+     */
+    await addUserToOrgHelper(user);
     await seedUserHelper(user.walletAddressC);
 
     return event;
