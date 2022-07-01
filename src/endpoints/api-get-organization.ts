@@ -1,3 +1,4 @@
+// TODO - This function is going away and replaced by get-org-by-id
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { generateReturn } from '../util/api-util';
 import {
@@ -7,22 +8,20 @@ import {
   getUsersInOrganization,
 } from '../util/dynamo-util';
 
-import logger from '../util/winston-logger-util';
+import logger, {
+  setDefaultLoggerMetaForApi,
+} from '../util/winston-logger-util';
 
 const dynamoClient = initDynamoClient();
 
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ) => {
+  setDefaultLoggerMetaForApi(event, logger);
   const claims = event.requestContext.authorizer.jwt.claims;
   // For some reason it can go through in two seperate ways
   const requestUserId =
     (claims.username as string) || (claims['cognito:username'] as string);
-
-  logger.defaultMeta = {
-    _requestId: event.requestContext.requestId,
-    userId: requestUserId,
-  };
 
   logger.info('Incoming Event', {
     values: { event },
@@ -31,8 +30,15 @@ export const handler = async (
     values: { authorizer: event.requestContext.authorizer },
   });
 
-  const requestUser = await getUserById(dynamoClient, requestUserId);
+  logger.verbose('Fetching requesting user', { values: { requestUserId } });
+  const requestUser = await getUserById(requestUserId, dynamoClient);
+  logger.info('Received user', { values: { requestUser } });
 
+  if (!requestUser) {
+    throw new Error('User not found, something bigger is wrong');
+  }
+
+  // TODO - This will look through the organizations array
   const requestUsersOrganization = requestUser.organization;
   const requestedOrganization = event.pathParameters?.orgId;
 
@@ -55,8 +61,6 @@ export const handler = async (
       await getUsersInOrganization(requestedOrganization, dynamoClient)
     ).filter((user) => user.id !== requestUserId && user.role !== 'seeder');
 
-    logger.verbose('Received users', { values: usersInOrgWithPrivateData });
-
     const usersInOrgWithPublicData = usersInOrgWithPrivateData.map(
       (user) =>
         ({
@@ -65,6 +69,7 @@ export const handler = async (
           walletPrivateKeyWithLeadingHex: undefined,
         } as UserWithPublicData)
     );
+    logger.info('Received users in org', { values: usersInOrgWithPublicData });
 
     const returnVal = generateReturn(200, {
       name: requestedOrganization,

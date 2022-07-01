@@ -1,13 +1,10 @@
-import type { DynamoDBStreamEvent, Context } from 'aws-lambda';
+import type { DynamoDBStreamEvent, Context, DynamoDBRecord } from 'aws-lambda';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { ethers } from 'ethers';
 
-import { initDynamoClient, User, getUserById } from '../util/dynamo-util';
-import { sendAvax } from '../util/avax-chain-util';
+import { initDynamoClient, User } from '../util/dynamo-util';
 import logger from '../util/winston-logger-util';
-
-export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
-export const BASE_AMOUNT_TO_SEED_USER = '0.01';
+import { seedFundsForUser } from '../util/seed-util';
 
 export const avaxTestNetworkNodeUrl =
   'https://api.avax-test.network/ext/bc/C/rpc';
@@ -17,33 +14,38 @@ const HTTPSProvider = new ethers.providers.JsonRpcProvider(
 
 const dynamoClient = initDynamoClient();
 
-export async function getSeedAccountPrivateKey(): Promise<string> {
-  // TODO: We likely want to fetch this from environment or similar
-  const seedAccount = await getUserById(dynamoClient, SEED_ACCOUNT_ID);
-  const seedPrivateKey = seedAccount.walletPrivateKeyWithLeadingHex;
-
-  if (!seedPrivateKey) {
-    throw new Error('Seed account has no private key');
-  }
-
-  return seedPrivateKey;
-}
-
-export async function seedFundsForUser(
-  seedWallet: ethers.Wallet,
-  userCchainAddressToSeed: string
-) {
-  const res = await sendAvax(
-    seedWallet,
-    BASE_AMOUNT_TO_SEED_USER,
-    userCchainAddressToSeed
-  );
-
-  return res;
-}
-
 function waitXMilliseconds(milliseconds: number) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+function setDefaultLoggerMeta(context?: Context) {
+  const requestId =
+    context &&
+    `${context.awsRequestId?.substring(0, 3)}-${context.awsRequestId?.substring(
+      32
+    )}}}`;
+
+  logger.defaultMeta = {
+    _requestId: requestId,
+  };
+}
+
+function getInsertedUsersFromEventHelper(records: DynamoDBRecord[]) {
+  const insertEvents = records.filter(
+    (record) => record.eventName === 'INSERT'
+  );
+
+  const insertedUsers = insertEvents
+    .map((record) => {
+      if (!record || !record.dynamodb?.NewImage) {
+        return undefined;
+      }
+      // @ts-expect-error NewImage may have undefined, unmarshall doesn't like that.  But it will handle it.
+      return unmarshall(record.dynamodb.NewImage) as User;
+    })
+    .filter((user) => Boolean(user)) as User[];
+
+  return insertedUsers;
 }
 
 export async function checkIfUserHasFunds(
@@ -75,7 +77,57 @@ export async function checkIfUserHasFunds(
   logger.verbose(`Returning if user has funds: ${userHasFunds.toString()}`, {
     values: { userHasFunds },
   });
+
   return userHasFunds;
+}
+
+async function filterForUsersThatNeedSeeding(usersToSeed: User[]) {
+  const newUsersToSeed = (
+    await Promise.all(
+      usersToSeed.map(async (user) => {
+        const userHasFunds = Boolean(
+          await checkIfUserHasFunds(user.walletAddressC)
+        );
+
+        if (userHasFunds) {
+          return undefined;
+        }
+
+        return user;
+      })
+    )
+  ).filter((user) => Boolean(user)) as User[];
+
+  return newUsersToSeed;
+}
+
+async function seedUsersHelper(usersToSeed: User[]) {
+  logger.verbose('Seeding users', { values: { usersToSeed } });
+
+  const transactions = await Promise.all(
+    usersToSeed.map(async (user) => {
+      logger.verbose('Seeding user', { values: { user } });
+
+      const transaction = await seedFundsForUser(
+        user.walletAddressC,
+        dynamoClient,
+        true
+      );
+
+      logger.info('Seeded user', {
+        values: {
+          user,
+          transaction,
+        },
+      });
+
+      return { user, transaction };
+    })
+  );
+  logger.info('Successfully seeded all users', {
+    values: { transactions },
+  });
+  return transactions;
 }
 
 export const handler = async (
@@ -84,55 +136,20 @@ export const handler = async (
   context?: Context
 ) => {
   try {
-    const requestId =
-      context &&
-      `${context.awsRequestId?.substring(
-        0,
-        3
-      )}-${context.awsRequestId?.substring(32)}}}`;
-
-    logger.defaultMeta = {
-      _requestId: requestId,
-    };
-
+    setDefaultLoggerMeta(context);
     logger.info('Incoming request event:', { values: { event } });
     logger.verbose('Incoming request context:', { values: { context } });
 
-    const insertedUsers = event.Records.filter(
-      (record) => record.eventName === 'INSERT'
-    );
+    const newlyInsertedUsers = getInsertedUsersFromEventHelper(event.Records);
 
-    const insertUserEvents = insertedUsers
-      .map((record) => {
-        if (!record || !record.dynamodb?.NewImage) {
-          return undefined;
-        }
-        // @ts-expect-error NewImage may have undefined, unmarshall doesn't like that.  But it will handle it.
-        return unmarshall(record.dynamodb.NewImage) as User;
-      })
-      .filter((user) => Boolean(user)) as User[];
-
-    if (insertUserEvents.length === 0) {
+    if (newlyInsertedUsers.length === 0) {
       logger.info('No insert events, returning', { values: { event } });
       return event;
     }
 
-    // Check if user has funds in their wallet
-    const newUsersToSeed = (
-      await Promise.all(
-        insertUserEvents.map(async (user) => {
-          const userHasFunds = Boolean(
-            await checkIfUserHasFunds(user.walletAddressC)
-          );
-
-          if (userHasFunds) {
-            return undefined;
-          }
-
-          return user;
-        })
-      )
-    ).filter((user) => Boolean(user)) as User[];
+    const newUsersToSeed = await filterForUsersThatNeedSeeding(
+      newlyInsertedUsers
+    );
 
     if (newUsersToSeed.length === 0) {
       logger.info('No users to seed, returning', {
@@ -141,39 +158,7 @@ export const handler = async (
       return event;
     }
 
-    logger.info('Seeding users', { values: { newUsersToSeed } });
-    logger.verbose('Fetching seed wallet');
-
-    const seedWalletPrivateKey = await getSeedAccountPrivateKey();
-    const seedWallet = new ethers.Wallet(seedWalletPrivateKey, HTTPSProvider);
-
-    logger.verbose('Received seed wallet');
-
-    const transactions = await Promise.all(
-      newUsersToSeed.map(async (user) => {
-        logger.verbose('Seeding user', { values: { user } });
-
-        const transaction = await sendAvax(
-          seedWallet,
-          BASE_AMOUNT_TO_SEED_USER,
-          user.walletAddressC,
-          true
-        );
-
-        logger.info('Seeded user', {
-          values: {
-            user,
-            transaction,
-          },
-        });
-
-        return { user, transaction };
-      })
-    );
-
-    logger.verbose('Successfully seeded all users', {
-      values: { transactions },
-    });
+    await seedUsersHelper(newUsersToSeed);
 
     return event;
   } catch (error) {

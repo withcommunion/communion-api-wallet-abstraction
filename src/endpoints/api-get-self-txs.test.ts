@@ -1,78 +1,8 @@
 jest.mock('../util/dynamo-util.ts');
-import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { handler } from './api-get-self';
+import { generateApiGatewayEvent } from '../util/jest-mock-util';
 
-const MOCK_EVENT: APIGatewayProxyEventV2WithJWTAuthorizer = {
-  version: '2.0',
-  routeKey: 'GET /user/self',
-  rawPath: '/user/self',
-  rawQueryString: '',
-  headers: {
-    accept: 'application/json, text/plain, */*',
-    'accept-encoding': 'gzip, deflate, br',
-    'accept-language': 'en-US,en;q=0.5',
-    authorization:
-      'eyJraWQiOiJrOU9RdjB5XC9TMER2QmdxXC9rTVwvWWltdDZPWXVBa2UrK1dUck9nQnpiS1B3PSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiIyMWY1NmQyMS00NWZmLTQwYTktOTA0MS0xZjNkM2I4NjRkZjUiLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV9FWFJaWkYwY3AiLCJjbGllbnRfaWQiOiI0ZWVybHUxdGFmNzJjOHIyMHB2MnRtbXZtdCIsIm9yaWdpbl9qdGkiOiI4ZmVkYzk5My1jN2U1LTRlZWUtODgwMi1jZTcyMDRlYmM5NTYiLCJldmVudF9pZCI6IjY0YWExNTg0LWRiNzUtNGIzZS05MTdkLWZlZjdhZmEyM2RjYiIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoiYXdzLmNvZ25pdG8uc2lnbmluLnVzZXIuYWRtaW4iLCJhdXRoX3RpbWUiOjE2NTI5MzAzNDksImV4cCI6MTY1Mjk4MTcxNSwiaWF0IjoxNjUyOTc4MTE1LCJqdGkiOiI1MDU3ZDFlNi1hMjY0LTQ4MmEtOTRkYS1iYjA2YzgzYTY2YTYiLCJ1c2VybmFtZSI6IjIxZjU2ZDIxLTQ1ZmYtNDBhOS05MDQxLTFmM2QzYjg2NGRmNSJ9.IENPV4e7DMx5nd02XqESAKjVvBAONDdw1Y2jlavtkM2Kk84HdjLmn0yFOnxQbH5srMxxvjhGP5KYIy_dm_feIAYVCoThc0d6msTQb74HZgq5JImbzZ06699W-fgfzTmSiCSnmjkMGPGx3NOkUhlaLCWsKIZiwPptmShpXWtOT6NxUMkkRytceVpteTmhxRcd2vKSI7mG1fAp9tUMi9-TdTwBqcMrBKdjhwNVIaXkLbSqj5TxJyi4AGZz8_1lQOo6sw28J0dlSk9bHvJI4vFfunESvcwFxXTRbwbDTx06Eff4Xn6DcFAVEwwJyklS9uJfUF0RhMevR-aHOZ1-FYKpiQ',
-    'cache-control': 'no-cache',
-    'content-length': '0',
-    dnt: '1',
-    host: 'p0rddetfk8.execute-api.us-east-1.amazonaws.com',
-    origin: 'http://localhost:3000',
-    pragma: 'no-cache',
-    referer: 'http://localhost:3000/',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'cross-site',
-    'sec-gpc': '1',
-    'user-agent':
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:101.0) Gecko/20100101 Firefox/101.0',
-    'x-amzn-trace-id': 'Root=1-62867f2f-666d68fa1b39c7da36f9181d',
-    'x-forwarded-for': '187.252.201.14',
-    'x-forwarded-port': '443',
-    'x-forwarded-proto': 'https',
-  },
-  requestContext: {
-    accountId: '143056416942',
-    apiId: 'p0rddetfk8',
-    authorizer: {
-      jwt: {
-        claims: {
-          auth_time: '1652930349',
-          client_id: '4eerlu1taf72c8r20pv2tmmvmt',
-          event_id: '64aa1584-db75-4b3e-917d-fef7afa23dcb',
-          exp: '1652981715',
-          iat: '1652978115',
-          iss: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_EXRZZF0cp',
-          jti: '5057d1e6-a264-482a-94da-bb06c83a66a6',
-          origin_jti: '8fedc993-c7e5-4eee-8802-ce7204ebc956',
-          scope: 'aws.cognito.signin.user.admin',
-          sub: 'local-invoke-45ff-40a9-9041-1f3d3b864df5',
-          token_use: 'access',
-          username: 'local-invoke-45ff-40a9-9041-1f3d3b864df5',
-        },
-        scopes: ['some-scope'],
-      },
-      principalId: 'asdf',
-      integrationLatency: 0,
-    },
-    domainName: 'p0rddetfk8.execute-api.us-east-1.amazonaws.com',
-    domainPrefix: 'p0rddetfk8',
-    http: {
-      method: 'GET',
-      path: '/user/self',
-      protocol: 'HTTP/1.1',
-      sourceIp: '187.252.201.14',
-      userAgent:
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:101.0) Gecko/20100101 Firefox/101.0',
-    },
-    requestId: 'SYjPgjuCoAMEJzw=',
-    routeKey: 'GET /user/self',
-    stage: '$default',
-    time: '19/May/2022:17:32:31 +0000',
-    timeEpoch: 1652981551844,
-  },
-  isBase64Encoded: false,
-};
+const MOCK_EVENT = generateApiGatewayEvent({});
 
 describe.skip('api-get-self-txs', () => {
   it('Should return a 200 status code', async () => {

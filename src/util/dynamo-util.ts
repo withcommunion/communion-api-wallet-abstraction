@@ -58,28 +58,23 @@ export interface Self extends User {
 
 // TODO: This will overwrite existing values.  Find proper args to not update existing values.
 export async function insertUser(
-  ddbClient: DynamoDBDocumentClient,
-  user: User
+  user: User,
+  ddbClient: DynamoDBDocumentClient
 ): Promise<PutCommandOutput> {
-  try {
-    const itemToInsert = new PutCommand({
-      TableName: usersTable,
-      Item: {
-        ...user,
-      },
-    });
-    const res = await ddbClient.send(itemToInsert);
+  const itemToInsert = new PutCommand({
+    TableName: usersTable,
+    Item: {
+      ...user,
+    },
+  });
+  const res = await ddbClient.send(itemToInsert);
 
-    return res;
-  } catch (error) {
-    console.error('Error in dynamo-util.insertUser', error);
-    throw error;
-  }
+  return res;
 }
 
 export async function getUserById(
-  ddbClient: DynamoDBDocumentClient,
-  userId: string
+  userId: string,
+  ddbClient: DynamoDBDocumentClient
 ): Promise<User> {
   const itemToGet = new GetCommand({
     TableName: usersTable,
@@ -88,18 +83,7 @@ export async function getUserById(
     },
   });
 
-  let res;
-  try {
-    res = await ddbClient.send(itemToGet);
-  } catch (error) {
-    console.error('Failed to dynamo-util.getUserById', error);
-    throw error;
-  }
-
-  if (!res || !res.Item) {
-    throw new Error(`User not found! [userId:${userId}]`);
-  }
-
+  const res = await ddbClient.send(itemToGet);
   const user = res.Item as User;
   return user;
 }
@@ -136,19 +120,8 @@ export async function getUsersInOrganization(
     },
   };
 
-  let res;
-  try {
-    res = await dynamoClient.send(new ScanCommand(scanParams));
-  } catch (error) {
-    console.error('Failed to dynamo-util.getUsersInOrganization', error);
-    throw error;
-  }
-
-  if (!res || !res.Items) {
-    throw new Error(`No users found in organization! [orgId:${orgId}]`);
-  }
-
-  const users = res.Items as User[];
+  const res = await dynamoClient.send(new ScanCommand(scanParams));
+  const users = (res.Items as User[]) || [];
   return users;
 }
 

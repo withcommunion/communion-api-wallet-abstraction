@@ -2,73 +2,48 @@ import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { ethers } from 'ethers';
 
 import { generateReturn } from '../util/api-util';
-import logger from '../util/winston-logger-util';
+import logger, {
+  setDefaultLoggerMetaForApi,
+} from '../util/winston-logger-util';
 import { getUserById, initDynamoClient, Self } from '../util/dynamo-util';
-import { getEthersWallet } from '../util/avax-wallet-util';
-import { sendAvax } from '../util/avax-chain-util';
+import { ethersAvaxProvider } from '../util/avax-wallet-util';
+import { seedFundsForUser } from '../util/seed-util';
 
 const dynamoClient = initDynamoClient();
-export const avaxTestNetworkNodeUrl =
-  'https://api.avax-test.network/ext/bc/C/rpc';
-const HTTPSProvider = new ethers.providers.JsonRpcProvider(
-  avaxTestNetworkNodeUrl
-);
 
-export const SEED_ACCOUNT_ID = '8f1e9bac-6969-4907-94f9-6187ec382976';
-export const BASE_AMOUNT_TO_SEED_USER = '0.01';
 export const MIN_BALANCE_TO_SEED = '0.005';
-
-export async function getSeedAccountPrivateKey(): Promise<string> {
-  // TODO: We likely want to fetch this from environment or similar
-  const seedAccount = await getUserById(dynamoClient, SEED_ACCOUNT_ID);
-  const seedPrivateKey = seedAccount.walletPrivateKeyWithLeadingHex;
-
-  if (!seedPrivateKey) {
-    throw new Error('Seed account has no private key');
-  }
-
-  return seedPrivateKey;
-}
-
-export async function seedFundsForUser(
-  seedWallet: ethers.Wallet,
-  userCchainAddressToSeed: string
-) {
-  const res = await sendAvax(
-    seedWallet,
-    BASE_AMOUNT_TO_SEED_USER,
-    userCchainAddressToSeed
-  );
-
-  return res;
-}
 
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ) => {
   try {
-    console.log('here?');
-    const claims = event.requestContext.authorizer.jwt.claims;
-    // For some reason it can go through in two seperate ways
-    const userId =
-      (claims.username as string) || (claims['cognito:username'] as string);
-
-    logger.defaultMeta = {
-      _requestId: event.requestContext.requestId,
-      userId,
-    };
-
+    setDefaultLoggerMetaForApi(event, logger);
     logger.info('incomingEvent', { values: { event } });
     logger.verbose('incomingEventAuth', {
       values: { authorizer: event.requestContext.authorizer },
     });
 
-    logger.info('Fetching user', { values: { userId } });
-    const user = (await getUserById(dynamoClient, userId)) as Self;
-    logger.verbose('Received user', { values: { user } });
+    const claims = event.requestContext.authorizer.jwt.claims;
+    // For some reason it can go through in two seperate ways
+    const userId =
+      (claims.username as string) || (claims['cognito:username'] as string);
 
-    const userWallet = getEthersWallet(user.walletPrivateKeyWithLeadingHex);
-    const usersBalance = await userWallet.getBalance();
+    logger.verbose('Fetching user', { values: { userId } });
+    const user = (await getUserById(userId, dynamoClient)) as Self;
+    if (!user) {
+      logger.error(
+        'User not found on getSelf - something is wrong, user is Authd and exists in Cognito but not in our DB',
+        {
+          values: { userId },
+        }
+      );
+      return generateReturn(404, { message: 'User not found' });
+    }
+    logger.info('Received user', { values: { user } });
+
+    const usersBalance = await ethersAvaxProvider.getBalance(
+      user.walletAddressC
+    );
 
     if (usersBalance.gt(ethers.utils.parseEther(MIN_BALANCE_TO_SEED))) {
       const message =
@@ -91,18 +66,13 @@ export const handler = async (
       values: { user, usersBalance },
     });
 
-    logger.info('Fetching seed wallet');
-    const seedWalletPrivateKey = await getSeedAccountPrivateKey();
-    const seedWallet = new ethers.Wallet(seedWalletPrivateKey, HTTPSProvider);
-    logger.verbose('Received seed wallet');
-
-    logger.info('Seeding user', { values: { user } });
-    const transaction = await sendAvax(
-      seedWallet,
-      BASE_AMOUNT_TO_SEED_USER,
+    logger.verbose('Seeding user', { values: { user } });
+    const transaction = seedFundsForUser(
       user.walletAddressC,
+      dynamoClient,
       true
     );
+
     logger.info('Seeded user', {
       values: {
         user,
