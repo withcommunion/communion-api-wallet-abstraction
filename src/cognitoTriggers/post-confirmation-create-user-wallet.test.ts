@@ -114,7 +114,7 @@ describe('postConfirmationCreateUserWallet', () => {
             first_name: 'Mike',
             last_name: 'A',
             organization: expectedOrganization,
-            organizations: [],
+            organizations: [{ orgId: expectedOrganization, role: 'worker' }],
             role: 'worker',
             walletAddressC: expect.any(String),
             walletAddressP: expect.any(String),

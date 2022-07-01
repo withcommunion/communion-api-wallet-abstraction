@@ -94,6 +94,8 @@ async function addUserToOrgHelper(user: User) {
     logger.info('Added user to org', {
       values: { orgId: user.organization, respFromDb },
     });
+
+    return respFromDb;
   } catch (error) {
     // @ts-expect-error error.name does exist here
     if (error.name === 'ConditionalCheckFailedException') {
@@ -174,7 +176,12 @@ export const handler = async (
       first_name: userAttributes['given_name'],
       last_name: userAttributes['family_name'],
       organization: userAttributes['custom:organization'],
-      organizations: [],
+      organizations: [
+        {
+          orgId: userAttributes['custom:organization'],
+          role: userAttributes['custom:role'],
+        },
+      ],
       role: userAttributes['custom:role'],
       walletPrivateKeyWithLeadingHex: usersPrivateKey.evmKeyWithLeadingHex,
       walletAddressC: usersWallet.avaxWallet.getAddressC(),
