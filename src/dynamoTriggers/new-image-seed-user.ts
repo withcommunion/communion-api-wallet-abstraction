@@ -51,23 +51,25 @@ export async function checkIfUserHasFunds(
   return userHasFunds;
 }
 
+function setDefaultLoggerMeta(event: DynamoDBStreamEvent, context?: Context) {
+  const requestId =
+    context &&
+    `${context.awsRequestId?.substring(0, 3)}-${context.awsRequestId?.substring(
+      32
+    )}}}`;
+
+  logger.defaultMeta = {
+    _requestId: requestId,
+  };
+}
+
 export const handler = async (
   event: DynamoDBStreamEvent,
   // eslint-disable-next-line
   context?: Context
 ) => {
   try {
-    const requestId =
-      context &&
-      `${context.awsRequestId?.substring(
-        0,
-        3
-      )}-${context.awsRequestId?.substring(32)}}}`;
-
-    logger.defaultMeta = {
-      _requestId: requestId,
-    };
-
+    setDefaultLoggerMeta(event, context);
     logger.info('Incoming request event:', { values: { event } });
     logger.verbose('Incoming request context:', { values: { context } });
 

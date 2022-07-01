@@ -8,22 +8,20 @@ import {
   getUsersInOrganization,
 } from '../util/dynamo-util';
 
-import logger from '../util/winston-logger-util';
+import logger, {
+  setDefaultLoggerMetaForApi,
+} from '../util/winston-logger-util';
 
 const dynamoClient = initDynamoClient();
 
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ) => {
+  setDefaultLoggerMetaForApi(event, logger);
   const claims = event.requestContext.authorizer.jwt.claims;
   // For some reason it can go through in two seperate ways
   const requestUserId =
     (claims.username as string) || (claims['cognito:username'] as string);
-
-  logger.defaultMeta = {
-    _requestId: event.requestContext.requestId,
-    userId: requestUserId,
-  };
 
   logger.info('Incoming Event', {
     values: { event },

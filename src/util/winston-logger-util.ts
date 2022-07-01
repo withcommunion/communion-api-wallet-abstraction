@@ -1,3 +1,4 @@
+import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import winston, { format, transports } from 'winston';
 
 const alignColorsAndTime = winston.format.combine(
@@ -44,10 +45,25 @@ const loggerTransports =
 console.log('-------------');
 console.log(process.env.LOG_LEVEL);
 console.log('-------------');
+
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: format.json(),
   transports: loggerTransports,
 });
+
+export function setDefaultLoggerMetaForApi(
+  event: APIGatewayProxyEventV2WithJWTAuthorizer,
+  logger: winston.Logger
+) {
+  const claims = event.requestContext.authorizer.jwt.claims;
+  // For some reason it can go through in two seperate ways
+  const requestUserId =
+    (claims.username as string) || (claims['cognito:username'] as string);
+  logger.defaultMeta = {
+    _requestId: event.requestContext.requestId,
+    userId: requestUserId,
+  };
+}
 
 export default logger;

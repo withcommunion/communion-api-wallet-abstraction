@@ -21,6 +21,24 @@ import logger from '../util/winston-logger-util';
 
 const dynamoClient = initDynamoClient();
 
+function setDefaultLoggerMeta(
+  event: PostConfirmationTriggerEvent,
+  context?: AuthResponseContext
+) {
+  const { request } = event;
+  const { userAttributes } = request;
+  const userId = userAttributes.sub;
+  const requestId = context?.awsRequestId
+    ? (context.awsRequestId as string)
+    : '';
+
+  logger.defaultMeta = {
+    _requestId: `${requestId?.substring(0, 8)}...${requestId?.substring(30)}}}`,
+    requestId,
+    userId,
+  };
+}
+
 export const handler = async (
   event: PostConfirmationTriggerEvent,
   context?: AuthResponseContext
@@ -29,18 +47,8 @@ export const handler = async (
     const { request } = event;
     const { userAttributes } = request;
     const userId = userAttributes.sub;
-    const requestId = context?.awsRequestId
-      ? (context.awsRequestId as string)
-      : '';
 
-    // TODO - This can be a util function
-    logger.defaultMeta = {
-      _requestId: `${requestId?.substring(0, 8)}...${requestId?.substring(
-        30
-      )}}}`,
-      requestId,
-      userId,
-    };
+    setDefaultLoggerMeta(event, context);
 
     logger.info('Incoming request event:', { values: { event } });
     logger.verbose('Incoming request context:', { values: { context } });
