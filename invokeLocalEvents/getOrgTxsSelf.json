@@ -60,6 +60,6 @@
     "time": "23/Jun/2022:02:24:36 +0000",
     "timeEpoch": 1655951076898
   },
-  "routeKey": "GET /org/{orgId}",
+  "routeKey": "GET /org/{orgId}/txs/self",
   "version": "2.0"
 }
