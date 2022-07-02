@@ -1,5 +1,5 @@
 jest.mock('../util/dynamo-util.ts');
-import { handler } from './api-get-self';
+import { handler } from './api-get-org-txs-self';
 import { generateApiGatewayEvent } from '../util/jest-mock-util';
 
 const MOCK_EVENT = generateApiGatewayEvent({});
