@@ -69,16 +69,6 @@ functions:
           path: /user/self
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
-  getSelfTxs:
-    name: getSelfTxs-${sls:stage}
-    handler: src/endpoints/api-get-self-txs.handler
-    events:
-      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
-      - httpApi:
-          method: GET
-          path: /user/self/tx
-          authorizer:
-            name: cognitoJwtAuthorizer-${sls:stage}
   postSeedSelf:
     name: postSeedSelf-${sls:stage}
     handler: src/endpoints/api-post-seed-self.handler
@@ -90,16 +80,6 @@ functions:
           path: /user/self/seed
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
-  getOrganization:
-    name: getOrganization-${sls:stage}
-    handler: src/endpoints/api-get-organization.handler
-    events:
-      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
-      - httpApi:
-          method: GET
-          path: /organization/{orgId}
-          authorizer:
-            name: cognitoJwtAuthorizer-${sls:stage}
   getOrgById:
     name: getOrgById-${sls:stage}
     handler: src/endpoints/api-get-org-by-id.handler
@@ -108,6 +88,16 @@ functions:
       - httpApi:
           method: GET
           path: /org/{orgId}
+          authorizer:
+            name: cognitoJwtAuthorizer-${sls:stage}
+  getOrgTxsSelf:
+    name: getOrgTxsSelf-${sls:stage}
+    handler: src/endpoints/api-get-org-txs-self.handler
+    events:
+      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+      - httpApi:
+          method: GET
+          path: /org/{orgId}/txs/self
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
   postJoinOrgById:

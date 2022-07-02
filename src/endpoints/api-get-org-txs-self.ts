@@ -6,7 +6,8 @@ import {
   UserWithPublicData,
   getUserById,
   initDynamoClient,
-  getUsersInOrganization,
+  getOrgById,
+  batchGetUsersById,
 } from '../util/dynamo-util';
 import { getAddressTxHistory, HistoricalTxn } from '../util/avax-chain-util';
 import logger, {
@@ -65,44 +66,57 @@ export const handler = async (
     setDefaultLoggerMetaForApi(event, logger);
     const claims = event.requestContext.authorizer.jwt.claims;
     // For some reason it can go through in two seperate ways
-    const userId =
+    const requestUserId =
       (claims.username as string) || (claims['cognito:username'] as string);
+
+    const orgId = event.pathParameters?.orgId;
 
     logger.info('incomingEvent', { values: { event } });
     logger.verbose('incomingEventAuth', {
       values: { authorizer: event.requestContext.authorizer },
     });
 
-    logger.verbose('Fetching user', { values: { userId: userId } });
-    const user = await getUserById(userId, dynamoClient);
+    if (!orgId) {
+      return generateReturn(400, {
+        message: 'Missing orgId',
+      });
+    }
+
+    logger.verbose('Getting org by id', { values: { orgId } });
+    const org = await getOrgById(orgId, dynamoClient);
+    logger.info('Received org', { values: { org } });
+
+    if (!org) {
+      logger.verbose('Returing 404, the org was not found', {
+        values: { orgId },
+      });
+      return generateReturn(404, {
+        message: `${orgId} organization not found`,
+      });
+    }
+
+    if (!org.member_ids.includes(requestUserId)) {
+      logger.warn('User is not a member of this org, why are they here?', {
+        values: { requestUserId, orgId },
+      });
+      return generateReturn(403, {
+        message: `${requestUserId} is not a member of ${orgId}`,
+      });
+    }
+
+    logger.verbose('Fetching user', { values: { requestUserId } });
+    const user = await getUserById(requestUserId, dynamoClient);
     if (!user) {
       return generateReturn(404, { message: 'User not found' });
     }
     logger.info('Received user', { values: user });
 
     const usersAddressC = user.walletAddressC;
-    /**
-     * TODO - This API endpoint will be /org/id/self/txs
-     * And then a user can view their history within the context of an org
-     * Or we can create a table that has user wallet addy as the primary key with user id as attribute
-     * Then we can batch fetch
-     * And then batch fetch again
-     * This will support the user viewing their own history across multiple orgs
-     *
-     */
-    /**
-     * TODO: This won't work when we have multiple organizations.
-     * I cannot SCAN for multiple users by their walletAddressC </3
-     * I need to reshape the DB to effectively support querying for multiple users by their Address
-     * It's becoming clear that DynamoDB may not be the best choice.  A shift to Aurora may need to happen.
-     */
+
     logger.verbose('Fetching users in Organization', {
-      values: { orgId: user.organization },
+      values: { orgId },
     });
-    const txCandidates = await getUsersInOrganization(
-      user.organization,
-      dynamoClient
-    );
+    const txCandidates = await batchGetUsersById(org.member_ids, dynamoClient);
     logger.info('Received users in org', { values: txCandidates });
 
     logger.verbose('Fetching user transactions', { values: { usersAddressC } });

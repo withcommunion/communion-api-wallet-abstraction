@@ -6,7 +6,6 @@ import {
   PutCommand,
   PutCommandOutput,
   GetCommand,
-  ScanCommand,
   BatchGetCommand,
   UpdateCommand,
   UpdateCommandOutput,
@@ -109,23 +108,6 @@ export async function batchGetUsersById(
   } else {
     return [];
   }
-}
-
-export async function getUsersInOrganization(
-  orgId: string,
-  dynamoClient: DynamoDBDocumentClient
-) {
-  const scanParams = {
-    TableName: usersTable,
-    FilterExpression: 'organization = :organization',
-    ExpressionAttributeValues: {
-      ':organization': orgId,
-    },
-  };
-
-  const res = await dynamoClient.send(new ScanCommand(scanParams));
-  const users = (res.Items as User[]) || [];
-  return users;
 }
 
 export interface OrgAction {

@@ -49,17 +49,17 @@
     "domainPrefix": "p0rddetfk8",
     "http": {
       "method": "GET",
-      "path": "/org/org-jacks-pizza-1",
+      "path": "/org/org-jacks-pizza-1/txs/self",
       "protocol": "HTTP/1.1",
       "sourceIp": "187.171.26.64",
       "userAgent": "PostmanRuntime/7.26.8"
     },
     "requestId": "UJ1Dyi-3oAMEM6Q=",
-    "routeKey": "GET /org/{orgId}",
+    "routeKey": "GET /org/{orgId}/txs/self",
     "stage": "$default",
     "time": "23/Jun/2022:02:24:36 +0000",
     "timeEpoch": 1655951076898
   },
-  "routeKey": "GET /org/{orgId}",
+  "routeKey": "GET /org/{orgId}/txs/self",
   "version": "2.0"
 }
