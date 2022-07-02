@@ -110,6 +110,16 @@ functions:
           path: /org/{orgId}
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
+  getOrgTxsSelf:
+    name: getOrgTxsSelf-${sls:stage}
+    handler: src/endpoints/api-get-org-txs-self.handler
+    events:
+      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+      - httpApi:
+          method: GET
+          path: /org/{orgId}/txs/self
+          authorizer:
+            name: cognitoJwtAuthorizer-${sls:stage}
   postJoinOrgById:
     name: postJoinOrgById-${sls:stage}
     handler: src/endpoints/api-post-join-org-by-id.handler
