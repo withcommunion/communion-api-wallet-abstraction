@@ -80,16 +80,6 @@ functions:
           path: /user/self/seed
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
-  getOrganization:
-    name: getOrganization-${sls:stage}
-    handler: src/endpoints/api-get-organization.handler
-    events:
-      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
-      - httpApi:
-          method: GET
-          path: /organization/{orgId}
-          authorizer:
-            name: cognitoJwtAuthorizer-${sls:stage}
   getOrgById:
     name: getOrgById-${sls:stage}
     handler: src/endpoints/api-get-org-by-id.handler
