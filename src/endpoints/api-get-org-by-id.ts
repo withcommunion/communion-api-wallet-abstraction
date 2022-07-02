@@ -87,6 +87,7 @@ export const handler = async (
       actions: org.actions,
       roles: org.roles,
       member_ids: org.member_ids,
+      redeemables: org.redeemables,
     };
 
     logger.verbose('Fetching all users in org', {

@@ -49,6 +49,18 @@ export const MOCK_ORG = {
       name: 'Kindness',
     },
   ],
+  redeemables: [
+    {
+      allowed_roles: ['worker', 'manager', 'owner'],
+      amount: '10',
+      name: 'Slice of Pizza',
+    },
+    {
+      allowed_roles: ['worker', 'manager', 'owner'],
+      amount: '150',
+      name: '1 Day PTO',
+    },
+  ],
   member_ids: [MOCK_USER_SELF.id, MOCK_USER_A.id],
   roles: ['worker', 'manager', 'owner', 'seeder'],
   seeder: {
