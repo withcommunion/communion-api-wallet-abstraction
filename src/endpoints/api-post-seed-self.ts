@@ -67,7 +67,7 @@ export const handler = async (
     });
 
     logger.verbose('Seeding user', { values: { user } });
-    const transaction = seedFundsForUser(
+    const transaction = await seedFundsForUser(
       user.walletAddressC,
       dynamoClient,
       true
