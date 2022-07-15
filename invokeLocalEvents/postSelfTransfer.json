@@ -1,0 +1,63 @@
+{
+  "body": "{\n    \"orgId\": \"jacks-pizza-1\",\n    \"toUserId\": \"asdf\"\n}",
+  "headers": {
+    "accept": "*/*",
+    "accept-encoding": "gzip, deflate, br",
+    "authorization": "Bearer eyJr",
+    "content-length": "56",
+    "content-type": "application/json",
+    "host": "p0rddetfk8.execute-api.us-east-1.amazonaws.com",
+    "postman-token": "acd06611-fad1-4f76-9682-ff16504f4d64",
+    "user-agent": "PostmanRuntime/7.26.8",
+    "x-amzn-trace-id": "Root=1-62d1d3b6-19b0b83503ee82540362e2af",
+    "x-forwarded-for": "187.171.39.10",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "isBase64Encoded": false,
+  "rawPath": "/user/self/transfer",
+  "rawQueryString": "",
+  "requestContext": {
+    "accountId": "143056416942",
+    "apiId": "p0rddetfk8",
+    "authorizer": {
+      "jwt": {
+        "claims": {
+          "aud": "4eerlu1taf72c8r20pv2tmmvmt",
+          "auth_time": "1657744128",
+          "cognito:username": "6281d918-df36-48bf-b8a4-3ee1f2b8305e",
+          "custom:organization": "org-jacks-pizza-1",
+          "email": "mfalicea58@gmail.com",
+          "email_verified": "true",
+          "event_id": "21185fb7-861d-4853-bcb0-dff82d1dbd4a",
+          "exp": "1657921042",
+          "family_name": "Alicea",
+          "given_name": "Mike",
+          "iat": "1657917442",
+          "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_EXRZZF0cp",
+          "jti": "dc669372-cab6-4806-b8d8-1fc3602a704a",
+          "origin_jti": "e5c3e861-409c-4f28-a60e-c51f9569458e",
+          "sub": "6281d918-df36-48bf-b8a4-3ee1f2b8305e",
+          "token_use": "id"
+        },
+        "scopes": null
+      }
+    },
+    "domainName": "p0rddetfk8.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "p0rddetfk8",
+    "http": {
+      "method": "POST",
+      "path": "/user/self/transfer",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "187.171.39.10",
+      "userAgent": "PostmanRuntime/7.26.8"
+    },
+    "requestId": "VU4Ejh0boAMEVEA=",
+    "routeKey": "POST /user/self/transfer",
+    "stage": "$default",
+    "time": "15/Jul/2022:20:53:10 +0000",
+    "timeEpoch": 1657918390512
+  },
+  "routeKey": "POST /user/self/transfer",
+  "version": "2.0"
+}

@@ -9,8 +9,6 @@ import { getUserById, initDynamoClient, Self } from '../util/dynamo-util';
 
 const dynamoClient = initDynamoClient();
 
-export const MIN_BALANCE_TO_SEED = '0.005';
-
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ) => {
@@ -25,6 +23,18 @@ export const handler = async (
     // For some reason it can go through in two seperate ways
     const userId =
       (claims.username as string) || (claims['cognito:username'] as string);
+
+    let body;
+    try {
+      // eslint-disable-next-line
+      body = JSON.parse(event.body || '{}');
+    } catch (error) {
+      logger.error('Failed to parse body', {
+        values: { error, body: event.body },
+      });
+      generateReturn(500, { message: 'Failed to parse body' });
+    }
+    // console.log(orgId);
 
     logger.verbose('Fetching user', { values: { userId } });
     const user = (await getUserById(userId, dynamoClient)) as Self;
@@ -44,7 +54,7 @@ export const handler = async (
   } catch (error) {
     logger.error('Failed to Transfer', { values: { error } });
     return generateReturn(500, {
-      message: 'Something went wrong trying to seed user',
+      message: 'Something went wrong trying to transfer funds',
       error: error,
     });
   }
