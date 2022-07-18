@@ -138,6 +138,8 @@ export interface OrgWithPrivateData {
   };
   avaxContract?: {
     address: string;
+    tokenName: string;
+    tokenSymbol: string;
   };
   members?: UserWithPublicData[];
 }
