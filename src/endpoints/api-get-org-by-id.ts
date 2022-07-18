@@ -88,6 +88,7 @@ export const handler = async (
       roles: org.roles,
       member_ids: org.member_ids,
       redeemables: org.redeemables,
+      avax_contract: org.avax_contract,
     };
 
     logger.verbose('Fetching all users in org', {
