@@ -27,6 +27,9 @@ async function fetchToAndFromUserHelper(toUserId: string, fromUserId: string) {
     const fromUser = users.find((user) => user.id === fromUserId);
 
     if (!toUser || !fromUser) {
+      logger.verbose('The users did not exist', {
+        values: { toUserId, fromUserId, toUser, fromUser },
+      });
       return { toUser: null, fromUser: null };
     }
 
@@ -146,6 +149,9 @@ export const handler = async (
       fromUserId
     );
     if (!toUser || !fromUser) {
+      logger.error('We could not find the users', {
+        values: { toUser, fromUser },
+      });
       return generateReturn(400, { message: 'Could not find users' });
     }
 
@@ -173,6 +179,7 @@ export const handler = async (
       orgGovernanceContract
     );
 
+    logger.verbose('We got here!?');
     return generateReturn(200, { transaction, txnHash: transaction.hash });
   } catch (error) {
     logger.error('Failed to Transfer', { values: { error } });
