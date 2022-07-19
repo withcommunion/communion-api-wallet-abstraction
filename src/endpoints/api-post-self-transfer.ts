@@ -1,13 +1,14 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
-// import { ethers } from 'ethers';
 
-import { abi as JacksPizzaAbi } from '../contractAbi/jacksPizza/JacksPizzaOrg.json';
 import { generateReturn } from '../util/api-util';
 import logger, {
   setDefaultLoggerMetaForApi,
 } from '../util/winston-logger-util';
 import { Contract, Transaction } from 'ethers';
-import { getEthersWallet } from '../util/avax-wallet-util';
+import {
+  getEthersWallet,
+  getJacksPizzaGovernanceContract,
+} from '../util/avax-wallet-util';
 import {
   User,
   batchGetUsersById,
@@ -54,9 +55,8 @@ async function getOrgGovernanceContractHelper(orgId: string) {
     }
 
     const orgDevWallet = getEthersWallet(org.seeder.privateKeyWithLeadingHex);
-    const governanceContract = new Contract(
+    const governanceContract = getJacksPizzaGovernanceContract(
       governanceContractAddress,
-      JacksPizzaAbi,
       orgDevWallet
     );
 
