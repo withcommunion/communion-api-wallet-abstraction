@@ -1,14 +1,18 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 // import { ethers } from 'ethers';
 
+import { abi as JacksPizzaAbi } from '../contractAbi/jacksPizza/JacksPizzaOrg.json';
 import { generateReturn } from '../util/api-util';
 import logger, {
   setDefaultLoggerMetaForApi,
 } from '../util/winston-logger-util';
+import { Contract, Transaction } from 'ethers';
+import { getEthersWallet } from '../util/avax-wallet-util';
 import {
+  User,
   batchGetUsersById,
   initDynamoClient,
-  // getOrgById,
+  getOrgById,
 } from '../util/dynamo-util';
 
 const dynamoClient = initDynamoClient();
@@ -35,28 +39,68 @@ async function fetchToAndFromUserHelper(toUserId: string, fromUserId: string) {
   }
 }
 
-// async function getOrgGovernanceContractHelper(orgId: string) {
-//   const org = await getOrgById(orgId, dynamoClient);
-//   // const governanceContractAddress = org.a
-// }
+async function getOrgGovernanceContractHelper(orgId: string) {
+  try {
+    const org = await getOrgById(orgId, dynamoClient);
+    const governanceContractAddress = org?.avax_contract?.address;
+    if (!governanceContractAddress) {
+      logger.error(
+        'Failed to get governance contract address from org - it should have one',
+        {
+          values: { orgId, org },
+        }
+      );
+      throw new Error('No governance contract address found');
+    }
+
+    const orgDevWallet = getEthersWallet(org.seeder.privateKeyWithLeadingHex);
+    const governanceContract = new Contract(
+      governanceContractAddress,
+      JacksPizzaAbi,
+      orgDevWallet
+    );
+
+    return governanceContract;
+  } catch (error) {
+    logger.error('Error fetching org governance contract', {
+      values: { orgId, error },
+    });
+    throw error;
+  }
+}
+
+async function transferTokensHelper(
+  fromUser: User,
+  toUser: User,
+  amount: number,
+  governanceContract: Contract
+) {
+  logger.info('Transferring tokens', {
+    values: {
+      fromUser: { id: fromUser.id, address: fromUser.walletAddressC },
+      toUser: { id: toUser.id, address: toUser.walletAddressC },
+      amount,
+    },
+  });
+
+  // eslint-disable-next-line
+  const transaction = (await governanceContract.transferEmployeeTokens(
+    fromUser.walletAddressC,
+    toUser.walletAddressC,
+    amount
+  )) as Transaction;
+
+  logger.verbose('Transferred tokens', { values: { transaction } });
+
+  return transaction;
+}
 
 interface ExpectedPostBody {
   toUserId: string;
   orgId: string;
+  amount: number;
 }
-/**
- * Parse body
- * Get to and from user id
- * Fetch to user
- * Fetch from user
- * Ensure to user is in org
- * Ensure from user is in org
- * Fetch org for private key in seeder
- * Create contract as seeder with Ethers
- * Call endpoint to transfer tokens
- * Wait for txn?  Accept param to wait for txn?
- * Return txn hash
- */
+
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ) => {
@@ -73,6 +117,7 @@ export const handler = async (
 
     let orgId = '';
     let toUserId = '';
+    let amount = 0;
     try {
       if (!event.body) {
         return generateReturn(400, { message: 'No body provided' });
@@ -81,16 +126,18 @@ export const handler = async (
       const body = JSON.parse(event.body) as ExpectedPostBody;
       orgId = body.orgId;
       toUserId = body.toUserId;
+      amount = body.amount;
     } catch (error) {
       logger.error('Failed to parse body', {
         values: { error, body: event.body },
       });
       generateReturn(500, { message: 'Failed to parse body' });
     }
-    if (!orgId || !toUserId || !fromUserId) {
+
+    if (!orgId || !toUserId || !fromUserId || !amount) {
       return generateReturn(400, {
-        message: 'Missing required fields',
-        fields: { orgId, toUserId },
+        message: 'Missing required fields in body',
+        fields: { orgId, toUserId, amount },
       });
     }
 
@@ -117,9 +164,16 @@ export const handler = async (
       });
     }
 
-    // const orgGovernanceContract = await getOrgGovernanceContractHelper(orgId);
+    const orgGovernanceContract = await getOrgGovernanceContractHelper(orgId);
 
-    return generateReturn(200, { transaction: {} });
+    const transaction = await transferTokensHelper(
+      fromUser,
+      toUser,
+      amount,
+      orgGovernanceContract
+    );
+
+    return generateReturn(200, { transaction, txnHash: transaction.hash });
   } catch (error) {
     logger.error('Failed to Transfer', { values: { error } });
     return generateReturn(500, {
