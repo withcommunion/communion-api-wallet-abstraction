@@ -1,4 +1,3 @@
-import { SingletonWallet } from '@avalabs/avalanche-wallet-sdk';
 import { ethers, Wallet } from 'ethers';
 import { abi as JacksPizzaAbi } from '../contractAbi/jacksPizza/JacksPizzaOrg.json';
 
@@ -30,14 +29,10 @@ export function createSingletonWallet(
   const evmKeyWithLeadingHex = hasLeadingHex
     ? evmPrivateKey
     : `0x${evmPrivateKey}`;
-  const evmKeyWithoutLeadingHex = hasLeadingHex
-    ? evmPrivateKey.split('0x')[1]
-    : evmPrivateKey;
 
-  const avaxWallet = SingletonWallet.fromEvmKey(evmKeyWithoutLeadingHex);
   const ethersWallet = new ethers.Wallet(evmKeyWithLeadingHex);
 
-  return { avaxWallet, ethersWallet };
+  return { ethersWallet };
 }
 
 export function getEthersWallet(

@@ -170,6 +170,8 @@ export const handler = async (
 
     const { usersPrivateKey, usersWallet } = setupUserWalletHelper();
 
+    const walletAddressC = await usersWallet.ethersWallet.getAddress();
+
     const user: User = {
       id: userId,
       email: userAttributes.email,
@@ -184,9 +186,9 @@ export const handler = async (
       ],
       role: userAttributes['custom:role'],
       walletPrivateKeyWithLeadingHex: usersPrivateKey.evmKeyWithLeadingHex,
-      walletAddressC: usersWallet.avaxWallet.getAddressC(),
-      walletAddressP: usersWallet.avaxWallet.getAddressP(),
-      walletAddressX: usersWallet.avaxWallet.getAddressX(),
+      walletAddressC,
+      walletAddressP: 'N/A',
+      walletAddressX: 'N/A',
     };
 
     await insertUserHelper(user);
