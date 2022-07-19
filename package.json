@@ -5,8 +5,8 @@
   "scripts": {
     "lint": "eslint src/",
     "build": "tsc",
-    "test": "LOG_LEVEL=error jest",
-    "test:watch": "jest --watch",
+    "test": "LOG_LEVEL=verbose jest",
+    "test:watch": "LOG_LEVEL=verbose jest --watch",
     "prepare": "husky install",
     "deploy:dev": "sls deploy --stage dev --aws-profile communion --verbose --aws-s3-accelerate",
     "deploy:prod": "sls deploy --stage prod --aws-profile communion --verbose --aws-s3-accelerate",
