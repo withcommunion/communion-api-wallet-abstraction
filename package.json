@@ -5,8 +5,8 @@
   "scripts": {
     "lint": "eslint src/",
     "build": "tsc",
-    "test": "LOG_LEVEL=error jest",
-    "test:watch": "jest --watch",
+    "test": "LOG_LEVEL=verbose jest",
+    "test:watch": "LOG_LEVEL=verbose jest --watch",
     "prepare": "husky install",
     "deploy:dev": "sls deploy --stage dev --aws-profile communion --verbose --aws-s3-accelerate",
     "deploy:prod": "sls deploy --stage prod --aws-profile communion --verbose --aws-s3-accelerate",
@@ -16,7 +16,8 @@
     "invoke:getOrgById": "NODE_ENV=local serverless invoke local --function getOrgById --stage dev --path ./invokeLocalEvents/getOrgById.json -e LOG_LEVEL=verbose",
     "invoke:getOrgTxsSelf": "NODE_ENV=local serverless invoke local --function getOrgTxsSelf --stage dev --path ./invokeLocalEvents/getOrgTxsSelf.json -e LOG_LEVEL=verbose",
     "invoke:postConfirmationCreateUserWallet": "NODE_ENV=local serverless invoke local --function postConfirmationCreateUserWallet --stage dev --path ./invokeLocalEvents/postConfirmationCognitoEvent.json -e LOG_LEVEL=verbose",
-    "invoke:postSeedSelf": "NODE_ENV=local serverless invoke local --function postSeedSelf --stage dev --path ./invokeLocalEvents/postSeedSelf.json -e LOG_LEVEL=verbose"
+    "invoke:postSeedSelf": "NODE_ENV=local serverless invoke local --function postSeedSelf --stage dev --path ./invokeLocalEvents/postSeedSelf.json -e LOG_LEVEL=verbose",
+    "invoke:postSelfTransfer": "NODE_ENV=local serverless invoke local --function postSelfTransfer --stage dev --path ./invokeLocalEvents/postSelfTransfer.json -e LOG_LEVEL=verbose"
   },
   "dependencies": {
     "@avalabs/avalanche-wallet-sdk": "^0.17.2",

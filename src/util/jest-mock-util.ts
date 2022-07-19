@@ -8,6 +8,7 @@ interface GatewayEventParamOverrides {
   familyName?: string;
   givenName?: string;
   email?: string;
+  body?: string;
 }
 export function generateApiGatewayEvent(
   paramOverrides: GatewayEventParamOverrides
@@ -16,6 +17,7 @@ export function generateApiGatewayEvent(
     headers: {
       authorization: 'Bearer someRandomToken',
     },
+    body: paramOverrides.body || '',
     isBase64Encoded: false,
     pathParameters: {
       orgId: paramOverrides.orgId || 'jacks-pizza-1',

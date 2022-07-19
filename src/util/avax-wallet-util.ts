@@ -1,5 +1,6 @@
 import { SingletonWallet } from '@avalabs/avalanche-wallet-sdk';
-import { ethers } from 'ethers';
+import { ethers, Wallet } from 'ethers';
+import { abi as JacksPizzaAbi } from '../contractAbi/jacksPizza/JacksPizzaOrg.json';
 
 // TODO: Deal with prod and dev
 export const avaxTestNetworkNodeUrl =
@@ -43,4 +44,17 @@ export function getEthersWallet(
   privateKeyWithLeadingHex: string
 ): ethers.Wallet {
   return new ethers.Wallet(privateKeyWithLeadingHex, ethersAvaxProvider);
+}
+
+export function getJacksPizzaGovernanceContract(
+  contractAddress: string,
+  signerWallet: Wallet
+) {
+  const contract = new ethers.Contract(
+    contractAddress,
+    JacksPizzaAbi,
+    signerWallet
+  );
+
+  return contract;
 }
