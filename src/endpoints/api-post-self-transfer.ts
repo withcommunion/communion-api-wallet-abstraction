@@ -9,6 +9,11 @@ import { getUserById, initDynamoClient, Self } from '../util/dynamo-util';
 
 const dynamoClient = initDynamoClient();
 
+interface ExpectedPostBody {
+  toUserId: string;
+  orgId: string;
+}
+
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ) => {
@@ -24,17 +29,28 @@ export const handler = async (
     const userId =
       (claims.username as string) || (claims['cognito:username'] as string);
 
-    let body;
+    if (!event.body) {
+      return generateReturn(400, { message: 'No body provided' });
+    }
+
+    let body: ExpectedPostBody;
     try {
-      // eslint-disable-next-line
-      body = JSON.parse(event.body || '{}');
+      body = JSON.parse(event.body) as ExpectedPostBody;
+
+      if (!body.orgId || !body.toUserId) {
+        return generateReturn(400, {
+          message: 'Missing required fields',
+          fields: { orgId: body.orgId, toUserId: body.toUserId },
+        });
+      }
     } catch (error) {
       logger.error('Failed to parse body', {
         values: { error, body: event.body },
       });
       generateReturn(500, { message: 'Failed to parse body' });
     }
-    // console.log(orgId);
+
+    // const { orgId, toUserId } = body;
 
     logger.verbose('Fetching user', { values: { userId } });
     const user = (await getUserById(userId, dynamoClient)) as Self;
