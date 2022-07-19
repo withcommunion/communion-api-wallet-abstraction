@@ -14,6 +14,7 @@ import {
   batchGetUsersById,
   initDynamoClient,
   getOrgById,
+  OrgWithPrivateData,
 } from '../util/dynamo-util';
 
 const dynamoClient = initDynamoClient();
@@ -43,15 +44,14 @@ async function fetchToAndFromUserHelper(toUserId: string, fromUserId: string) {
   }
 }
 
-async function getOrgGovernanceContractHelper(orgId: string) {
+async function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
   try {
-    const org = await getOrgById(orgId, dynamoClient);
     const governanceContractAddress = org?.avax_contract?.address;
     if (!governanceContractAddress) {
       logger.error(
         'Failed to get governance contract address from org - it should have one',
         {
-          values: { orgId, org },
+          values: { org },
         }
       );
       throw new Error('No governance contract address found');
@@ -66,7 +66,7 @@ async function getOrgGovernanceContractHelper(orgId: string) {
     return governanceContract;
   } catch (error) {
     logger.error('Error fetching org governance contract', {
-      values: { orgId, error },
+      values: { org, error },
     });
     throw error;
   }
@@ -152,7 +152,7 @@ export const handler = async (
       logger.error('We could not find the users', {
         values: { toUser, fromUser },
       });
-      return generateReturn(400, { message: 'Could not find users' });
+      return generateReturn(404, { message: 'Could not find users' });
     }
 
     const isToUserInOrg = Boolean(
@@ -163,14 +163,22 @@ export const handler = async (
     );
 
     if (!isToUserInOrg || !isFromUserInOrg) {
-      return generateReturn(400, {
+      return generateReturn(401, {
         message:
-          'Either the toUser or the fromUser is not in org, they both must be in the org',
+          'Unauthorized: either the toUser or the fromUser is not in org, they both must be in the org',
         fields: { orgId, isToUserInOrg, isFromUserInOrg },
       });
     }
 
-    const orgGovernanceContract = await getOrgGovernanceContractHelper(orgId);
+    const org = await getOrgById(orgId, dynamoClient);
+    if (!org) {
+      return generateReturn(404, {
+        message: 'the requested org was not found',
+        orgId,
+      });
+    }
+
+    const orgGovernanceContract = await getOrgGovernanceContractHelper(org);
 
     const transaction = await transferTokensHelper(
       fromUser,
