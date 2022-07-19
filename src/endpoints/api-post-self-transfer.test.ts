@@ -98,4 +98,61 @@ describe('api-post-self-transfer', () => {
       );
     });
   });
+
+  describe('Unhappy path', () => {
+    describe('When fetching the to and from users', () => {
+      describe('If the users do not exist', () => {
+        it('Should return a 404 status code', async () => {
+          batchGetUsersByIdSpy.mockImplementationOnce(async () => {
+            return [];
+          });
+          const res = await handler(MOCK_EVENT);
+          expect(res.statusCode).toBe(404);
+        });
+      });
+      describe('If the users are not in the org that is requested', () => {
+        it('Should returna a 401 status code', async () => {
+          batchGetUsersByIdSpy.mockImplementationOnce(async () => {
+            return [
+              MOCK_USER_SELF as dynamoUtil.User,
+              {
+                ...MOCK_USER_A,
+                organizations: [{ orgId: 'some-other-org' }],
+              } as dynamoUtil.User,
+            ];
+          });
+
+          const res = await handler(MOCK_EVENT);
+          expect(res.statusCode).toBe(401);
+        });
+      });
+    });
+
+    describe('When the org is not found', () => {
+      it('Should return a 404 status code', async () => {
+        getOrgByIdSpy.mockImplementationOnce(async () => {
+          return null;
+        });
+        const res = await handler(MOCK_EVENT);
+        expect(res.statusCode).toBe(404);
+      });
+    });
+
+    describe('getOrgGovernanceContractHelper', () => {
+      describe('When there is no avax contract in the org object', () => {
+        it('Should throw an error and return a 500', async () => {
+          getOrgByIdSpy.mockImplementationOnce(async () => {
+            // @ts-expect-error it's okay
+            return {
+              ...MOCK_ORG,
+              avax_contract: undefined,
+            } as dynamoUtil.OrgWithPrivateData;
+          });
+
+          const res = await handler(MOCK_EVENT);
+          expect(res.statusCode).toBe(500);
+        });
+      });
+    });
+  });
 });
