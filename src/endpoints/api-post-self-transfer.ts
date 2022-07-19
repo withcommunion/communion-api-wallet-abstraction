@@ -179,7 +179,9 @@ export const handler = async (
       orgGovernanceContract
     );
 
-    logger.verbose('We got here!?');
+    logger.info('Returning 200', {
+      values: { transaction, txnHash: transaction.hash },
+    });
     return generateReturn(200, { transaction, txnHash: transaction.hash });
   } catch (error) {
     logger.error('Failed to Transfer', { values: { error } });
