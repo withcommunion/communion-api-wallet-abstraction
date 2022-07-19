@@ -136,6 +136,11 @@ export interface OrgWithPrivateData {
     address: string;
     privateKeyWithLeadingHex: string;
   };
+  avax_contract?: {
+    address: string;
+    token_name: string;
+    token_symbol: string;
+  };
   members?: UserWithPublicData[];
 }
 

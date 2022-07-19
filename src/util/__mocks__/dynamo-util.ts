@@ -67,6 +67,11 @@ export const MOCK_ORG = {
     privateKeyWithLeadingHex: '0xf9c...294c',
     walletAddressC: '0xfE96DA...965f',
   },
+  avax_contract: {
+    address: '0x0000000000000000000000000000000000000000',
+    token_name: 'Jacks Pizza Employee Token',
+    token_symbol: 'JPET',
+  },
 };
 
 export const awsSdkPromiseResponse = jest
