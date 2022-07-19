@@ -1,6 +1,45 @@
+export const MOCK_ORG_ID = 'jacks-pizza-1';
+export const MOCK_SELF_ID = 'local-mock-user-self';
+export const MOCK_USER_A_ID = 'local-invoke-mock-user-a';
+
+export const MOCK_ORG = {
+  id: MOCK_ORG_ID,
+  actions: [
+    {
+      allowed_roles: ['worker', 'manager', 'owner'],
+      amount: '0.05',
+      name: 'Kindness',
+    },
+  ],
+  redeemables: [
+    {
+      allowed_roles: ['worker', 'manager', 'owner'],
+      amount: '10',
+      name: 'Slice of Pizza',
+    },
+    {
+      allowed_roles: ['worker', 'manager', 'owner'],
+      amount: '150',
+      name: '1 Day PTO',
+    },
+  ],
+  member_ids: [MOCK_SELF_ID, MOCK_USER_A_ID],
+  roles: ['worker', 'manager', 'owner', 'seeder'],
+  seeder: {
+    privateKeyWithLeadingHex: '0xf9c...294c',
+    walletAddressC: '0xfE96DA...965f',
+  },
+  avax_contract: {
+    address: '0x0000000000000000000000000000000000000000',
+    token_name: 'Jacks Pizza Employee Token',
+    token_symbol: 'JPET',
+  },
+};
+
 export const MOCK_USER_SELF = {
-  id: 'local-mock-user-self',
+  id: MOCK_SELF_ID,
   organization: 'test-org',
+  organizations: [{ orgId: MOCK_ORG.id }],
   role: 'worker',
   last_name: 'invoke-self',
   first_name: 'local-self',
@@ -13,8 +52,9 @@ export const MOCK_USER_SELF = {
 };
 
 export const MOCK_USER_A = {
-  id: 'local-invoke-mock-user-a',
+  id: MOCK_USER_A_ID,
   organization: 'test-org',
+  organizations: [{ orgId: MOCK_ORG.id }],
   role: 'worker',
   last_name: 'invoke-a',
   first_name: 'local-a',
@@ -38,40 +78,6 @@ export const MOCK_USER_SEEDER = {
   walletPrivateKeyWithLeadingHex:
     '0xa3a06515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
   email: 'local-invoke-user-seeder@gmail.com',
-};
-
-export const MOCK_ORG = {
-  id: 'jacks-pizza-1',
-  actions: [
-    {
-      allowed_roles: ['worker', 'manager', 'owner'],
-      amount: '0.05',
-      name: 'Kindness',
-    },
-  ],
-  redeemables: [
-    {
-      allowed_roles: ['worker', 'manager', 'owner'],
-      amount: '10',
-      name: 'Slice of Pizza',
-    },
-    {
-      allowed_roles: ['worker', 'manager', 'owner'],
-      amount: '150',
-      name: '1 Day PTO',
-    },
-  ],
-  member_ids: [MOCK_USER_SELF.id, MOCK_USER_A.id],
-  roles: ['worker', 'manager', 'owner', 'seeder'],
-  seeder: {
-    privateKeyWithLeadingHex: '0xf9c...294c',
-    walletAddressC: '0xfE96DA...965f',
-  },
-  avax_contract: {
-    address: '0x0000000000000000000000000000000000000000',
-    token_name: 'Jacks Pizza Employee Token',
-    token_symbol: 'JPET',
-  },
 };
 
 export const awsSdkPromiseResponse = jest
