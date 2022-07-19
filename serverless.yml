@@ -56,7 +56,6 @@ custom:
     externals:
       - crypto
       - ethers
-      - '@avalabs/avalanche-wallet-sdk'
 
 functions:
   getSelf:
