@@ -77,7 +77,11 @@ async function burnTokensHelper(
   try {
     logger.info('Burning tokens', {
       values: {
-        user: { id: user.id, address: user.walletAddressC },
+        user: {
+          id: user.id,
+          name: `${user.first_name} ${user.last_name}`,
+          address: user.walletAddressC,
+        },
         amount,
       },
     });
@@ -92,7 +96,9 @@ async function burnTokensHelper(
 
     return transaction;
   } catch (error) {
-    logger.error('Failure burning tokens', { values: { user, amount, error } });
+    logger.error('Failed to burning tokens', {
+      values: { user, amount, error },
+    });
     throw error;
   }
 }
