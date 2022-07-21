@@ -1,6 +1,6 @@
 name: wallet-abstraction
 on:
-  push:
+  pull_request:
     paths:
       - 'src/**'
       - '.github/workflows/wallet-abstraction.yml'
