@@ -120,7 +120,10 @@ export const handler = async (
     logger.info('Received users in org', { values: txCandidates });
 
     logger.verbose('Fetching user transactions', { values: { usersAddressC } });
-    const rawUserTxs = await getAddressTxHistory(usersAddressC);
+    const rawUserTxs = await getAddressTxHistory(
+      usersAddressC,
+      org.avax_contract.token_address
+    );
     logger.info('Received txns', { values: { rawUserTxs } });
 
     const txsWithUserData = createUserTxnHistoryHelper(

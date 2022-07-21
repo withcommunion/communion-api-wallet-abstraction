@@ -129,21 +129,26 @@ export interface HistoricalTxn {
   hash: string;
   nonce: string;
   blockHash: string;
-  transactionIndex: string;
   from: string;
   to: string;
+  contractAddress: string;
   value: string;
+  tokenName: string;
+  tokenSymbol: string;
+  tokenDecimal: string;
+  transactionIndex: string;
   gas: string;
   gasPrice: string;
-  isError: string;
-  txreceipt_status: string;
-  input: string;
-  contractAddress: string;
-  cumulativeGasUsed: string;
   gasUsed: string;
+  cumulativeGasUsed: string;
+  input: string;
   confirmations: string;
 }
-export async function getAddressTxHistory(address: string) {
+
+export async function getAddressTxHistory(
+  userAddress: string,
+  contractAddress: string
+) {
   interface TxListResponse {
     message: string;
     result: HistoricalTxn[];
@@ -155,8 +160,9 @@ export async function getAddressTxHistory(address: string) {
     {
       params: {
         module: 'account',
-        action: 'txlist',
-        address,
+        action: 'tokentx',
+        address: userAddress,
+        conrtactaddress: contractAddress,
         startblock: 1,
         endblock: 99999999,
         sort: 'desc',
