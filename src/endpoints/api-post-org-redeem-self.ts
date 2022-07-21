@@ -74,22 +74,27 @@ async function burnTokensHelper(
   amount: number,
   governanceContract: Contract
 ) {
-  logger.info('Burning tokens', {
-    values: {
-      user: { id: user.id, address: user.walletAddressC },
-      amount,
-    },
-  });
+  try {
+    logger.info('Burning tokens', {
+      values: {
+        user: { id: user.id, address: user.walletAddressC },
+        amount,
+      },
+    });
 
-  // eslint-disable-next-line
-  const transaction = (await governanceContract.burnEmployeeToken(
-    user.walletAddressC,
-    amount
-  )) as Transaction;
+    // eslint-disable-next-line
+    const transaction = (await governanceContract.burnEmployeeToken(
+      user.walletAddressC,
+      amount
+    )) as Transaction;
 
-  logger.verbose('Burned tokens', { values: { transaction } });
+    logger.verbose('Burned tokens', { values: { transaction } });
 
-  return transaction;
+    return transaction;
+  } catch (error) {
+    logger.error('Failure burning tokens', { values: { user, amount, error } });
+    throw error;
+  }
 }
 
 interface ExpectedPostBody {
