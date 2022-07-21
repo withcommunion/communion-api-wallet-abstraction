@@ -87,7 +87,7 @@ async function burnTokensHelper(
     });
 
     // eslint-disable-next-line
-    const transaction = (await governanceContract.burnEmployeeToken(
+    const transaction = (await governanceContract.burnEmployeeTokens(
       user.walletAddressC,
       amount
     )) as Transaction;

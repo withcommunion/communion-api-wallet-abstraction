@@ -26,11 +26,11 @@ const getJacksPizzaGovernanceContractSpy = jest.spyOn(
 
 // eslint-disable-next-line
 const MOCK_HASH = '0x12345325252';
-const burnEmployeeTokenSpy = jest.fn(() => ({ hash: MOCK_HASH }));
+const burnEmployeeTokensSpy = jest.fn(() => ({ hash: MOCK_HASH }));
 // @ts-expect-error it's okay
 getJacksPizzaGovernanceContractSpy.mockImplementation(() => {
   return {
-    burnEmployeeToken: burnEmployeeTokenSpy,
+    burnEmployeeTokens: burnEmployeeTokensSpy,
   };
 });
 
@@ -82,8 +82,8 @@ describe('api-post-org-redeem-self', () => {
 
     it('Should call burnEmployeeToken with the passed in amount and addresses from users', async () => {
       await handler(MOCK_EVENT);
-      expect(burnEmployeeTokenSpy).toHaveBeenCalledTimes(1);
-      expect(burnEmployeeTokenSpy).toHaveBeenCalledWith(
+      expect(burnEmployeeTokensSpy).toHaveBeenCalledTimes(1);
+      expect(burnEmployeeTokensSpy).toHaveBeenCalledWith(
         MOCK_USER_SELF.walletAddressC,
         1
       );
