@@ -136,8 +136,9 @@ export interface OrgWithPrivateData {
     address: string;
     privateKeyWithLeadingHex: string;
   };
-  avax_contract?: {
+  avax_contract: {
     address: string;
+    token_address: string;
     token_name: string;
     token_symbol: string;
   };
