@@ -109,6 +109,16 @@ functions:
           path: /org/{orgId}/txs/self
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
+  postOrgRedeemSelf:
+    name: postOrgRedeemSelf-${sls:stage}
+    handler: src/endpoints/api-post-org-redeem-self.handler
+    events:
+      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+      - httpApi:
+          method: POST
+          path: /org/{orgId}/redeem
+          authorizer:
+            name: cognitoJwtAuthorizer-${sls:stage}
 
   postJoinOrgById:
     name: postJoinOrgById-${sls:stage}
