@@ -179,9 +179,9 @@ export const handler = async (
     });
     return generateReturn(200, { transaction, txnHash: transaction.hash });
   } catch (error) {
-    logger.error('Failed to Transfer', { values: { error } });
+    logger.error('Failed to Redeem rewards', { values: { error } });
     return generateReturn(500, {
-      message: 'Something went wrong trying to transfer funds',
+      message: 'Something went wrong trying to redeem rewards',
       error: error,
     });
   }
