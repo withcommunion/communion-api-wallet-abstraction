@@ -31,6 +31,7 @@ export const MOCK_ORG = {
   },
   avax_contract: {
     address: '0x0000000000000000000000000000000000000000',
+    token_address: '0x0000000000000000000000000000000000000000',
     token_name: 'Jacks Pizza Employee Token',
     token_symbol: 'JPET',
   },
