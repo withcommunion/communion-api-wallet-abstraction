@@ -3,9 +3,13 @@ import type {
   AuthResponseContext,
 } from 'aws-lambda';
 
+import type { Transaction } from 'ethers';
+
 import {
+  getEthersWallet,
   generatePrivateEvmKey,
   createSingletonWallet,
+  getJacksPizzaGovernanceContract,
 } from '../util/avax-wallet-util';
 
 import { seedFundsForUser } from '../util/seed-util';
@@ -16,6 +20,7 @@ import {
   User,
   getUserById,
   addUserToOrg,
+  getOrgById,
 } from '../util/dynamo-util';
 
 import logger from '../util/winston-logger-util';
@@ -81,7 +86,7 @@ async function insertUserHelper(user: User) {
   }
 }
 
-async function addUserToOrgHelper(user: User) {
+async function addUserToOrgInDbHelper(user: User) {
   try {
     logger.verbose('Attempting to add user to org', {
       values: { user, userId: user.id, orgId: user.organization },
@@ -114,6 +119,43 @@ async function addUserToOrgHelper(user: User) {
       });
       throw error;
     }
+  }
+}
+
+/**
+ * TODO: This will be moved to the api-post-join-org-by-id endpoint
+ * For now it works.
+ */
+async function addUserToOrgInSmartContractHelper(user: User) {
+  try {
+    logger.info('Attempting to add user to org in smart contract', {
+      values: { user },
+    });
+    const org = await getOrgById(user.organization, dynamoClient);
+    const governanceContractAddress = org?.avax_contract?.address || '';
+    const orgDevWallet = getEthersWallet(
+      org?.seeder.privateKeyWithLeadingHex || ''
+    );
+
+    const governanceContract = getJacksPizzaGovernanceContract(
+      governanceContractAddress,
+      orgDevWallet
+    );
+
+    // eslint-disable-next-line
+    const txn = await governanceContract.addEmployee(user.walletAddressC);
+    // eslint-disable-next-line
+    const completedTxn = (await txn.wait()) as Transaction;
+    logger.info('Successfully added user to org in smart contract', {
+      values: { txn: completedTxn, address: user.walletAddressC },
+    });
+
+    return completedTxn;
+  } catch (error) {
+    logger.error('Failed to add user to org in smart contract', {
+      values: { user, error },
+    });
+    throw error;
   }
 }
 
@@ -196,7 +238,8 @@ export const handler = async (
      * TODO: This will go away once we start using the endpoint and users join orgs manually
      * This is okay for jacks pizza, right now
      */
-    await addUserToOrgHelper(user);
+    await addUserToOrgInDbHelper(user);
+    await addUserToOrgInSmartContractHelper(user);
     await seedUserHelper(user.walletAddressC);
 
     return event;

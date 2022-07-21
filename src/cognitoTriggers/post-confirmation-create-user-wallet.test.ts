@@ -11,7 +11,7 @@ import * as seedUtil from '../util/seed-util';
 import * as dynamoUtil from '../util/dynamo-util';
 
 import { handler } from './post-confirmation-create-user-wallet';
-import { MOCK_USER_SELF } from '../util/__mocks__/dynamo-util';
+import { MOCK_ORG, MOCK_USER_SELF } from '../util/__mocks__/dynamo-util';
 
 const MOCK_EVENT: PostConfirmationTriggerEvent = {
   version: '1',
@@ -57,6 +57,21 @@ describe('postConfirmationCreateUserWallet', () => {
     avaxWalletUtil,
     'createSingletonWallet'
   );
+
+  const getEthersWalletSpy = jest.spyOn(avaxWalletUtil, 'getEthersWallet');
+  getEthersWalletSpy.mockImplementation(() => ({} as ethers.Wallet));
+
+  const getJacksPizzaGovernanceContractSpy = jest.spyOn(
+    avaxWalletUtil,
+    'getJacksPizzaGovernanceContract'
+  );
+  const addEmployeeSpy = jest.fn(() => ({ wait: () => Promise.resolve() }));
+  // @ts-expect-error it's okay
+  getJacksPizzaGovernanceContractSpy.mockImplementation(() => {
+    return {
+      addEmployee: addEmployeeSpy,
+    };
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -149,6 +164,38 @@ describe('postConfirmationCreateUserWallet', () => {
           await handler(MOCK_EVENT);
           expect(addUserToOrg).toHaveBeenCalledTimes(1);
         });
+      });
+    });
+
+    describe('Adding user to the JacksPizzaGovernance contract', () => {
+      it('Should call getOrgById', async () => {
+        const getOrgByIdSpy = jest.spyOn(dynamoUtil, 'getOrgById');
+        await handler(MOCK_EVENT);
+        expect(getOrgByIdSpy).toHaveBeenCalledTimes(1);
+        expect(getOrgByIdSpy).toHaveBeenCalledWith(
+          MOCK_USER_SELF.organization,
+          {}
+        );
+      });
+      it('Should call getEthersWallet with the org seeder key', async () => {
+        await handler(MOCK_EVENT);
+        expect(getEthersWalletSpy).toHaveBeenCalledTimes(1);
+        expect(getEthersWalletSpy).toHaveBeenCalledWith(
+          MOCK_ORG.seeder.privateKeyWithLeadingHex
+        );
+      });
+      it('Should call getJacksPizzaGovernanceContract with the address in the org and ethers wallet', async () => {
+        await handler(MOCK_EVENT);
+        expect(getJacksPizzaGovernanceContractSpy).toHaveBeenCalledTimes(1);
+        expect(getJacksPizzaGovernanceContractSpy).toHaveBeenCalledWith(
+          MOCK_ORG.avax_contract.address,
+          {}
+        );
+      });
+      it('Should call addEmployee with the users walletAddressC', async () => {
+        await handler(MOCK_EVENT);
+        expect(addEmployeeSpy).toHaveBeenCalledTimes(1);
+        expect(addEmployeeSpy).toHaveBeenCalledWith(expect.any(String));
       });
     });
 
