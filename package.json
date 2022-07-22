@@ -15,6 +15,7 @@
     "invoke:getSelf": "NODE_ENV=local serverless invoke local --function getSelf --stage dev --path ./invokeLocalEvents/getSelfEvent.json -e LOG_LEVEL=verbose",
     "invoke:getOrgById": "NODE_ENV=local serverless invoke local --function getOrgById --stage dev --path ./invokeLocalEvents/getOrgById.json -e LOG_LEVEL=verbose",
     "invoke:getOrgTxsSelf": "NODE_ENV=local serverless invoke local --function getOrgTxsSelf --stage dev --path ./invokeLocalEvents/getOrgTxsSelf.json -e LOG_LEVEL=verbose",
+    "invoke:postOrgRedeemSelf": "NODE_ENV=local serverless invoke local --function postOrgRedeemSelf --stage dev --path ./invokeLocalEvents/postOrgRedeemSelf.json -e LOG_LEVEL=verbose",
     "invoke:postConfirmationCreateUserWallet": "NODE_ENV=local serverless invoke local --function postConfirmationCreateUserWallet --stage dev --path ./invokeLocalEvents/postConfirmationCognitoEvent.json -e LOG_LEVEL=verbose",
     "invoke:postSeedSelf": "NODE_ENV=local serverless invoke local --function postSeedSelf --stage dev --path ./invokeLocalEvents/postSeedSelf.json -e LOG_LEVEL=verbose",
     "invoke:postSelfTransfer": "NODE_ENV=local serverless invoke local --function postSelfTransfer --stage dev --path ./invokeLocalEvents/postSelfTransfer.json -e LOG_LEVEL=verbose"
