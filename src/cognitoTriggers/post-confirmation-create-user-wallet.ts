@@ -1,5 +1,6 @@
 import type {
   PostConfirmationTriggerEvent,
+  PreSignUpAdminCreateUserTriggerEvent,
   AuthResponseContext,
 } from 'aws-lambda';
 
@@ -26,7 +27,7 @@ import logger from '../util/winston-logger-util';
 const dynamoClient = initDynamoClient();
 
 function setDefaultLoggerMeta(
-  event: PostConfirmationTriggerEvent,
+  event: PostConfirmationTriggerEvent | PreSignUpAdminCreateUserTriggerEvent,
   context?: AuthResponseContext
 ) {
   const { request } = event;
@@ -158,7 +159,7 @@ async function addUserToOrgInSmartContractHelper(user: User) {
 }
 
 export const handler = async (
-  event: PostConfirmationTriggerEvent,
+  event: PostConfirmationTriggerEvent | PreSignUpAdminCreateUserTriggerEvent,
   context?: AuthResponseContext
 ) => {
   try {
@@ -196,19 +197,24 @@ export const handler = async (
 
     const walletAddressC = await usersWallet.ethersWallet.getAddress();
 
+    /**
+     * TODO: Have users actually join an org and not be added to one automagically
+     */
+    const TEMP_JACKS_PIZZA_ORG = 'org-jacks-pizza-1';
+    const TEMP_JACKS_PIZZA_DEFAULT_ROLE = 'worker';
     const user: User = {
       id: userId,
       email: userAttributes.email,
       first_name: userAttributes['given_name'],
       last_name: userAttributes['family_name'],
-      organization: userAttributes['custom:organization'],
+      organization: TEMP_JACKS_PIZZA_ORG,
       organizations: [
         {
-          orgId: userAttributes['custom:organization'],
-          role: userAttributes['custom:role'],
+          orgId: TEMP_JACKS_PIZZA_ORG,
+          role: TEMP_JACKS_PIZZA_DEFAULT_ROLE,
         },
       ],
-      role: userAttributes['custom:role'],
+      role: TEMP_JACKS_PIZZA_DEFAULT_ROLE,
       walletPrivateKeyWithLeadingHex: usersPrivateKey.evmKeyWithLeadingHex,
       walletAddressC,
       walletAddressP: 'N/A',

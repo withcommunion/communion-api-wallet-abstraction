@@ -108,7 +108,9 @@ describe('postConfirmationCreateUserWallet', () => {
     describe('Inserting user into the database', () => {
       it('should call inserUser with user parsed from event', async () => {
         await handler(MOCK_EVENT);
-        const expectedOrganization =
+        // TODO This is a hack for now, as all users are in jacks pizza
+        const TEMP_EXPECTED_ORG =
+          'org-jacks-pizza-1' ||
           MOCK_EVENT.request.userAttributes['custom:organization'];
 
         expect(insertUser).toHaveBeenCalledTimes(1);
@@ -118,8 +120,8 @@ describe('postConfirmationCreateUserWallet', () => {
             email: 'someUser@gmail.com',
             first_name: 'Mike',
             last_name: 'A',
-            organization: expectedOrganization,
-            organizations: [{ orgId: expectedOrganization, role: 'worker' }],
+            organization: TEMP_EXPECTED_ORG,
+            organizations: [{ orgId: TEMP_EXPECTED_ORG, role: 'worker' }],
             role: 'worker',
             walletAddressC: expect.any(String),
             walletAddressP: expect.any(String),
@@ -134,13 +136,16 @@ describe('postConfirmationCreateUserWallet', () => {
     describe('Inserting user into org database', () => {
       it('should call addUserToOrg with users org parsed from event', async () => {
         await handler(MOCK_EVENT);
-        const expectedOrganization =
+
+        // TODO This is a hack for now, as all users are in jacks pizza
+        const TEMP_EXPECTED_ORG =
+          'org-jacks-pizza-1' ||
           MOCK_EVENT.request.userAttributes['custom:organization'];
 
         expect(addUserToOrg).toHaveBeenCalledTimes(1);
         expect(addUserToOrg).toHaveBeenCalledWith(
           MOCK_EVENT.userName,
-          expectedOrganization,
+          TEMP_EXPECTED_ORG,
           {}
         );
       });
@@ -158,14 +163,14 @@ describe('postConfirmationCreateUserWallet', () => {
     });
 
     describe('Adding user to the JacksPizzaGovernance contract', () => {
+      // TODO This is a hack for now, as all users are in jacks pizza
+      const TEMP_EXPECTED_ORG =
+        'org-jacks-pizza-1' || MOCK_USER_SELF.organization;
       it('Should call getOrgById', async () => {
         const getOrgByIdSpy = jest.spyOn(dynamoUtil, 'getOrgById');
         await handler(MOCK_EVENT);
         expect(getOrgByIdSpy).toHaveBeenCalledTimes(1);
-        expect(getOrgByIdSpy).toHaveBeenCalledWith(
-          MOCK_USER_SELF.organization,
-          {}
-        );
+        expect(getOrgByIdSpy).toHaveBeenCalledWith(TEMP_EXPECTED_ORG, {});
       });
       it('Should call getEthersWallet with the org seeder key', async () => {
         await handler(MOCK_EVENT);
