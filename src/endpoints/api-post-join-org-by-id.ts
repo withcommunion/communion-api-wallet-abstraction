@@ -1,3 +1,6 @@
+/**
+ * TODO: Update to include adding user to the orgs governance contract
+ */
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 
 import { generateReturn } from '../util/api-util';
