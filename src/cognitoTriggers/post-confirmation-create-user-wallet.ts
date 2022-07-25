@@ -32,7 +32,7 @@ function setDefaultLoggerMeta(
 ) {
   const { request } = event;
   const { userAttributes } = request;
-  const userId = userAttributes.sub;
+  const userId = userAttributes.sub || event.userName;
   const requestId = context?.awsRequestId
     ? (context.awsRequestId as string)
     : '';
