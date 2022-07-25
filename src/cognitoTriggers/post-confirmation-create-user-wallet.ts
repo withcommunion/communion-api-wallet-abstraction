@@ -12,8 +12,6 @@ import {
   getJacksPizzaGovernanceContract,
 } from '../util/avax-wallet-util';
 
-import { seedFundsForUser } from '../util/seed-util';
-
 import {
   initDynamoClient,
   insertUser,
@@ -159,22 +157,6 @@ async function addUserToOrgInSmartContractHelper(user: User) {
   }
 }
 
-async function seedUserHelper(userWalletAddressC: string) {
-  try {
-    logger.verbose('Attempting to seed user', {
-      values: { userWalletAddressC },
-    });
-    const sendAvax = await seedFundsForUser(userWalletAddressC, dynamoClient);
-    logger.info('Seeded user', { values: { sendAvax } });
-  } catch (error) {
-    logger.error(
-      'Failed to seed user - should be okay as it will be caught in the Dynamo insert trigger',
-      { values: { error } }
-    );
-    throw error;
-  }
-}
-
 export const handler = async (
   event: PostConfirmationTriggerEvent,
   context?: AuthResponseContext
@@ -240,7 +222,6 @@ export const handler = async (
      */
     await addUserToOrgInDbHelper(user);
     await addUserToOrgInSmartContractHelper(user);
-    await seedUserHelper(user.walletAddressC);
 
     return event;
   } catch (error) {
