@@ -165,7 +165,7 @@ export const handler = async (
   try {
     const { request } = event;
     const { userAttributes } = request;
-    const userId = userAttributes.sub;
+    const userId = userAttributes.sub || event.userName;
 
     setDefaultLoggerMeta(event, context);
 
