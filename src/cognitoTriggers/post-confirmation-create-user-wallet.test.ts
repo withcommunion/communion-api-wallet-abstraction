@@ -7,7 +7,6 @@ import { ethers } from 'ethers';
 import type { PostConfirmationTriggerEvent } from 'aws-lambda';
 import { insertUser, getUserById, addUserToOrg } from '../util/dynamo-util';
 import * as avaxWalletUtil from '../util/avax-wallet-util';
-import * as seedUtil from '../util/seed-util';
 import * as dynamoUtil from '../util/dynamo-util';
 
 import { handler } from './post-confirmation-create-user-wallet';
@@ -40,15 +39,6 @@ const MOCK_EVENT: PostConfirmationTriggerEvent = {
 };
 
 describe('postConfirmationCreateUserWallet', () => {
-  const seedFundsForUserSpy = jest.spyOn(seedUtil, 'seedFundsForUser');
-  seedFundsForUserSpy.mockImplementation(() =>
-    Promise.resolve({
-      transaction: {} as ethers.providers.TransactionResponse,
-      txHash: '0x123',
-      explorerUrl: 'https://etherscan.io/tx/0x123',
-    })
-  );
-
   const generatePrivateEvmKeySpy = jest.spyOn(
     avaxWalletUtil,
     'generatePrivateEvmKey'
@@ -197,34 +187,6 @@ describe('postConfirmationCreateUserWallet', () => {
         expect(addEmployeeSpy).toHaveBeenCalledTimes(1);
         expect(addEmployeeSpy).toHaveBeenCalledWith(expect.any(String));
       });
-    });
-
-    describe('Seeding user with Avax', () => {
-      it('Should call "seedFundsForUser" with the address to seed', async () => {
-        await handler(MOCK_EVENT);
-        expect(seedFundsForUserSpy).toHaveBeenCalledWith(
-          expect.any(String),
-          expect.any(Object)
-        );
-      });
-      // it('should call getUserById with the SEED_ACCOUNT_ID', async () => {
-      //   await handler(MOCK_EVENT);
-      //   // Once for the user lookup and another to get the seed account
-      //   expect(getUserById).toHaveBeenCalledTimes(2);
-      //   expect(getUserById).toHaveBeenCalledWith(
-      //     SEED_ACCOUNT_ID,
-      //     expect.any(Object)
-      //   );
-      // });
-      // it('should call sendAvax with the Seed Wallet, BASE_AMOUNT_TO_SEED_USER, and toAddress of the newly created user', async () => {
-      //   await handler(MOCK_EVENT);
-      //   expect(sendAvax).toHaveBeenCalledTimes(1);
-      //   expect(sendAvax).toHaveBeenCalledWith(
-      //     expect.objectContaining({ address: expect.any(String) }),
-      //     BASE_AMOUNT_TO_SEED_USER,
-      //     expect.any(String)
-      //   );
-      // });
     });
   });
   describe('Unhappy path', () => {
