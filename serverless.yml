@@ -89,6 +89,16 @@ functions:
           path: /user/self/transfer
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
+  postSelfMultisend:
+    name: postSelfMultisend-${sls:stage}
+    handler: src/endpoints/api-post-self-multisend.handler
+    events:
+      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+      - httpApi:
+          method: post
+          path: /user/self/multisend
+          authorizer:
+            name: cognitoJwtAuthorizer-${sls:stage}
   getOrgById:
     name: getOrgById-${sls:stage}
     handler: src/endpoints/api-get-org-by-id.handler
