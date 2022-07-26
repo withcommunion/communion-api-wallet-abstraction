@@ -2,11 +2,21 @@ import Avalanche from 'avalanche';
 import { ethers } from 'ethers';
 import axios from 'axios';
 
+import { isProd } from '../util/env-util';
 import logger from '../util/winston-logger-util';
+
+export const prodAvaxUrl = 'api.avalanche.network';
+export const fujiTestAvaxUrl = 'api.avax-test.network';
+export const prodAvaxRpcUrl = 'https://api.avax.network/ext/bc/C/rpc';
+export const fujiTestAvaxRpcUrl = 'https://api.avax-test.network/ext/bc/C/rpc';
+
+export const HTTPSProvider = new ethers.providers.JsonRpcProvider(
+  isProd ? prodAvaxRpcUrl : fujiTestAvaxRpcUrl
+);
 
 const chainId = 43113;
 const avalanche = new Avalanche(
-  'api.avax-test.network',
+  isProd ? prodAvaxUrl : fujiTestAvaxUrl,
   undefined,
   'https',
   chainId
@@ -45,7 +55,6 @@ export const calcFeeData = async () => {
   return maxFees;
 };
 
-// TODO: Support prod and dev environment
 export const sendAvax = async (
   fromWallet: ethers.Wallet,
   amount: string,
@@ -54,9 +63,6 @@ export const sendAvax = async (
 ) => {
   const MAX_GAS_WILLING_TO_SPEND_GWEI = '45';
   const chainId = 43113;
-  const nodeURL = 'https://api.avax-test.network/ext/bc/C/rpc';
-  const HTTPSProvider = new ethers.providers.JsonRpcProvider(nodeURL);
-
   const fromAddress = fromWallet.address;
 
   const nonce = await HTTPSProvider.getTransactionCount(fromAddress);
@@ -98,27 +104,29 @@ export const sendAvax = async (
     values: { estimatedGasCost },
   });
 
-  const signedTx = await fromWallet.signTransaction(fullTx);
-  const txHash = ethers.utils.keccak256(signedTx);
-  const explorerUrl = `https://testnet.snowtrace.io/tx/${txHash}`;
+  const signedTxn = await fromWallet.signTransaction(fullTx);
+  const txnHash = ethers.utils.keccak256(signedTxn);
+  const explorerUrl = isProd
+    ? `https://snowtrace.io/tx/${txnHash}`
+    : `https://testnet.snowtrace.io/tx/${txnHash}`;
 
   logger.info('Sending signed transaction', {
     values: {
-      signedTx,
+      signedTxn,
       fullTx,
-      txHash,
+      txnHash,
       explorerUrl,
       nonce,
     },
   });
 
   const res = waitForTxnToFinish
-    ? await (await HTTPSProvider.sendTransaction(signedTx)).wait()
-    : await HTTPSProvider.sendTransaction(signedTx);
+    ? await (await HTTPSProvider.sendTransaction(signedTxn)).wait()
+    : await HTTPSProvider.sendTransaction(signedTxn);
 
   return {
     transaction: res,
-    txHash,
+    txHash: txnHash,
     explorerUrl,
   };
 };
@@ -154,21 +162,21 @@ export async function getAddressTxHistory(
     result: HistoricalTxn[];
     status: string;
   }
-  const rawHistoryResp = await axios.get<TxListResponse>(
-    // TODO: Support dev and prod environment
-    'https://api-testnet.snowtrace.io/api',
-    {
-      params: {
-        module: 'account',
-        action: 'tokentx',
-        address: userAddress,
-        conrtactaddress: contractAddress,
-        startblock: 1,
-        endblock: 99999999,
-        sort: 'desc',
-      },
-    }
-  );
+  const snowtraceApiUrl = isProd
+    ? 'https://api.snowtrace.io/api'
+    : 'https://api-testnet.snowtrace.io/api';
+
+  const rawHistoryResp = await axios.get<TxListResponse>(snowtraceApiUrl, {
+    params: {
+      module: 'account',
+      action: 'tokentx',
+      address: userAddress,
+      conrtactaddress: contractAddress,
+      startblock: 1,
+      endblock: 99999999,
+      sort: 'desc',
+    },
+  });
 
   return rawHistoryResp.data.result;
 }

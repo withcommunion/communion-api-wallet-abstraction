@@ -30,6 +30,8 @@ function setDefaultLoggerMeta(context?: Context) {
   };
 }
 
+// @ts-expect-error No longer necessary, but this fn may be useful in the future
+// eslint-disable-next-line
 function getInsertedUsersFromEventHelper(records: DynamoDBRecord[]) {
   const insertEvents = records.filter(
     (record) => record.eventName === 'INSERT'
@@ -81,6 +83,8 @@ export async function checkIfUserHasFunds(
   return userHasFunds;
 }
 
+// @ts-expect-error No longer necessary, but this fn may be useful in the future
+// eslint-disable-next-line
 async function filterForUsersThatNeedSeeding(usersToSeed: User[]) {
   const newUsersToSeed = (
     await Promise.all(
@@ -101,6 +105,8 @@ async function filterForUsersThatNeedSeeding(usersToSeed: User[]) {
   return newUsersToSeed;
 }
 
+// @ts-expect-error No longer necessary, but this fn may be useful in the future
+// eslint-disable-next-line
 async function seedUsersHelper(usersToSeed: User[]) {
   logger.verbose('Seeding users', { values: { usersToSeed } });
 
@@ -140,6 +146,11 @@ export const handler = async (
     logger.info('Incoming request event:', { values: { event } });
     logger.verbose('Incoming request context:', { values: { context } });
 
+    return event;
+
+    /** 
+     * This FN is no longer needed.  It was used to seed users with funds.
+     * 
     const newlyInsertedUsers = getInsertedUsersFromEventHelper(event.Records);
 
     if (newlyInsertedUsers.length === 0) {
@@ -161,6 +172,7 @@ export const handler = async (
     await seedUsersHelper(newUsersToSeed);
 
     return event;
+    */
   } catch (error) {
     logger.error('Error in dynamoTriggers/new-image-seed-user.ts:', {
       values: { error },

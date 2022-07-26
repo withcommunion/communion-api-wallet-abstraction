@@ -1,12 +1,13 @@
 import { ethers, Wallet } from 'ethers';
+// TODO: We'll likely want to store these in Dynamo or S3 or similar
 import { abi as JacksPizzaAbi } from '../contractAbi/jacksPizza/JacksPizzaOrg.json';
 
-// TODO: Deal with prod and dev
-export const avaxTestNetworkNodeUrl =
-  'https://api.avax-test.network/ext/bc/C/rpc';
+import { isProd } from '../util/env-util';
+export const prodAvaxRpcUrl = 'https://api.avax.network/ext/bc/C/rpc';
+export const fujiTestAvaxRpcUrl = 'https://api.avax-test.network/ext/bc/C/rpc';
 
-export const ethersAvaxProvider = new ethers.providers.JsonRpcProvider(
-  avaxTestNetworkNodeUrl
+export const HTTPSAvaxProvider = new ethers.providers.JsonRpcProvider(
+  isProd ? prodAvaxRpcUrl : fujiTestAvaxRpcUrl
 );
 
 export function generatePrivateEvmKey(): {
@@ -38,7 +39,7 @@ export function createSingletonWallet(
 export function getEthersWallet(
   privateKeyWithLeadingHex: string
 ): ethers.Wallet {
-  return new ethers.Wallet(privateKeyWithLeadingHex, ethersAvaxProvider);
+  return new ethers.Wallet(privateKeyWithLeadingHex, HTTPSAvaxProvider);
 }
 
 export function getJacksPizzaGovernanceContract(
