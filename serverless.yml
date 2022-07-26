@@ -31,7 +31,7 @@ provider:
         issuerUrl: https://cognito-idp.us-east-1.amazonaws.com/us-east-1_SeeaUyuuH
         audience:
           # TODO: Figure out the implications of this, is clientId proper?
-          - 66eoq77778g7d8e36v6pobj0b6
+          - 4sdv5ic4kdhhggf7chcveocimk
   iam:
     role:
       statements:
