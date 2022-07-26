@@ -6,7 +6,7 @@ import logger, {
   setDefaultLoggerMetaForApi,
 } from '../util/winston-logger-util';
 import { getUserById, initDynamoClient, Self } from '../util/dynamo-util';
-import { ethersAvaxProvider } from '../util/avax-wallet-util';
+import { HTTPSAvaxProvider } from '../util/avax-wallet-util';
 import { seedFundsForUser } from '../util/seed-util';
 
 const dynamoClient = initDynamoClient();
@@ -41,7 +41,7 @@ export const handler = async (
     }
     logger.info('Received user', { values: { user } });
 
-    const usersBalance = await ethersAvaxProvider.getBalance(
+    const usersBalance = await HTTPSAvaxProvider.getBalance(
       user.walletAddressC
     );
 
