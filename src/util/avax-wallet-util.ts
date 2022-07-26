@@ -1,4 +1,5 @@
 import { ethers, Wallet } from 'ethers';
+// TODO: We'll likely want to store these in Dynamo or S3 or similar
 import { abi as JacksPizzaAbi } from '../contractAbi/jacksPizza/JacksPizzaOrg.json';
 
 import { isProd } from '../util/env-util';
