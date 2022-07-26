@@ -166,21 +166,17 @@ export async function getAddressTxHistory(
     ? 'https://api.snowtrace.io/api'
     : 'https://api-testnet.snowtrace.io/api';
 
-  const rawHistoryResp = await axios.get<TxListResponse>(
-    // TODO: Support dev and prod environment
-    snowtraceApiUrl,
-    {
-      params: {
-        module: 'account',
-        action: 'tokentx',
-        address: userAddress,
-        conrtactaddress: contractAddress,
-        startblock: 1,
-        endblock: 99999999,
-        sort: 'desc',
-      },
-    }
-  );
+  const rawHistoryResp = await axios.get<TxListResponse>(snowtraceApiUrl, {
+    params: {
+      module: 'account',
+      action: 'tokentx',
+      address: userAddress,
+      conrtactaddress: contractAddress,
+      startblock: 1,
+      endblock: 99999999,
+      sort: 'desc',
+    },
+  });
 
   return rawHistoryResp.data.result;
 }
