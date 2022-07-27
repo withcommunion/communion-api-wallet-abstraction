@@ -11,6 +11,7 @@ import {
 } from '../util/avax-wallet-util';
 import {
   User,
+  getUserById,
   batchGetUsersById,
   initDynamoClient,
   getOrgById,
@@ -19,34 +20,29 @@ import {
 
 const dynamoClient = initDynamoClient();
 
-async function fetchToAndFromUserHelper(toUserId: string, fromUserId: string) {
-  logger.verbose('Fetching users', { values: { toUserId, fromUserId } });
+async function fetchUsersHelper(userIds: string[]) {
+  logger.verbose('Fetching users', { values: { userIds } });
   try {
-    const users = await batchGetUsersById([toUserId, fromUserId], dynamoClient);
+    const users = await batchGetUsersById(userIds, dynamoClient);
 
-    const toUser = users.find((user) => user.id === toUserId);
-    const fromUser = users.find((user) => user.id === fromUserId);
+    const nullUsersRemoved = users.filter((user) => Boolean(user));
+    const isNullUserFound = users.length !== nullUsersRemoved.length;
 
-    if (!toUser || !fromUser) {
-      logger.verbose('The users did not exist', {
-        values: { toUserId, fromUserId, toUser, fromUser },
-      });
-      return { toUser: null, fromUser: null };
+    if (!users || isNullUserFound) {
+      logger.verbose('At least 1 user not found', { values: { userIds } });
+      return null;
     }
-
-    logger.info('Received users', { values: { toUser, fromUser } });
-    return { toUser, fromUser };
+    logger.info('Received users', { values: { users } });
+    return users;
   } catch (error) {
-    logger.error('Error fetching users', {
-      values: { toUserId, fromUserId, error },
-    });
+    logger.error('Error fetching users', { values: { userIds, error } });
     throw error;
   }
 }
 
 async function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
   try {
-    const governanceContractAddress = org?.avax_contract?.address;
+    const governanceContractAddress = org?.avax_contract?.address; // contract address with multisend fn: 0xbA3FF6a903869A9fb40d5cEE8EdF44AdD0932f8e
     if (!governanceContractAddress) {
       logger.error(
         'Failed to get governance contract address from org - it should have one',
@@ -72,25 +68,31 @@ async function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
   }
 }
 
-async function transferTokensHelper(
+async function multisendTokenHelper(
   fromUser: User,
-  toUser: User,
-  amount: number,
+  userIds: string[],
+  toUsersAddresses: string[],
+  amounts: number[],
   governanceContract: Contract
 ) {
-  logger.info('Transferring tokens', {
+  const toUsersIdsAddressesAndAmounts = userIds.map((id, index) => ({
+    id,
+    address: toUsersAddresses[index],
+    amount: amounts[index],
+  }));
+
+  logger.info('Multisending tokens', {
     values: {
       fromUser: { id: fromUser.id, address: fromUser.walletAddressC },
-      toUser: { id: toUser.id, address: toUser.walletAddressC },
-      amount,
+      toUsers: toUsersIdsAddressesAndAmounts,
     },
   });
 
   // eslint-disable-next-line
-  const transaction = (await governanceContract.transferEmployeeTokens(
+  const transaction = (await governanceContract.multisendEmployeeTokens(
     fromUser.walletAddressC,
-    toUser.walletAddressC,
-    amount
+    toUsersAddresses,
+    amounts
   )) as Transaction;
 
   logger.verbose('Transferred tokens', { values: { transaction } });
@@ -99,7 +101,7 @@ async function transferTokensHelper(
 }
 
 interface ExpectedPostBody {
-  toUserId: string;
+  toUserAndAmountObjs: [{ userId: string; amount: number }];
   orgId: string;
   amount: number;
 }
@@ -119,8 +121,7 @@ export const handler = async (
       (claims.username as string) || (claims['cognito:username'] as string);
 
     let orgId = '';
-    let toUserId = '';
-    let amount = 0;
+    let toUserAndAmountObjs: { userId: string; amount: number }[] = [];
     try {
       if (!event.body) {
         return generateReturn(400, { message: 'No body provided' });
@@ -128,8 +129,7 @@ export const handler = async (
 
       const body = JSON.parse(event.body) as ExpectedPostBody;
       orgId = body.orgId;
-      toUserId = body.toUserId;
-      amount = body.amount;
+      toUserAndAmountObjs = body.toUserAndAmountObjs;
     } catch (error) {
       logger.error('Failed to parse body', {
         values: { error, body: event.body },
@@ -137,36 +137,39 @@ export const handler = async (
       generateReturn(500, { message: 'Failed to parse body' });
     }
 
-    if (!orgId || !toUserId || !fromUserId || !amount) {
+    if (!orgId || !toUserAndAmountObjs || !fromUserId) {
       return generateReturn(400, {
         message: 'Missing required fields in body',
-        fields: { orgId, toUserId, amount },
+        fields: { orgId, toUserAndAmountObjs, fromUserId },
       });
     }
 
-    const { toUser, fromUser } = await fetchToAndFromUserHelper(
-      toUserId,
-      fromUserId
-    );
-    if (!toUser || !fromUser) {
-      logger.error('We could not find the users', {
-        values: { toUser, fromUser },
+    const userIds = toUserAndAmountObjs.map((obj) => obj.userId);
+    const amounts = toUserAndAmountObjs.map((obj) => obj.amount);
+
+    const fromUser = await getUserById(fromUserId, dynamoClient);
+    const toUsers = await fetchUsersHelper(userIds);
+
+    if (!toUsers || !fromUser) {
+      logger.error('At least 1 user not found', {
+        values: { toUsers, fromUser },
       });
       return generateReturn(404, { message: 'Could not find users' });
     }
 
-    const isToUserInOrg = Boolean(
-      toUser.organizations.find((org) => org.orgId === orgId)
-    );
     const isFromUserInOrg = Boolean(
       fromUser.organizations.find((org) => org.orgId === orgId)
     );
+    const toUsersInOrg = toUsers.filter((user) =>
+      Boolean(user.organizations.find((org) => org.orgId === orgId))
+    );
+    const areAllToUsersInOrg = toUsersInOrg.length === toUsers.length;
 
-    if (!isToUserInOrg || !isFromUserInOrg) {
+    if (!areAllToUsersInOrg || !isFromUserInOrg) {
       return generateReturn(401, {
         message:
-          'Unauthorized: either the toUser or the fromUser is not in org, they both must be in the org',
-        fields: { orgId, isToUserInOrg, isFromUserInOrg },
+          'Unauthorized: at least 1 toUser or the fromUser is not in org, they all must be in the org',
+        fields: { orgId, toUsersInOrg, isFromUserInOrg },
       });
     }
 
@@ -180,10 +183,13 @@ export const handler = async (
 
     const orgGovernanceContract = await getOrgGovernanceContractHelper(org);
 
-    const transaction = await transferTokensHelper(
+    const toUsersAddresses = toUsers.map((user) => user.walletAddressC);
+
+    const transaction = await multisendTokenHelper(
       fromUser,
-      toUser,
-      amount,
+      userIds,
+      toUsersAddresses,
+      amounts,
       orgGovernanceContract
     );
 
