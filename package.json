@@ -19,7 +19,8 @@
     "invoke:postConfirmationCreateUserWallet": "NODE_ENV=local serverless invoke local --function postConfirmationCreateUserWallet --stage dev --path ./invokeLocalEvents/postConfirmationCognitoEvent.json -e LOG_LEVEL=verbose",
     "invoke:preSignupCreateUserWallet": "NODE_ENV=local serverless invoke local --function postConfirmationCreateUserWallet --stage dev --path ./invokeLocalEvents/preSignupCognitoEvent.json -e LOG_LEVEL=verbose",
     "invoke:postSeedSelf": "NODE_ENV=local serverless invoke local --function postSeedSelf --stage dev --path ./invokeLocalEvents/postSeedSelf.json -e LOG_LEVEL=verbose",
-    "invoke:postSelfTransfer": "NODE_ENV=local serverless invoke local --function postSelfTransfer --stage dev --path ./invokeLocalEvents/postSelfTransfer.json -e LOG_LEVEL=verbose"
+    "invoke:postSelfTransfer": "NODE_ENV=local serverless invoke local --function postSelfTransfer --stage dev --path ./invokeLocalEvents/postSelfTransfer.json -e LOG_LEVEL=verbose",
+    "invoke:postSelfMultisend": "NODE_ENV=local serverless invoke local --function postSelfMultisend --stage dev --path ./invokeLocalEvents/postSelfMultisend.json -e LOG_LEVEL=verbose"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.128.0",
