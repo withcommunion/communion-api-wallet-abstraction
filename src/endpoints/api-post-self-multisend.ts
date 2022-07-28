@@ -25,10 +25,9 @@ async function fetchUsersHelper(userIds: string[]) {
   try {
     const users = await batchGetUsersById(userIds, dynamoClient);
 
-    const nullUsersRemoved = users.filter((user) => Boolean(user));
-    const isNullUserFound = users.length !== nullUsersRemoved.length;
+    const areAllUsersFound = users.every((user) => Boolean(user));
 
-    if (!users || isNullUserFound) {
+    if (!users || !users.length || !areAllUsersFound) {
       logger.verbose('At least 1 user not found', { values: { userIds } });
       return null;
     }
@@ -68,13 +67,24 @@ async function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
   }
 }
 
+async function constructUserPropertyArrays(
+  toUsers: User[]
+): Promise<{ userIds: string[]; toUsersAddresses: string[] }> {
+  const userIds = toUsers.map((user) => user.id);
+  const toUsersAddresses = toUsers.map((user) => user.walletAddressC);
+  return { userIds, toUsersAddresses };
+}
+
 async function multisendTokenHelper(
   fromUser: User,
-  userIds: string[],
-  toUsersAddresses: string[],
+  toUsers: User[],
   amounts: number[],
   governanceContract: Contract
 ) {
+  const { userIds, toUsersAddresses } = await constructUserPropertyArrays(
+    toUsers
+  );
+
   const toUsersIdsAddressesAndAmounts = userIds.map((id, index) => ({
     id,
     address: toUsersAddresses[index],
@@ -101,7 +111,7 @@ async function multisendTokenHelper(
 }
 
 interface ExpectedPostBody {
-  toUserAndAmountObjs: [{ userId: string; amount: number }];
+  toUserIdAndAmountObjs: [{ userId: string; amount: number }];
   orgId: string;
   amount: number;
 }
@@ -121,7 +131,7 @@ export const handler = async (
       (claims.username as string) || (claims['cognito:username'] as string);
 
     let orgId = '';
-    let toUserAndAmountObjs: { userId: string; amount: number }[] = [];
+    let toUserIdAndAmountObjs: { userId: string; amount: number }[] = [];
     try {
       if (!event.body) {
         return generateReturn(400, { message: 'No body provided' });
@@ -129,7 +139,7 @@ export const handler = async (
 
       const body = JSON.parse(event.body) as ExpectedPostBody;
       orgId = body.orgId;
-      toUserAndAmountObjs = body.toUserAndAmountObjs;
+      toUserIdAndAmountObjs = body.toUserIdAndAmountObjs;
     } catch (error) {
       logger.error('Failed to parse body', {
         values: { error, body: event.body },
@@ -137,18 +147,32 @@ export const handler = async (
       generateReturn(500, { message: 'Failed to parse body' });
     }
 
-    if (!orgId || !toUserAndAmountObjs || !fromUserId) {
+    if (
+      !orgId ||
+      !toUserIdAndAmountObjs ||
+      !toUserIdAndAmountObjs.length ||
+      !fromUserId
+    ) {
+      logger.info('Invalid request, returning 400');
       return generateReturn(400, {
         message: 'Missing required fields in body',
-        fields: { orgId, toUserAndAmountObjs, fromUserId },
+        fields: { orgId, toUserIdAndAmountObjs, fromUserId },
       });
     }
 
-    const userIds = toUserAndAmountObjs.map((obj) => obj.userId);
-    const amounts = toUserAndAmountObjs.map((obj) => obj.amount);
+    const toUserIds = toUserIdAndAmountObjs.map((obj) => obj.userId);
+    const amounts = toUserIdAndAmountObjs.map((obj) => obj.amount);
+
+    const areAllAmountsValid = amounts.every((amount) => amount && amount > 0);
+    if (!areAllAmountsValid) {
+      logger.error('At least 1 amount is invalid', {
+        values: { toUserIds, amounts },
+      });
+      return generateReturn(400, { message: 'At least 1 amount is invalid' });
+    }
 
     const fromUser = await getUserById(fromUserId, dynamoClient);
-    const toUsers = await fetchUsersHelper(userIds);
+    const toUsers = await fetchUsersHelper(toUserIds);
 
     if (!toUsers || !fromUser) {
       logger.error('At least 1 user not found', {
@@ -157,19 +181,15 @@ export const handler = async (
       return generateReturn(404, { message: 'Could not find users' });
     }
 
-    const isFromUserInOrg = Boolean(
-      fromUser.organizations.find((org) => org.orgId === orgId)
-    );
-    const toUsersInOrg = toUsers.filter((user) =>
+    const areAllUsersInRequestedOrg = [fromUser, ...toUsers].every((user) =>
       Boolean(user.organizations.find((org) => org.orgId === orgId))
     );
-    const areAllToUsersInOrg = toUsersInOrg.length === toUsers.length;
 
-    if (!areAllToUsersInOrg || !isFromUserInOrg) {
+    if (!areAllUsersInRequestedOrg) {
       return generateReturn(401, {
         message:
           'Unauthorized: at least 1 toUser or the fromUser is not in org, they all must be in the org',
-        fields: { orgId, toUsersInOrg, isFromUserInOrg },
+        fields: { orgId, toUsers, fromUser },
       });
     }
 
@@ -183,12 +203,9 @@ export const handler = async (
 
     const orgGovernanceContract = await getOrgGovernanceContractHelper(org);
 
-    const toUsersAddresses = toUsers.map((user) => user.walletAddressC);
-
     const transaction = await multisendTokenHelper(
       fromUser,
-      userIds,
-      toUsersAddresses,
+      toUsers,
       amounts,
       orgGovernanceContract
     );
