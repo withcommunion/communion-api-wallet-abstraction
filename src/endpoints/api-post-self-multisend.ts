@@ -111,7 +111,7 @@ async function multisendTokenHelper(
 }
 
 interface ExpectedPostBody {
-  toUserIdAndAmountObjs: [{ userId: string; amount: number }];
+  toUserIdAndAmountObjs: { userId: string; amount: number }[];
   orgId: string;
   amount: number;
 }
