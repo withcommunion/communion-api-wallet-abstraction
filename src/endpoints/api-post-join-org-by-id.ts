@@ -1,15 +1,64 @@
 /**
  * TODO: Update to include adding user to the orgs governance contract
+ * This is a shit show - but it works for now.
+ * The manual role passing isn't good
  */
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
+import type { Transaction } from 'ethers';
 
 import { generateReturn } from '../util/api-util';
 import logger, {
   setDefaultLoggerMetaForApi,
 } from '../util/winston-logger-util';
-import { initDynamoClient, addUserToOrg } from '../util/dynamo-util';
+import {
+  initDynamoClient,
+  addUserToOrg,
+  addOrgToUser,
+  User,
+  OrgWithPrivateData,
+  getUserById,
+  getOrgById,
+} from '../util/dynamo-util';
+
+import {
+  getCommunionTestGovernanceContract,
+  getEthersWallet,
+  getJacksPizzaGovernanceContract,
+} from '../util/avax-wallet-util';
 
 const dynamoClient = initDynamoClient();
+
+async function addOrgToUserHelper(userId: string, orgId: string, role: string) {
+  try {
+    logger.verbose('Attempting to add org to user', {
+      values: { userId, orgId },
+    });
+    const respFromDb = await addOrgToUser(userId, orgId, role, dynamoClient);
+    logger.info('Added org to user', {
+      values: { orgId, respFromDb },
+    });
+
+    return respFromDb;
+  } catch (error) {
+    // @ts-expect-error error.name does exist here
+    if (error.name === 'ConditionalCheckFailedException') {
+      logger.warn(
+        `Org already exists in user ${orgId}, this is weird - but it is okay.`,
+        {
+          values: { userId, orgId },
+        }
+      );
+
+      return null;
+    } else {
+      // TODO: Alert - this is bad
+      logger.error('Fatal: Failed to add org to user', {
+        values: { userId, orgId, error },
+      });
+      throw error;
+    }
+  }
+}
 
 async function addUserToOrgHelper(userId: string, orgId: string) {
   try {
@@ -36,11 +85,60 @@ async function addUserToOrgHelper(userId: string, orgId: string) {
     } else {
       // TODO: Alert - this is bad
       logger.error('Fatal: Failed to add user to org', {
-        values: { userId, orgId },
+        values: { userId, orgId, error },
       });
       throw error;
     }
   }
+}
+
+async function addUserToOrgInSmartContractHelper(
+  org: OrgWithPrivateData,
+  user: User
+) {
+  try {
+    logger.info('Attempting to add user to org in smart contract', {
+      values: { user },
+    });
+    const governanceContractAddress = org?.avax_contract?.address || '';
+    const orgDevWallet = getEthersWallet(
+      org?.seeder.privateKeyWithLeadingHex || ''
+    );
+
+    /**
+     * TODO: This is a hack to get the smart contract to work.
+     * We will need to make this more robust - store ABI in Dynamo?
+     */
+    const governanceContract =
+      org.id === 'communion-test-org'
+        ? getCommunionTestGovernanceContract(
+            governanceContractAddress,
+            orgDevWallet
+          )
+        : getJacksPizzaGovernanceContract(
+            governanceContractAddress,
+            orgDevWallet
+          );
+
+    // eslint-disable-next-line
+    const txn = (await governanceContract.addEmployee(
+      user.walletAddressC
+    )) as Transaction;
+    logger.info('Successfully added user to org in smart contract', {
+      values: { txn, address: user.walletAddressC },
+    });
+
+    return txn;
+  } catch (error) {
+    logger.error('Failed to add user to org in smart contract', {
+      values: { user, error },
+    });
+    throw error;
+  }
+}
+
+interface ExpectedPostBody {
+  role: string;
 }
 
 export const handler = async (
@@ -63,17 +161,61 @@ export const handler = async (
       return generateReturn(400, { message: 'orgId is required' });
     }
 
-    const orgWithNewUser = await addUserToOrgHelper(userId, orgId);
-    if (!orgWithNewUser) {
-      // return no-op status code
-      return generateReturn(204, {
-        message: 'User already exists in org, you are good to go',
+    let role = 'worker';
+    try {
+      if (!event.body) {
+        return generateReturn(400, { message: 'No body provided' });
+      }
+
+      const body = JSON.parse(event.body) as ExpectedPostBody;
+      if (body.role) {
+        role = body.role;
+      }
+    } catch (error) {
+      logger.error('Failed to parse body', {
+        values: { error, body: event.body },
+      });
+      generateReturn(500, { message: 'Failed to parse body' });
+    }
+
+    logger.info('Fetching org from db', { values: { orgId } });
+    const org = await getOrgById(orgId, dynamoClient);
+    logger.verbose('Retrieved org from db', { values: { org } });
+
+    if (!org) {
+      logger.info('Org not found', { values: { orgId } });
+      return generateReturn(400, {
+        message: 'org wht given id does not exist',
+        orgId,
       });
     }
 
-    const org = orgWithNewUser.Attributes;
+    logger.info('Fetching user from db', { values: { userId } });
+    const user = await getUserById(userId, dynamoClient);
+    logger.verbose('Retrieved user from db', { values: { user } });
 
-    return generateReturn(200, { org });
+    const orgIsAlreadyInUserObject = Boolean(
+      user.organizations.filter((org) => org.orgId === orgId).length
+    );
+
+    if (!orgIsAlreadyInUserObject) {
+      await addOrgToUserHelper(userId, orgId, role);
+    } else {
+      logger.warn('No-op: User obj already has org');
+    }
+
+    const userWasAddedToOrg = Boolean(await addUserToOrgHelper(userId, orgId));
+    if (!userWasAddedToOrg) {
+      logger.warn('No-op: User already exists in org, and that is okay.');
+    }
+
+    const txn = await addUserToOrgInSmartContractHelper(org, user);
+
+    return generateReturn(200, {
+      userAddedInDb: true,
+      userAddedInSmartContract: true,
+      userAddContractTxn: txn,
+    });
   } catch (error) {
     console.log(error);
     logger.error('Failed to join org', {
