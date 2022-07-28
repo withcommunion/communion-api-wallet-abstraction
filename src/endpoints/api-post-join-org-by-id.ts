@@ -1,5 +1,6 @@
 /**
  * TODO: Update to include adding user to the orgs governance contract
+ * TODO: Add tests for this function
  * This is a shit show - but it works for now.
  * The manual role passing isn't good
  */
