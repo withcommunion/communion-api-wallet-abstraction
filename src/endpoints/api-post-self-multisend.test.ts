@@ -11,7 +11,7 @@ import {
 
 const MOCK_BODY_PARAMS = JSON.stringify({
   orgId: MOCK_ORG.id,
-  toUserAndAmountObjs: [
+  toUserIdAndAmountObjs: [
     {
       userId: MOCK_USER_A.id,
       amount: '1',
@@ -45,8 +45,10 @@ getJacksPizzaGovernanceContractSpy.mockImplementation(() => {
 
 const getOrgByIdSpy = jest.spyOn(dynamoUtil, 'getOrgById');
 const batchGetUsersByIdSpy = jest.spyOn(dynamoUtil, 'batchGetUsersById');
+// @ts-expect-error it's okay
+batchGetUsersByIdSpy.mockImplementation(async () => [MOCK_USER_A]);
 
-describe('api-post-self-transfer', () => {
+describe('api-post-self-multisend', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });

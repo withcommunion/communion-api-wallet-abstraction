@@ -59,11 +59,11 @@ export const MOCK_USER_A = {
   role: 'worker',
   last_name: 'invoke-a',
   first_name: 'local-a',
-  walletAddressC: '0x4286d388A796457DBcd8Bcca957E58cCC31aF0bd',
-  walletAddressP: 'P-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
-  walletAddressX: 'X-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
+  walletAddressC: '0x0000d388A796457DBcd8Bcca957E58cCC31al0bd',
+  walletAddressP: 'P-avax0000qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
+  walletAddressX: 'X-avax0000qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
   walletPrivateKeyWithLeadingHex:
-    '0xa3a06515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
+    '0x00006515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
   email: 'local-invoke-user-a@gmail.com',
 };
 
@@ -73,11 +73,11 @@ export const MOCK_USER_SEEDER = {
   role: 'seeder',
   last_name: 'invoke-seeder',
   first_name: 'local-seeder',
-  walletAddressC: '0x4286d388A796457DBcd8Bcca957E58cCC31aF0bd',
-  walletAddressP: 'P-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
-  walletAddressX: 'X-avax1l29qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
+  walletAddressC: '0x1111d388A796457DBcd8Bcca957E58cCC31aF0bd',
+  walletAddressP: 'P-avax11111qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
+  walletAddressX: 'X-avax11111qtzhasa8k7epcnpqxxatkxv67vwzn5ln0rd',
   walletPrivateKeyWithLeadingHex:
-    '0xa3a06515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
+    '0x11106515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
   email: 'local-invoke-user-seeder@gmail.com',
 };
 
