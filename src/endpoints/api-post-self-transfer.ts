@@ -8,6 +8,7 @@ import { Contract, Transaction } from 'ethers';
 import {
   getEthersWallet,
   getJacksPizzaGovernanceContract,
+  getCommunionTestGovernanceContract,
 } from '../util/avax-wallet-util';
 import {
   User,
@@ -58,10 +59,20 @@ async function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
     }
 
     const orgDevWallet = getEthersWallet(org.seeder.privateKeyWithLeadingHex);
-    const governanceContract = getJacksPizzaGovernanceContract(
-      governanceContractAddress,
-      orgDevWallet
-    );
+    /**
+     * TODO: This is a hack to get the smart contract to work.
+     * We will need to make this more robust - store ABI in Dynamo?
+     */
+    const governanceContract =
+      org.id === 'communion-test-org'
+        ? getCommunionTestGovernanceContract(
+            governanceContractAddress,
+            orgDevWallet
+          )
+        : getJacksPizzaGovernanceContract(
+            governanceContractAddress,
+            orgDevWallet
+          );
 
     return governanceContract;
   } catch (error) {

@@ -8,7 +8,6 @@ import {
   GetCommand,
   BatchGetCommand,
   UpdateCommand,
-  UpdateCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 
 const stage = process.env.STAGE || 'dev';
@@ -72,6 +71,36 @@ export async function insertUser(
   const res = await ddbClient.send(itemToInsert);
 
   return res;
+}
+
+export async function addOrgToUser(
+  userId: string,
+  orgId: string,
+  role: string,
+  ddbClient: DynamoDBDocumentClient
+): Promise<User> {
+  /**
+   * TODO: This fn will infinitely append to the list of organizations.
+   * Maybe GET the user and see if they already have the org in JS
+   */
+  const params = new UpdateCommand({
+    TableName: usersTable,
+    Key: {
+      id: userId,
+    },
+    ReturnValues: 'ALL_NEW',
+    UpdateExpression: 'SET organizations = list_append(organizations, :orgId)',
+    ConditionExpression: 'NOT contains (organizations, :orgIdStr)',
+    ExpressionAttributeValues: {
+      ':orgId': [{ orgId, role }],
+      ':orgIdStr': orgId,
+    },
+  });
+
+  const resp = await ddbClient.send(params);
+  const user = resp.Attributes as User;
+
+  return user;
 }
 
 export async function getUserById(
@@ -172,7 +201,7 @@ export async function addUserToOrg(
   userId: string,
   orgId: string,
   ddbClient: DynamoDBDocumentClient
-): Promise<UpdateCommandOutput> {
+): Promise<OrgWithPrivateData> {
   const params = new UpdateCommand({
     TableName: orgsTable,
     Key: {
@@ -188,6 +217,7 @@ export async function addUserToOrg(
   });
 
   const resp = await ddbClient.send(params);
+  const org = resp.Attributes as OrgWithPrivateData;
 
-  return resp;
+  return org;
 }
