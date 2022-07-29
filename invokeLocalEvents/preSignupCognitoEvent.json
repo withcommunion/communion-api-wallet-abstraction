@@ -6,7 +6,7 @@
   "region": "us-east-1",
   "request": {
     "userAttributes": {
-      "custom:organization": "org-jacks-pizza-1",
+      "custom:organization": "jacks-pizza-pittsfield",
       "custom:role": "worker",
       "email": "mfalicea58+33@gmail.com",
       "family_name": "Mag",

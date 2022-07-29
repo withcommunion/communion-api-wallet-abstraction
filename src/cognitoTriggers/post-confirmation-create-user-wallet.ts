@@ -200,7 +200,7 @@ export const handler = async (
     /**
      * TODO: Have users actually join an org and not be added to one automagically
      */
-    const TEMP_JACKS_PIZZA_ORG = 'org-jacks-pizza-1';
+    const TEMP_JACKS_PIZZA_ORG = 'jacks-pizza-pittsfield';
     const TEMP_JACKS_PIZZA_DEFAULT_ROLE = 'worker';
     const user: User = {
       id: userId,

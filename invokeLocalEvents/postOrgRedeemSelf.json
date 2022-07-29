@@ -1,7 +1,7 @@
 {
   "body": "{\n    \"amount\": 1\n}",
   "pathParameters": {
-    "orgId": "org-jacks-pizza-1"
+    "orgId": "jacks-pizza-pittsfield"
   },
   "headers": {
     "accept": "*/*",
@@ -29,7 +29,7 @@
           "aud": "4eerlu1taf72c8r20pv2tmmvmt",
           "auth_time": "1657744128",
           "cognito:username": "6281d918-df36-48bf-b8a4-3ee1f2b8305e",
-          "custom:organization": "org-jacks-pizza-1",
+          "custom:organization": "jacks-pizza-pittsfield",
           "email": "mfalicea58@gmail.com",
           "email_verified": "true",
           "event_id": "21185fb7-861d-4853-bcb0-dff82d1dbd4a",
