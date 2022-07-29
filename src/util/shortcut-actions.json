@@ -1,0 +1,73 @@
+{
+  "L": [
+    {
+      "M": {
+        "allowed_roles": {
+          "L": [
+            {
+              "S": "worker"
+            },
+            {
+              "S": "manager"
+            },
+            {
+              "S": "owner"
+            }
+          ]
+        },
+        "amount": {
+          "S": "5"
+        },
+        "name": {
+          "S": "Kindness"
+        }
+      }
+    },
+    {
+      "M": {
+        "allowed_roles": {
+          "L": [
+            {
+              "S": "worker"
+            },
+            {
+              "S": "manager"
+            },
+            {
+              "S": "owner"
+            }
+          ]
+        },
+        "amount": {
+          "S": "10"
+        },
+        "name": {
+          "S": "Support"
+        }
+      }
+    },
+    {
+      "M": {
+        "allowed_roles": {
+          "L": [
+            {
+              "S": "worker"
+            },
+            {
+              "S": "manager"
+            },
+            {
+              "S": "owner"
+            }
+          ]
+        },
+        "amount": {
+          "S": "20"
+        },
+        "name": {
+          "S": "Attending Meetings"
+        }
+      }
+    }
+  ]
+}

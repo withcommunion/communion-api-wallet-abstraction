@@ -1,0 +1,165 @@
+{
+  "L": [
+    {
+      "M": {
+        "allowed_roles": {
+          "L": [
+            {
+              "S": "worker"
+            },
+            {
+              "S": "manager"
+            },
+            {
+              "S": "owner"
+            }
+          ]
+        },
+        "amount": {
+          "S": "100"
+        },
+        "name": {
+          "S": "1 Hour PTO"
+        }
+      }
+    },
+    {
+      "M": {
+        "allowed_roles": {
+          "L": [
+            {
+              "S": "worker"
+            },
+            {
+              "S": "manager"
+            },
+            {
+              "S": "owner"
+            }
+          ]
+        },
+        "amount": {
+          "S": "10"
+        },
+        "name": {
+          "S": "Stickers"
+        }
+      }
+    },
+    {
+      "M": {
+        "allowed_roles": {
+          "L": [
+            {
+              "S": "worker"
+            },
+            {
+              "S": "manager"
+            },
+            {
+              "S": "owner"
+            }
+          ]
+        },
+        "amount": {
+          "S": "25"
+        },
+        "name": {
+          "S": "Mug/Cup"
+        }
+      }
+    },
+    {
+      "M": {
+        "allowed_roles": {
+          "L": [
+            {
+              "S": "worker"
+            },
+            {
+              "S": "manager"
+            },
+            {
+              "S": "owner"
+            }
+          ]
+        },
+        "amount": {
+          "S": "40"
+        },
+        "name": {
+          "S": "Hat"
+        }
+      }
+    },
+    {
+      "M": {
+        "allowed_roles": {
+          "L": [
+            {
+              "S": "worker"
+            },
+            {
+              "S": "manager"
+            },
+            {
+              "S": "owner"
+            }
+          ]
+        },
+        "amount": {
+          "S": "50"
+        },
+        "name": {
+          "S": "T-Shirt"
+        }
+      }
+    },
+    {
+      "M": {
+        "allowed_roles": {
+          "L": [
+            {
+              "S": "worker"
+            },
+            {
+              "S": "manager"
+            },
+            {
+              "S": "owner"
+            }
+          ]
+        },
+        "amount": {
+          "S": "100"
+        },
+        "name": {
+          "S": "Hoodie"
+        }
+      }
+    },
+    {
+      "M": {
+        "allowed_roles": {
+          "L": [
+            {
+              "S": "worker"
+            },
+            {
+              "S": "manager"
+            },
+            {
+              "S": "owner"
+            }
+          ]
+        },
+        "amount": {
+          "S": "3000"
+        },
+        "name": {
+          "S": "$1,000 Tuition Grant"
+        }
+      }
+    }
+  ]
+}
