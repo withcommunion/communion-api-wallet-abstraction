@@ -85,6 +85,8 @@ async function insertUserHelper(user: User) {
   }
 }
 
+// @ts-expect-error okay for now
+// eslint-disable-next-line
 async function addUserToOrgInDbHelper(user: User) {
   try {
     logger.verbose('Attempting to add user to org', {
@@ -125,6 +127,8 @@ async function addUserToOrgInDbHelper(user: User) {
  * TODO: This will be moved to the api-post-join-org-by-id endpoint
  * For now it works.
  */
+// @ts-expect-error okay for now
+// eslint-disable-next-line
 async function addUserToOrgInSmartContractHelper(user: User) {
   try {
     logger.info('Attempting to add user to org in smart contract', {
@@ -226,8 +230,8 @@ export const handler = async (
      * TODO: This will go away once we start using the endpoint and users join orgs manually
      * This is okay for jacks pizza, right now
      */
-    await addUserToOrgInDbHelper(user);
-    await addUserToOrgInSmartContractHelper(user);
+    // await addUserToOrgInDbHelper(user);
+    // await addUserToOrgInSmartContractHelper(user);
 
     return event;
   } catch (error) {
