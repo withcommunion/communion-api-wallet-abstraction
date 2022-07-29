@@ -147,7 +147,7 @@ functions:
     events:
       - cognitoUserPool:
           pool: communion-users-demo-${sls:stage}
-          trigger: PreSignUp
+          trigger: PostConfirmation
           existing: true
   newImageSeedUser:
     name: newImageSeedUser-${sls:stage}
