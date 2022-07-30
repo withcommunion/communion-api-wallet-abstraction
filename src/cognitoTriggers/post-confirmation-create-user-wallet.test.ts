@@ -110,7 +110,7 @@ describe('postConfirmationCreateUserWallet', () => {
         await handler(MOCK_EVENT);
         // TODO This is a hack for now, as all users are in jacks pizza
         const TEMP_EXPECTED_ORG =
-          'org-jacks-pizza-1' ||
+          'jacks-pizza-pittsfield' ||
           MOCK_EVENT.request.userAttributes['custom:organization'];
 
         expect(insertUser).toHaveBeenCalledTimes(1);
@@ -139,7 +139,7 @@ describe('postConfirmationCreateUserWallet', () => {
 
         // TODO This is a hack for now, as all users are in jacks pizza
         const TEMP_EXPECTED_ORG =
-          'org-jacks-pizza-1' ||
+          'jacks-pizza-pittsfield' ||
           MOCK_EVENT.request.userAttributes['custom:organization'];
 
         expect(addUserToOrg).toHaveBeenCalledTimes(1);
@@ -165,7 +165,7 @@ describe('postConfirmationCreateUserWallet', () => {
     describe('Adding user to the JacksPizzaGovernance contract', () => {
       // TODO This is a hack for now, as all users are in jacks pizza
       const TEMP_EXPECTED_ORG =
-        'org-jacks-pizza-1' || MOCK_USER_SELF.organization;
+        'jacks-pizza-pittsfield' || MOCK_USER_SELF.organization;
       it('Should call getOrgById', async () => {
         const getOrgByIdSpy = jest.spyOn(dynamoUtil, 'getOrgById');
         await handler(MOCK_EVENT);

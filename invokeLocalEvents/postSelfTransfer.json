@@ -1,5 +1,5 @@
 {
-  "body": "{\n    \"orgId\": \"org-jacks-pizza-1\",\n    \"toUserId\": \"be4f3c21-06f8-495d-81c3-a6d43849e7de\",\n    \"amount\": 1\n}",
+  "body": "{\n    \"orgId\": \"jacks-pizza-pittsfield\",\n    \"toUserId\": \"be4f3c21-06f8-495d-81c3-a6d43849e7de\",\n    \"amount\": 1\n}",
   "headers": {
     "accept": "*/*",
     "accept-encoding": "gzip, deflate, br",
@@ -26,7 +26,7 @@
           "aud": "4eerlu1taf72c8r20pv2tmmvmt",
           "auth_time": "1657744128",
           "cognito:username": "6281d918-df36-48bf-b8a4-3ee1f2b8305e",
-          "custom:organization": "org-jacks-pizza-1",
+          "custom:organization": "jacks-pizza-pittsfield",
           "email": "mfalicea58@gmail.com",
           "email_verified": "true",
           "event_id": "21185fb7-861d-4853-bcb0-dff82d1dbd4a",

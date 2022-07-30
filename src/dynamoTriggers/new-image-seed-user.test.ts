@@ -35,7 +35,7 @@ const MOCK_EVENT: DynamoDBStreamEvent = {
             S: 'Campbell',
           },
           organization: {
-            S: 'org-jacks-pizza-1',
+            S: 'jacks-pizza-pittsfield',
           },
           role: {
             S: 'worker',
@@ -88,7 +88,7 @@ const MOCK_EVENT: DynamoDBStreamEvent = {
             S: 'Campbell',
           },
           organization: {
-            S: 'org-jacks-pizza-1',
+            S: 'jacks-pizza-pittsfield',
           },
           role: {
             S: 'worker',
