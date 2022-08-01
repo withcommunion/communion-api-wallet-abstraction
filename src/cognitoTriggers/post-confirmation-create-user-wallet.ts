@@ -130,6 +130,7 @@ async function addUserToOrgInSmartContractHelper(user: User) {
     logger.info('Attempting to add user to org in smart contract', {
       values: { user },
     });
+    // TODO: Make sure we don't copy this.  We want to kill off user.organization
     const org = await getOrgById(user.organization, dynamoClient);
     const governanceContractAddress = org?.avax_contract?.address || '';
     const orgDevWallet = getEthersWallet(
@@ -142,19 +143,20 @@ async function addUserToOrgInSmartContractHelper(user: User) {
     );
 
     // eslint-disable-next-line
-    const txn = await governanceContract.addEmployee(user.walletAddressC);
-    // eslint-disable-next-line
-    const completedTxn = (await txn.wait()) as Transaction;
-    logger.info('Successfully added user to org in smart contract', {
-      values: { txn: completedTxn, address: user.walletAddressC },
+    const txn = (await governanceContract.addEmployee(
+      user.walletAddressC
+    )) as Transaction;
+    logger.info('Successfully called contract to add employee to contract', {
+      values: { txn, address: user.walletAddressC },
     });
 
-    return completedTxn;
+    return txn;
   } catch (error) {
     logger.error('Failed to add user to org in smart contract', {
       values: { user, error },
     });
-    throw error;
+    return null;
+    // throw error;
   }
 }
 
@@ -226,8 +228,9 @@ export const handler = async (
      * TODO: This will go away once we start using the endpoint and users join orgs manually
      * This is okay for jacks pizza, right now
      */
-    await addUserToOrgInDbHelper(user);
     await addUserToOrgInSmartContractHelper(user);
+
+    await addUserToOrgInDbHelper(user);
 
     return event;
   } catch (error) {
