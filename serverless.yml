@@ -129,7 +129,6 @@ functions:
           path: /org/{orgId}/redeem
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
-
   postJoinOrgById:
     name: postJoinOrgById-${sls:stage}
     handler: src/endpoints/api-post-join-org-by-id.handler
@@ -138,6 +137,17 @@ functions:
       - httpApi:
           method: POST
           path: /org/{orgId}/join
+          authorizer:
+            name: cognitoJwtAuthorizer-${sls:stage}
+  postLogTxnError:
+    name: postLogTxnError-${sls:stage}
+    handler: src/endpoints/api-post-log-txn-error.handler
+    timeout: 5
+    events:
+      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+      - httpApi:
+          method: POST
+          path: /log
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
   postConfirmationCreateUserWallet:
@@ -149,6 +159,7 @@ functions:
           pool: communion-users-demo-${sls:stage}
           trigger: PostConfirmation
           existing: true
+
   newImageSeedUser:
     name: newImageSeedUser-${sls:stage}
     handler: src/dynamoTriggers/new-image-seed-user.handler
