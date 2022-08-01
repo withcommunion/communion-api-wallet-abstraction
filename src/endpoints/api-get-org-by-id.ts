@@ -1,17 +1,26 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
+import type { Contract, Transaction } from 'ethers';
 import { generateReturn } from '../util/api-util';
 import {
   initDynamoClient,
   getOrgById,
   OrgWithPublicData,
   batchGetUsersById,
+  getUserById,
   UserWithPublicData,
   User,
+  OrgWithPrivateData,
 } from '../util/dynamo-util';
 
 import logger, {
   setDefaultLoggerMetaForApi,
 } from '../util/winston-logger-util';
+
+import {
+  getCommunionTestGovernanceContract,
+  getEthersWallet,
+  getJacksPizzaGovernanceContract,
+} from '../util/avax-wallet-util';
 
 const dynamoClient = initDynamoClient();
 
@@ -32,6 +41,149 @@ function removePrivateDataFromUsersHelper(
   });
 
   return usersInOrgWithPublicData;
+}
+
+function getGovernanceContract(org: OrgWithPrivateData) {
+  const governanceContractAddress = org?.avax_contract?.address || '';
+  const orgDevWallet = getEthersWallet(
+    org?.seeder.privateKeyWithLeadingHex || ''
+  );
+
+  /**
+   * TODO: This is a hack to get the smart contract to work.
+   * We will need to make this more robust - store ABI in Dynamo?
+   */
+  const governanceContract =
+    org.id === 'communion-test-org'
+      ? getCommunionTestGovernanceContract(
+          governanceContractAddress,
+          orgDevWallet
+        )
+      : getJacksPizzaGovernanceContract(
+          governanceContractAddress,
+          orgDevWallet
+        );
+
+  return governanceContract;
+}
+
+async function isUserInOrgInSmartContract(
+  governanceContract: Contract,
+  userWalletAddressC: string
+) {
+  try {
+    logger.info('Checking if user is in Governance Contract', {
+      values: {
+        contractAddress: governanceContract.address,
+        userWalletAddressC,
+      },
+    });
+    // eslint-disable-next-line
+    const isUserInContract = (await governanceContract.hasEmployee(
+      userWalletAddressC
+    )) as boolean;
+
+    return isUserInContract;
+  } catch (error) {
+    logger.error('Failed to check if user is in Governance Contract', {
+      values: {
+        contractAddress: governanceContract.address,
+        userWalletAddressC,
+        error,
+      },
+    });
+  }
+}
+
+async function addUserToOrgInSmartContractHelper(
+  governanceContract: Contract,
+  userWalletAddressC: string
+) {
+  try {
+    logger.info('Attempting to add user to org in smart contract', {
+      values: { userWalletAddressC },
+    });
+
+    // eslint-disable-next-line
+    const txn = (await governanceContract.addEmployee(
+      userWalletAddressC
+    )) as Transaction;
+
+    logger.info('Successfully sent txn to add user to contract', {
+      values: { txn, address: userWalletAddressC },
+    });
+
+    return txn;
+  } catch (error) {
+    logger.error('Failed to add user to org in smart contract', {
+      values: { userWalletAddressC, error },
+    });
+    throw error;
+  }
+}
+
+async function ensureMemberIsInOrgSmartContractHelper(
+  userId: string,
+  org: OrgWithPrivateData
+) {
+  try {
+    logger.verbose('Getting requesting by id', { values: { userId } });
+    const requestingUser = await getUserById(userId, dynamoClient);
+    logger.info('Received user', { values: { requestingUser } });
+
+    const userForLogging = {
+      id: requestingUser.id,
+      name: `${requestingUser.first_name} ${requestingUser.last_name}`,
+      walletAddressC: requestingUser.walletAddressC,
+    };
+
+    logger.verbose('Checking if user in org is in org smart contract', {
+      values: {
+        user: userForLogging,
+        orgContract: org.avax_contract,
+      },
+    });
+    const governanceContract = getGovernanceContract(org);
+    const isUserInContract = await isUserInOrgInSmartContract(
+      governanceContract,
+      requestingUser.walletAddressC
+    );
+    logger.info('Is user in org in smart contract', {
+      values: {
+        isUserInContract,
+        user: userForLogging,
+        contractAddress: governanceContract.address,
+      },
+    });
+
+    if (!isUserInContract) {
+      logger.info('User is not in the contract, adding them', {
+        values: {
+          user: userForLogging,
+          orgContract: org.avax_contract,
+        },
+      });
+      const txn = await addUserToOrgInSmartContractHelper(
+        governanceContract,
+        requestingUser.walletAddressC
+      );
+      logger.info('Made txn to add user', {
+        values: { txn, user: userForLogging },
+      });
+
+      return true;
+    }
+
+    logger.info('User is in org, no need to add them', {
+      values: { user: userForLogging, isUserInContract },
+    });
+    return true;
+  } catch (error) {
+    logger.error('Failed to ensure member is in smart contract', {
+      userId,
+      values: error,
+    });
+  }
 }
 
 export const handler = async (
@@ -81,6 +233,9 @@ export const handler = async (
         message: `${requestUserId} is not a member of ${orgId}`,
       });
     }
+
+    // TODO: Cleanup this whole flow, add tests, abstract into util fns
+    await ensureMemberIsInOrgSmartContractHelper(requestUserId, org);
 
     const orgWithPublicData: OrgWithPublicData = {
       id: org.id,
