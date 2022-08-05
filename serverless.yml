@@ -112,6 +112,7 @@ functions:
   getOrgTxsSelf:
     name: getOrgTxsSelf-${sls:stage}
     handler: src/endpoints/api-get-org-txs-self.handler
+    timeout: 15
     events:
       # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
       - httpApi:
