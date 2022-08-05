@@ -182,10 +182,8 @@ export const handler = async (
       fromUser.organizations.find((org) => org.orgId === orgId)?.role ===
       'manager';
 
-    const isManagerModeEnabled = isManagerModeInBody && isFromUserManager;
-
-    if (!isManagerModeEnabled) {
-      logger.warning('User requested manager mode but is not a manager', {
+    if (isManagerModeInBody && !isFromUserManager) {
+      logger.warn('User requested manager mode but is not a manager', {
         values: { fromUserId, orgId, fromUserOrgs: fromUser.organizations },
       });
 
@@ -194,13 +192,14 @@ export const handler = async (
       });
     }
 
+    const isManagerModeEnabled = isManagerModeInBody && isFromUserManager;
     const isManagerModeSendingToSelf =
       isManagerModeEnabled && toUserIds.includes(fromUserId);
     if (isManagerModeSendingToSelf) {
       /**
        * We cannot allow this, as managers can send tokens to themselves from the seed account
        */
-      logger.warning('The manager is trying to send to themselves', {
+      logger.warn('The manager is trying to send to themselves', {
         values: {
           fromUserId,
           toUserIds,
@@ -262,7 +261,8 @@ export const handler = async (
     });
     return generateReturn(200, { transaction, txnHash: transaction.hash });
   } catch (error) {
-    logger.error('Failed to Transfer', { values: { error } });
+    logger.error('Failed to Transfer', { values: { error: error } });
+    console.log(error);
     return generateReturn(500, {
       message: 'Something went wrong trying to transfer funds',
       error: error,
