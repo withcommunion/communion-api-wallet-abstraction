@@ -162,7 +162,7 @@ export interface OrgWithPrivateData {
   roles: Roles[];
   member_ids: string[];
   seeder: {
-    address: string;
+    walletAddressC: string;
     privateKeyWithLeadingHex: string;
   };
   avax_contract: {
