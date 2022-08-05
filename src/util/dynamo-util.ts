@@ -56,6 +56,11 @@ export interface UserWithPublicData extends User {
 export interface Self extends User {
   walletPrivateKeyWithLeadingHex: string;
 }
+export interface UserInTxn {
+  first_name: string;
+  last_name: string;
+  id: string;
+}
 
 // TODO: This will overwrite existing values.  Find proper args to not update existing values.
 export async function insertUser(

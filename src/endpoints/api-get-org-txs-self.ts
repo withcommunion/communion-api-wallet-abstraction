@@ -3,11 +3,12 @@ import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { generateReturn } from '../util/api-util';
 import {
   User,
-  UserWithPublicData,
+  UserInTxn,
   getUserById,
   initDynamoClient,
   getOrgById,
   batchGetUsersById,
+  OrgWithPrivateData,
 } from '../util/dynamo-util';
 import { getAddressTxHistory, HistoricalTxn } from '../util/avax-chain-util';
 import logger, {
@@ -18,7 +19,8 @@ const dynamoClient = initDynamoClient();
 
 function createUserTxnHistoryHelper(
   rawUserTxs: HistoricalTxn[],
-  txCandidates: User[]
+  txCandidates: User[],
+  organization: OrgWithPrivateData
 ) {
   logger.verbose('Creating txAddress array');
   const txAddresses = rawUserTxs
@@ -41,17 +43,33 @@ function createUserTxnHistoryHelper(
 
   logger.verbose('Matching txns to users');
   const txsWithUserData = rawUserTxs.map((tx) => {
-    const fromUser = {
-      ...addressCToUserMap[tx.from.toLowerCase()],
-      walletPrivateKeyWithLeadingHex: undefined,
-      email: undefined,
-    } as UserWithPublicData;
+    const txnIsFromOrgSeeder = Boolean(
+      tx.from.toLowerCase() === organization.seeder.walletAddressC.toLowerCase()
+    );
 
-    const toUser = {
-      ...addressCToUserMap[tx.to.toLowerCase()],
-      walletPrivateKeyWithLeadingHex: undefined,
-      email: undefined,
-    } as UserWithPublicData;
+    const fromUser: UserInTxn = txnIsFromOrgSeeder
+      ? {
+          first_name: `${organization.avax_contract.token_symbol} Bank`,
+          last_name: '',
+          id: organization.id,
+        }
+      : {
+          first_name: addressCToUserMap[tx.from.toLowerCase()]?.first_name,
+          last_name: addressCToUserMap[tx.from.toLowerCase()]?.last_name,
+          id: addressCToUserMap[tx.from.toLowerCase()]?.id,
+        };
+
+    const toUser: UserInTxn = txnIsFromOrgSeeder
+      ? {
+          first_name: `${organization.avax_contract.token_symbol} Bank`,
+          last_name: '',
+          id: organization.id,
+        }
+      : {
+          first_name: addressCToUserMap[tx.to.toLowerCase()]?.first_name,
+          last_name: addressCToUserMap[tx.to.toLowerCase()]?.last_name,
+          id: addressCToUserMap[tx.to.toLowerCase()]?.id,
+        };
 
     return { ...tx, fromUser, toUser };
   }, []);
@@ -128,7 +146,8 @@ export const handler = async (
 
     const txsWithUserData = createUserTxnHistoryHelper(
       rawUserTxs,
-      txCandidates
+      txCandidates,
+      org
     );
 
     const returnValue = generateReturn(200, { txs: txsWithUserData });
@@ -137,11 +156,12 @@ export const handler = async (
 
     return returnValue;
   } catch (error) {
-    logger.error('Failed to get wallet', {
+    logger.error('Failed to get users txns', {
       values: error,
     });
+    console.log(error);
     return generateReturn(500, {
-      message: 'Something went wrong trying to get the wallet',
+      message: 'Something went wrong trying to get the users txns',
       error: error,
     });
   }
