@@ -9,7 +9,7 @@ import {
   MOCK_ORG,
 } from '../util/__mocks__/dynamo-util';
 
-const MOCK_BODY_PARAMS = JSON.stringify({
+const MOCK_BODY = {
   orgId: MOCK_ORG.id,
   toUserIdAndAmountObjs: [
     {
@@ -17,7 +17,8 @@ const MOCK_BODY_PARAMS = JSON.stringify({
       amount: '1',
     },
   ],
-});
+};
+const MOCK_BODY_PARAMS = JSON.stringify(MOCK_BODY);
 const MOCK_EVENT = generateApiGatewayEvent({
   userId: MOCK_USER_SELF.id,
   body: MOCK_BODY_PARAMS,
@@ -47,6 +48,8 @@ const getOrgByIdSpy = jest.spyOn(dynamoUtil, 'getOrgById');
 const batchGetUsersByIdSpy = jest.spyOn(dynamoUtil, 'batchGetUsersById');
 // @ts-expect-error it's okay
 batchGetUsersByIdSpy.mockImplementation(async () => [MOCK_USER_A]);
+
+const getUserByIdSpy = jest.spyOn(dynamoUtil, 'getUserById');
 
 describe('api-post-self-multisend', () => {
   beforeEach(() => {
@@ -99,6 +102,28 @@ describe('api-post-self-multisend', () => {
         [MOCK_USER_A.walletAddressC],
         ['1']
       );
+    });
+    describe('When isManagerMode is true in the body', () => {
+      const MANAGER_MODE_EVENT = generateApiGatewayEvent({
+        userId: MOCK_USER_SELF.id,
+        body: JSON.stringify({ ...MOCK_BODY, isManagerMode: true }),
+      });
+      beforeEach(() => {
+        getUserByIdSpy.mockImplementationOnce(async () => ({
+          ...MOCK_USER_SELF,
+          organizations: [{ orgId: MOCK_ORG.id, role: 'manager' }],
+        }));
+      });
+      it('Should call multisendEmployeeTokens with the from user being the orgs seeder wallet address', async () => {
+        await handler(MANAGER_MODE_EVENT);
+
+        expect(multisendEmployeeTokensSpy).toHaveBeenCalledTimes(1);
+        expect(multisendEmployeeTokensSpy).toHaveBeenCalledWith(
+          MOCK_ORG.seeder.walletAddressC,
+          [MOCK_USER_A.walletAddressC],
+          ['1']
+        );
+      });
     });
   });
 
@@ -154,6 +179,54 @@ describe('api-post-self-multisend', () => {
 
           const res = await handler(MOCK_EVENT);
           expect(res.statusCode).toBe(500);
+        });
+      });
+    });
+
+    describe('When isManagerMode is true in the body', () => {
+      const MANAGER_MODE_EVENT = generateApiGatewayEvent({
+        userId: MOCK_USER_SELF.id,
+        body: JSON.stringify({ ...MOCK_BODY, isManagerMode: true }),
+      });
+      describe('And the user is not the role of manager', () => {
+        it('Should return a 401 unauthorized', async () => {
+          getUserByIdSpy.mockImplementationOnce(async () => ({
+            ...MOCK_USER_SELF,
+            organizations: [{ orgId: MOCK_ORG.id, role: 'worker' }],
+          }));
+          const resp = await handler(MANAGER_MODE_EVENT);
+          expect(multisendEmployeeTokensSpy).toHaveBeenCalledTimes(0);
+          expect(resp.statusCode).toBe(401);
+        });
+      });
+      describe('And the user manger is trying to send to themselves', () => {
+        it('Should return a 401 unauthorized', async () => {
+          const MANAGER_MODE_EVENT = generateApiGatewayEvent({
+            userId: MOCK_USER_SELF.id,
+            body: JSON.stringify({
+              ...MOCK_BODY,
+              toUserIdAndAmountObjs: [
+                {
+                  userId: MOCK_USER_A.id,
+                  amount: '1',
+                },
+                {
+                  userId: MOCK_USER_SELF.id,
+                  amount: '1',
+                },
+              ],
+              isManagerMode: true,
+            }),
+          });
+
+          getUserByIdSpy.mockImplementationOnce(async () => ({
+            ...MOCK_USER_SELF,
+            organizations: [{ orgId: MOCK_ORG.id, role: 'manager' }],
+          }));
+
+          const resp = await handler(MANAGER_MODE_EVENT);
+          expect(multisendEmployeeTokensSpy).toHaveBeenCalledTimes(0);
+          expect(resp.statusCode).toBe(401);
         });
       });
     });

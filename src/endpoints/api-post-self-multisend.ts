@@ -76,10 +76,11 @@ async function constructUserPropertyArrays(
 }
 
 async function multisendTokenHelper(
-  fromUser: User,
+  fromUser: User | { id: string; walletAddressC: string },
   toUsers: User[],
   amounts: number[],
-  governanceContract: Contract
+  governanceContract: Contract,
+  isManagerMode?: boolean
 ) {
   const { userIds, toUsersAddresses } = await constructUserPropertyArrays(
     toUsers
@@ -95,6 +96,7 @@ async function multisendTokenHelper(
     values: {
       fromUser: { id: fromUser.id, address: fromUser.walletAddressC },
       toUsers: toUsersIdsAddressesAndAmounts,
+      isManagerMode,
     },
   });
 
@@ -114,6 +116,7 @@ interface ExpectedPostBody {
   toUserIdAndAmountObjs: { userId: string; amount: number }[];
   orgId: string;
   amount: number;
+  isManagerMode?: boolean;
 }
 
 export const handler = async (
@@ -132,6 +135,7 @@ export const handler = async (
 
     let orgId = '';
     let toUserIdAndAmountObjs: { userId: string; amount: number }[] = [];
+    let isManagerModeInBody = false;
     try {
       if (!event.body) {
         return generateReturn(400, { message: 'No body provided' });
@@ -140,6 +144,7 @@ export const handler = async (
       const body = JSON.parse(event.body) as ExpectedPostBody;
       orgId = body.orgId;
       toUserIdAndAmountObjs = body.toUserIdAndAmountObjs;
+      isManagerModeInBody = Boolean(body.isManagerMode);
     } catch (error) {
       logger.error('Failed to parse body', {
         values: { error, body: event.body },
@@ -172,6 +177,42 @@ export const handler = async (
     }
 
     const fromUser = await getUserById(fromUserId, dynamoClient);
+
+    const isFromUserManager =
+      fromUser.organizations.find((org) => org.orgId === orgId)?.role ===
+      'manager';
+
+    if (isManagerModeInBody && !isFromUserManager) {
+      logger.warn('User requested manager mode but is not a manager', {
+        values: { fromUserId, orgId, fromUserOrgs: fromUser.organizations },
+      });
+
+      return generateReturn(401, {
+        message: 'You are do not have the role of "manager" in this org',
+      });
+    }
+
+    const isManagerModeEnabled = isManagerModeInBody && isFromUserManager;
+    const isManagerModeSendingToSelf =
+      isManagerModeEnabled && toUserIds.includes(fromUserId);
+    if (isManagerModeSendingToSelf) {
+      /**
+       * We cannot allow this, as managers can send tokens to themselves from the seed account
+       */
+      logger.warn('The manager is trying to send to themselves', {
+        values: {
+          fromUserId,
+          toUserIds,
+          orgId,
+          fromUserOrgs: fromUser.organizations,
+        },
+      });
+
+      return generateReturn(401, {
+        message: 'You cannot send tokens to youself while in manager mode',
+      });
+    }
+
     const toUsers = await fetchUsersHelper(toUserIds);
 
     if (!toUsers || !fromUser) {
@@ -203,11 +244,16 @@ export const handler = async (
 
     const orgGovernanceContract = await getOrgGovernanceContractHelper(org);
 
+    const userToSendTokensFrom = isManagerModeEnabled
+      ? { id: `${org.id}-seeder`, walletAddressC: org.seeder.walletAddressC }
+      : fromUser;
+
     const transaction = await multisendTokenHelper(
-      fromUser,
+      userToSendTokensFrom,
       toUsers,
       amounts,
-      orgGovernanceContract
+      orgGovernanceContract,
+      isManagerModeEnabled
     );
 
     logger.info('Returning 200', {
@@ -215,10 +261,11 @@ export const handler = async (
     });
     return generateReturn(200, { transaction, txnHash: transaction.hash });
   } catch (error) {
-    logger.error('Failed to Transfer', { values: { error } });
+    logger.error('Failed to Transfer', { values: { error: error } });
+    console.log(error);
     return generateReturn(500, {
       message: 'Something went wrong trying to transfer funds',
-      error: error,
+      error,
     });
   }
 };
