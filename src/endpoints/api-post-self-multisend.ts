@@ -245,7 +245,7 @@ export const handler = async (
     const orgGovernanceContract = await getOrgGovernanceContractHelper(org);
 
     const userToSendTokensFrom = isManagerModeEnabled
-      ? { id: `${org.id}-seeder`, walletAddressC: org.seeder.address }
+      ? { id: `${org.id}-seeder`, walletAddressC: org.seeder.walletAddressC }
       : fromUser;
 
     const transaction = await multisendTokenHelper(
