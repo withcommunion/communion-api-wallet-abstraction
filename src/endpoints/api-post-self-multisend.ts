@@ -265,7 +265,7 @@ export const handler = async (
     console.log(error);
     return generateReturn(500, {
       message: 'Something went wrong trying to transfer funds',
-      error: error,
+      error,
     });
   }
 };
