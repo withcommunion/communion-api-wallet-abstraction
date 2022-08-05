@@ -54,9 +54,9 @@ function createUserTxnHistoryHelper(
           id: organization.id,
         }
       : {
-          first_name: addressCToUserMap[tx.from.toLowerCase()].first_name,
-          last_name: addressCToUserMap[tx.from.toLowerCase()].last_name,
-          id: addressCToUserMap[tx.from.toLowerCase()].id,
+          first_name: addressCToUserMap[tx.from.toLowerCase()]?.first_name,
+          last_name: addressCToUserMap[tx.from.toLowerCase()]?.last_name,
+          id: addressCToUserMap[tx.from.toLowerCase()]?.id,
         };
 
     const toUser: UserInTxn = txnIsFromOrgSeeder
@@ -66,9 +66,9 @@ function createUserTxnHistoryHelper(
           id: organization.id,
         }
       : {
-          first_name: addressCToUserMap[tx.to.toLowerCase()].first_name,
-          last_name: addressCToUserMap[tx.to.toLowerCase()].last_name,
-          id: addressCToUserMap[tx.to.toLowerCase()].id,
+          first_name: addressCToUserMap[tx.to.toLowerCase()]?.first_name,
+          last_name: addressCToUserMap[tx.to.toLowerCase()]?.last_name,
+          id: addressCToUserMap[tx.to.toLowerCase()]?.id,
         };
 
     return { ...tx, fromUser, toUser };
@@ -156,11 +156,12 @@ export const handler = async (
 
     return returnValue;
   } catch (error) {
-    logger.error('Failed to get wallet', {
+    logger.error('Failed to get users txns', {
       values: error,
     });
+    console.log(error);
     return generateReturn(500, {
-      message: 'Something went wrong trying to get the wallet',
+      message: 'Something went wrong trying to get the users txns',
       error: error,
     });
   }
