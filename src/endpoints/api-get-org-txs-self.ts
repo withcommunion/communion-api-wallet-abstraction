@@ -59,17 +59,11 @@ function createUserTxnHistoryHelper(
           id: addressCToUserMap[tx.from.toLowerCase()]?.id,
         };
 
-    const toUser: UserInTxn = txnIsFromOrgSeeder
-      ? {
-          first_name: `${organization.avax_contract.token_symbol} Bank`,
-          last_name: '',
-          id: organization.id,
-        }
-      : {
-          first_name: addressCToUserMap[tx.to.toLowerCase()]?.first_name,
-          last_name: addressCToUserMap[tx.to.toLowerCase()]?.last_name,
-          id: addressCToUserMap[tx.to.toLowerCase()]?.id,
-        };
+    const toUser: UserInTxn = {
+      first_name: addressCToUserMap[tx.to.toLowerCase()]?.first_name,
+      last_name: addressCToUserMap[tx.to.toLowerCase()]?.last_name,
+      id: addressCToUserMap[tx.to.toLowerCase()]?.id,
+    };
 
     return { ...tx, fromUser, toUser };
   }, []);
@@ -88,11 +82,16 @@ export const handler = async (
       (claims.username as string) || (claims['cognito:username'] as string);
 
     const orgId = event.pathParameters?.orgId;
+    const isManagerMode = event.queryStringParameters?.isManagerMode === 'true';
 
     logger.info('incomingEvent', { values: { event } });
     logger.verbose('incomingEventAuth', {
       values: { authorizer: event.requestContext.authorizer },
     });
+
+    if (isManagerMode) {
+      logger.info('In Manager Mode', { values: { isManagerMode } });
+    }
 
     if (!orgId) {
       return generateReturn(400, {
@@ -129,17 +128,20 @@ export const handler = async (
     }
     logger.info('Received user', { values: user });
 
-    const usersAddressC = user.walletAddressC;
-
     logger.verbose('Fetching users in Organization', {
       values: { orgId },
     });
     const txCandidates = await batchGetUsersById(org.member_ids, dynamoClient);
     logger.info('Received users in org', { values: txCandidates });
 
+    const usersAddressC = user.walletAddressC;
+    const addressToUse = isManagerMode
+      ? org.seeder.walletAddressC
+      : usersAddressC;
+
     logger.verbose('Fetching user transactions', { values: { usersAddressC } });
     const rawUserTxs = await getAddressTxHistory(
-      usersAddressC,
+      addressToUse,
       org.avax_contract.token_address
     );
     logger.info('Received txns', { values: { rawUserTxs } });
