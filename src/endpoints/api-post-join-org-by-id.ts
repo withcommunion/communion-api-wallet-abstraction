@@ -190,8 +190,8 @@ export const handler = async (
 
     if (!org) {
       logger.info('Org not found', { values: { orgId } });
-      return generateReturn(400, {
-        message: 'org wht given id does not exist',
+      return generateReturn(404, {
+        message: 'org with given id does not exist',
         orgId,
       });
     }
@@ -209,6 +209,13 @@ export const handler = async (
     logger.info('Fetching user from db', { values: { userId } });
     const user = await getUserById(userId, dynamoClient);
     logger.verbose('Retrieved user from db', { values: { user } });
+    if (!user) {
+      logger.info('User not found', { values: { orgId } });
+      return generateReturn(404, {
+        message: 'user with given id does not exist',
+        orgId,
+      });
+    }
 
     const orgIsAlreadyInUserObject = Boolean(
       user.organizations.filter((org) => org.orgId === orgId).length
