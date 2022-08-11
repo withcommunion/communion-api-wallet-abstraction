@@ -166,6 +166,7 @@ export interface OrgWithPrivateData {
   redeemables: OrgRedeemables[];
   roles: Roles[];
   member_ids: string[];
+  join_code: string;
   seeder: {
     walletAddressC: string;
     privateKeyWithLeadingHex: string;
