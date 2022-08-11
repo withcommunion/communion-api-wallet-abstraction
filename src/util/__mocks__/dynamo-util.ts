@@ -23,6 +23,7 @@ export const MOCK_ORG = {
       name: '1 Day PTO',
     },
   ],
+  join_code: '',
   member_ids: [MOCK_SELF_ID, MOCK_USER_A_ID],
   roles: ['worker', 'manager', 'owner', 'seeder'],
   seeder: {
