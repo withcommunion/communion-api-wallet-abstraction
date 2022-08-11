@@ -180,7 +180,10 @@ export interface OrgWithPrivateData {
   members?: UserWithPublicData[];
 }
 
-export type OrgWithPublicData = Omit<OrgWithPrivateData, 'seeder'>;
+export type OrgWithPublicData = Omit<
+  OrgWithPrivateData,
+  'seeder' | 'join_code'
+>;
 
 export async function getOrgById(
   orgId: string,
