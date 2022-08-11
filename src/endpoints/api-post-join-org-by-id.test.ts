@@ -148,8 +148,10 @@ describe('api-post-join-org-by-id', () => {
     describe('When the org has a join code and it doesnt match what is passed in', () => {
       it('Should return a 401 unauthorized status code', async () => {
         getOrgByIdSpy.mockImplementationOnce(() =>
-          // @ts-expect-error it's okay
-          Promise.resolve({ ...MOCK_ORG, join_code: 'OTHER_CODE' })
+          Promise.resolve({
+            ...MOCK_ORG,
+            join_code: 'OTHER_CODE',
+          } as dynamoUtil.OrgWithPrivateData)
         );
 
         const res = await handler(MOCK_EVENT);
