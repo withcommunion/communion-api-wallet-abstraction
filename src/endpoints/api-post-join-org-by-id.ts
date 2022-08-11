@@ -173,11 +173,7 @@ export const handler = async (
 
     let joinCode = '';
     try {
-      if (!event.body) {
-        return generateReturn(400, { message: 'No body provided' });
-      }
-
-      const body = JSON.parse(event.body) as ExpectedPostBody;
+      const body = JSON.parse(event.body || '') as ExpectedPostBody;
       if (body.joinCode) {
         joinCode = body.joinCode;
       }
