@@ -166,6 +166,7 @@ export interface OrgWithPrivateData {
   redeemables: OrgRedeemables[];
   roles: Roles[];
   member_ids: string[];
+  join_code: string;
   seeder: {
     walletAddressC: string;
     privateKeyWithLeadingHex: string;
@@ -179,7 +180,10 @@ export interface OrgWithPrivateData {
   members?: UserWithPublicData[];
 }
 
-export type OrgWithPublicData = Omit<OrgWithPrivateData, 'seeder'>;
+export type OrgWithPublicData = Omit<
+  OrgWithPrivateData,
+  'seeder' | 'join_code'
+>;
 
 export async function getOrgById(
   orgId: string,
