@@ -29,12 +29,21 @@ import {
 
 const dynamoClient = initDynamoClient();
 
-async function addOrgToUserHelper(userId: string, orgId: string, role: string) {
+async function addOrgToUserHelper(userId: string, orgId: string) {
   try {
     logger.verbose('Attempting to add org to user', {
       values: { userId, orgId },
     });
-    const respFromDb = await addOrgToUser(userId, orgId, role, dynamoClient);
+    /**
+     * All users start as a "worker" in org
+     * Will have managers or owners add them to other roles
+     */
+    const respFromDb = await addOrgToUser(
+      userId,
+      orgId,
+      'worker',
+      dynamoClient
+    );
     logger.info('Added org to user', {
       values: { orgId, respFromDb },
     });
@@ -139,7 +148,7 @@ async function addUserToOrgInSmartContractHelper(
 }
 
 interface ExpectedPostBody {
-  role: string;
+  joinCode: string;
 }
 
 export const handler = async (
@@ -162,15 +171,15 @@ export const handler = async (
       return generateReturn(400, { message: 'orgId is required' });
     }
 
-    let role = 'worker';
+    let joinCode = '';
     try {
       if (!event.body) {
         return generateReturn(400, { message: 'No body provided' });
       }
 
       const body = JSON.parse(event.body) as ExpectedPostBody;
-      if (body.role) {
-        role = body.role;
+      if (body.joinCode) {
+        joinCode = body.joinCode;
       }
     } catch (error) {
       logger.error('Failed to parse body', {
@@ -191,6 +200,16 @@ export const handler = async (
       });
     }
 
+    if (org.join_code && org.join_code !== joinCode) {
+      logger.warn('Join code does not match', {
+        values: { orgId, orgJoinCode: org.join_code, joinCode, userId },
+      });
+      return generateReturn(401, {
+        message:
+          'Join code does not match, you are not allowed to join this org',
+      });
+    }
+
     logger.info('Fetching user from db', { values: { userId } });
     const user = await getUserById(userId, dynamoClient);
     logger.verbose('Retrieved user from db', { values: { user } });
@@ -200,7 +219,7 @@ export const handler = async (
     );
 
     if (!orgIsAlreadyInUserObject) {
-      await addOrgToUserHelper(userId, orgId, role);
+      await addOrgToUserHelper(userId, orgId);
     } else {
       logger.warn('No-op: User obj already has org');
     }
