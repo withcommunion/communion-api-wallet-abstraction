@@ -10,6 +10,7 @@ import {
   UserWithPublicData,
   User,
   OrgWithPrivateData,
+  OrgWithManagerData,
 } from '../util/dynamo-util';
 
 import logger, {
@@ -123,14 +124,10 @@ async function addUserToOrgInSmartContractHelper(
 }
 
 async function ensureMemberIsInOrgSmartContractHelper(
-  userId: string,
+  requestingUser: User,
   org: OrgWithPrivateData
 ) {
   try {
-    logger.verbose('Getting requesting by id', { values: { userId } });
-    const requestingUser = await getUserById(userId, dynamoClient);
-    logger.info('Received user', { values: { requestingUser } });
-
     const userForLogging = {
       id: requestingUser.id,
       name: `${requestingUser.first_name} ${requestingUser.last_name}`,
@@ -180,7 +177,7 @@ async function ensureMemberIsInOrgSmartContractHelper(
     return true;
   } catch (error) {
     logger.error('Failed to ensure member is in smart contract', {
-      userId,
+      userId: requestingUser.id,
       values: error,
     });
   }
@@ -234,10 +231,24 @@ export const handler = async (
       });
     }
 
-    // TODO: Cleanup this whole flow, add tests, abstract into util fns
-    await ensureMemberIsInOrgSmartContractHelper(requestUserId, org);
+    logger.verbose('Getting requesting by id', {
+      values: { userId: requestUserId },
+    });
+    const requestingUser = await getUserById(requestUserId, dynamoClient);
+    logger.info('Received user', { values: { requestingUser } });
 
-    const orgWithPublicData: OrgWithPublicData = {
+    const isRequestingUserManager =
+      requestingUser.organizations.find((usersOrg) => usersOrg.orgId === orgId)
+        ?.role === 'manager';
+
+    logger.verbose('Is User a manager?', {
+      values: { isRequestingUserManager },
+    });
+
+    // TODO: Cleanup this whole flow, add tests, abstract into util fns
+    await ensureMemberIsInOrgSmartContractHelper(requestingUser, org);
+
+    const baseOrgWithPublicData = {
       id: org.id,
       actions: org.actions,
       roles: org.roles,
@@ -246,6 +257,17 @@ export const handler = async (
       avax_contract: org.avax_contract,
     };
 
+    const orgWithPublicData: OrgWithManagerData | OrgWithPublicData =
+      isRequestingUserManager
+        ? ({
+            ...baseOrgWithPublicData,
+            join_code: org.join_code,
+          } as OrgWithManagerData)
+        : (baseOrgWithPublicData as OrgWithPublicData);
+
+    logger.info('Returning org with Public Data', {
+      values: { orgWithPublicData },
+    });
     logger.verbose('Fetching all users in org', {
       values: { member_ids: orgWithPublicData.member_ids },
     });

@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
-import { User } from './dynamo-util';
+import { OrgWithPrivateData, User } from './dynamo-util';
 
 interface GatewayEventParamOverrides {
   userId?: string;
@@ -112,10 +112,15 @@ interface MockOrgParamOverrides {
   id?: string;
   member_ids?: string[];
 }
-export function generateMockOrg(paramOverrides: MockOrgParamOverrides) {
+export function generateMockOrg(
+  paramOverrides: MockOrgParamOverrides
+): OrgWithPrivateData {
   return {
     id: paramOverrides.id || 'some-mock-org-a',
     member_ids: paramOverrides.member_ids || ['some-user-a', 'some-user-b'],
+    join_code: 'asdf',
+    // @ts-expect-error it's okay
+    roles: ['worker', 'manager', 'owner', 'seeder'],
     actions: [
       {
         allowed_roles: ['worker', 'manager', 'owner'],
@@ -123,7 +128,26 @@ export function generateMockOrg(paramOverrides: MockOrgParamOverrides) {
         name: 'Kindness',
       },
     ],
-    roles: ['worker', 'manager', 'owner', 'seeder'],
+    redeemables: [
+      {
+        // @ts-expect-error it's okay
+        allowed_roles: ['worker', 'manager', 'owner'],
+        amount: '10',
+        name: 'Slice of Pizza',
+      },
+      {
+        // @ts-expect-error it's okay
+        allowed_roles: ['worker', 'manager', 'owner'],
+        amount: '150',
+        name: '1 Day PTO',
+      },
+    ],
+    avax_contract: {
+      address: '0x4286d388A796457DBcd8Bcca957E58cCC31aF0bd',
+      token_address: '0x4286d388A796457DBcd8Bcca957E58cCC31aF0bd',
+      token_name: 'Avax',
+      token_symbol: 'AVAX',
+    },
     seeder: {
       privateKeyWithLeadingHex: '0xf9c...294c',
       walletAddressC: '0xfE96DA...965f',
