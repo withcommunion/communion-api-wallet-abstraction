@@ -18,16 +18,17 @@ const MOCK_EVENT = generateApiGatewayEvent({
   orgId: MOCK_ORG.id,
 });
 
+const getOrgByIdSpy = jest.spyOn(dynamoUtil, 'getOrgById');
+getOrgByIdSpy.mockImplementation(() => Promise.resolve(MOCK_ORG));
+
+const getUserByIdSpy = jest.spyOn(dynamoUtil, 'getUserById');
+getUserByIdSpy.mockImplementation(() => Promise.resolve(MOCK_USER_SELF));
+
+const batchGetUsersByIdSpy = jest.spyOn(dynamoUtil, 'batchGetUsersById');
+batchGetUsersByIdSpy.mockImplementation(() =>
+  Promise.resolve([MOCK_USER_SELF])
+);
 describe('getOrgById', () => {
-  const getOrgByIdSpy = jest.spyOn(dynamoUtil, 'getOrgById');
-  // @ts-expect-error it's okay
-  getOrgByIdSpy.mockImplementation(() => Promise.resolve(MOCK_ORG));
-
-  const batchGetUsersByIdSpy = jest.spyOn(dynamoUtil, 'batchGetUsersById');
-  batchGetUsersByIdSpy.mockImplementation(() =>
-    Promise.resolve([MOCK_USER_SELF])
-  );
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -40,17 +41,19 @@ describe('getOrgById', () => {
 
     it('Should return the correct org', async () => {
       const resp = await handler(MOCK_EVENT);
-      // eslint-disable-next-line
-      const org = JSON.parse(resp.body);
       const expectedOrg = MOCK_ORG;
-      // @ts-expect-error This is ok
+      // @ts-expect-error this is ok
+      delete expectedOrg.join_code;
+      // @ts-expect-error this is ok
       delete expectedOrg.seeder;
 
+      // eslint-disable-next-line
+      const org = JSON.parse(resp.body);
       expect(getOrgByIdSpy).toHaveBeenCalledWith(
         MOCK_EVENT.pathParameters?.orgId,
         {}
       );
-      expect(org).toEqual(expect.objectContaining(MOCK_ORG));
+      expect(org).toEqual(expect.objectContaining({ ...MOCK_ORG }));
     });
 
     it('Should call getOrgById with the org in the path param', async () => {
@@ -81,11 +84,25 @@ describe('getOrgById', () => {
       );
     });
   });
+  describe('When the user is a manager', () => {
+    it('Should include the join_code in the response', async () => {
+      getUserByIdSpy.mockImplementationOnce(() =>
+        Promise.resolve({
+          ...MOCK_USER_SELF,
+          organizations: [{ orgId: MOCK_ORG.id, role: 'manager' }],
+        })
+      );
+      const resp = await handler(MOCK_EVENT);
+      // eslint-disable-next-line
+      const body = JSON.parse(resp.body);
+      // eslint-disable-next-line
+      expect(body.join_code).toBe(MOCK_ORG.join_code);
+    });
+  });
 
   describe.skip('Unhappy path', () => {
     it('Should return a 403 status code if the user is not a member of the org', async () => {
       const getOrgByIdSpy = jest.spyOn(dynamoUtil, 'getOrgById');
-      // @ts-expect-error This is ok
       getOrgByIdSpy.mockImplementationOnce(async () => ({
         ...MOCK_ORG,
         member_ids: ['not-a-member'],

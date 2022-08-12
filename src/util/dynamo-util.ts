@@ -185,6 +185,8 @@ export type OrgWithPublicData = Omit<
   'seeder' | 'join_code'
 >;
 
+export type OrgWithManagerData = Omit<OrgWithPrivateData, 'seeder'>;
+
 export async function getOrgById(
   orgId: string,
   ddbClient: DynamoDBDocumentClient
