@@ -39,9 +39,9 @@ export interface User {
   email?: string;
   first_name: string;
   last_name: string;
-  organization: string;
+  organization?: string;
   organizations: { orgId: string; role: string }[];
-  role: 'worker' | 'manager' | 'owner' | 'seeder' | string;
+  role?: 'worker' | 'manager' | 'owner' | 'seeder' | string;
   walletPrivateKeyWithLeadingHex?: string;
   walletAddressC: string;
   walletAddressP: string;
