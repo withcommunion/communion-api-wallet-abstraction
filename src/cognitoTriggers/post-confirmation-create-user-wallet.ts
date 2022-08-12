@@ -96,7 +96,7 @@ export const handler = async (
     try {
       logger.verbose('Checking if user exists in DB', { values: { userId } });
       const existingUser = await getUserById(userId, dynamoClient);
-      logger.info('User exists in DB', { values: { existingUser } });
+      logger.info('Does user exist in DB', { values: { existingUser } });
 
       if (
         existingUser &&
