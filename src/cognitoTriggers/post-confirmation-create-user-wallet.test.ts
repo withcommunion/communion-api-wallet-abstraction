@@ -5,12 +5,11 @@ jest.mock('../util/avax-chain-util.ts');
 import { ethers } from 'ethers';
 
 import type { PostConfirmationTriggerEvent } from 'aws-lambda';
-import { insertUser, getUserById, addUserToOrg } from '../util/dynamo-util';
+import { insertUser, getUserById } from '../util/dynamo-util';
 import * as avaxWalletUtil from '../util/avax-wallet-util';
-import * as dynamoUtil from '../util/dynamo-util';
 
 import { handler } from './post-confirmation-create-user-wallet';
-import { MOCK_ORG, MOCK_USER_SELF } from '../util/__mocks__/dynamo-util';
+import { MOCK_USER_SELF } from '../util/__mocks__/dynamo-util';
 
 const MOCK_EVENT: PostConfirmationTriggerEvent = {
   version: '1',
@@ -109,9 +108,6 @@ describe('postConfirmationCreateUserWallet', () => {
       it('should call inserUser with user parsed from event', async () => {
         await handler(MOCK_EVENT);
         // TODO This is a hack for now, as all users are in jacks pizza
-        const TEMP_EXPECTED_ORG =
-          'jacks-pizza-pittsfield' ||
-          MOCK_EVENT.request.userAttributes['custom:organization'];
 
         expect(insertUser).toHaveBeenCalledTimes(1);
         expect(insertUser).toHaveBeenCalledWith(
@@ -120,9 +116,7 @@ describe('postConfirmationCreateUserWallet', () => {
             email: 'someUser@gmail.com',
             first_name: 'Mike',
             last_name: 'A',
-            organization: TEMP_EXPECTED_ORG,
-            organizations: [{ orgId: TEMP_EXPECTED_ORG, role: 'worker' }],
-            role: 'worker',
+            organizations: [],
             walletAddressC: expect.any(String),
             walletAddressP: expect.any(String),
             walletAddressX: expect.any(String),
@@ -130,67 +124,6 @@ describe('postConfirmationCreateUserWallet', () => {
           },
           {}
         );
-      });
-    });
-
-    describe('Inserting user into org database', () => {
-      it('should call addUserToOrg with users org parsed from event', async () => {
-        await handler(MOCK_EVENT);
-
-        // TODO This is a hack for now, as all users are in jacks pizza
-        const TEMP_EXPECTED_ORG =
-          'jacks-pizza-pittsfield' ||
-          MOCK_EVENT.request.userAttributes['custom:organization'];
-
-        expect(addUserToOrg).toHaveBeenCalledTimes(1);
-        expect(addUserToOrg).toHaveBeenCalledWith(
-          MOCK_EVENT.userName,
-          TEMP_EXPECTED_ORG,
-          {}
-        );
-      });
-
-      describe('If the user is for some reason already in the org', () => {
-        it('Should handle it gracefully', async () => {
-          const addUserToOrgSpy = jest.spyOn(dynamoUtil, 'addUserToOrg');
-          addUserToOrgSpy.mockImplementationOnce(() =>
-            Promise.reject({ name: 'ConditionalCheckFailedException' })
-          );
-          await handler(MOCK_EVENT);
-          expect(addUserToOrg).toHaveBeenCalledTimes(1);
-        });
-      });
-    });
-
-    describe('Adding user to the JacksPizzaGovernance contract', () => {
-      // TODO This is a hack for now, as all users are in jacks pizza
-      const TEMP_EXPECTED_ORG =
-        'jacks-pizza-pittsfield' || MOCK_USER_SELF.organization;
-      it('Should call getOrgById', async () => {
-        const getOrgByIdSpy = jest.spyOn(dynamoUtil, 'getOrgById');
-        await handler(MOCK_EVENT);
-        expect(getOrgByIdSpy).toHaveBeenCalledTimes(1);
-        expect(getOrgByIdSpy).toHaveBeenCalledWith(TEMP_EXPECTED_ORG, {});
-      });
-      it('Should call getEthersWallet with the org seeder key', async () => {
-        await handler(MOCK_EVENT);
-        expect(getEthersWalletSpy).toHaveBeenCalledTimes(1);
-        expect(getEthersWalletSpy).toHaveBeenCalledWith(
-          MOCK_ORG.seeder.privateKeyWithLeadingHex
-        );
-      });
-      it('Should call getJacksPizzaGovernanceContract with the address in the org and ethers wallet', async () => {
-        await handler(MOCK_EVENT);
-        expect(getJacksPizzaGovernanceContractSpy).toHaveBeenCalledTimes(1);
-        expect(getJacksPizzaGovernanceContractSpy).toHaveBeenCalledWith(
-          MOCK_ORG.avax_contract.address,
-          {}
-        );
-      });
-      it('Should call addEmployee with the users walletAddressC', async () => {
-        await handler(MOCK_EVENT);
-        expect(addEmployeeSpy).toHaveBeenCalledTimes(1);
-        expect(addEmployeeSpy).toHaveBeenCalledWith(expect.any(String));
       });
     });
   });

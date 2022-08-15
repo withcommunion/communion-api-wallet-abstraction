@@ -4,13 +4,9 @@ import type {
   AuthResponseContext,
 } from 'aws-lambda';
 
-import type { Transaction } from 'ethers';
-
 import {
-  getEthersWallet,
   generatePrivateEvmKey,
   createSingletonWallet,
-  getJacksPizzaGovernanceContract,
 } from '../util/avax-wallet-util';
 
 import {
@@ -18,8 +14,6 @@ import {
   insertUser,
   User,
   getUserById,
-  addUserToOrg,
-  getOrgById,
 } from '../util/dynamo-util';
 
 import logger from '../util/winston-logger-util';
@@ -85,81 +79,6 @@ async function insertUserHelper(user: User) {
   }
 }
 
-async function addUserToOrgInDbHelper(user: User) {
-  try {
-    logger.verbose('Attempting to add user to org', {
-      values: { user, userId: user.id, orgId: user.organization },
-    });
-    const respFromDb = await addUserToOrg(
-      user.id,
-      user.organization,
-      dynamoClient
-    );
-    logger.info('Added user to org', {
-      values: { orgId: user.organization, respFromDb },
-    });
-
-    return respFromDb;
-  } catch (error) {
-    // @ts-expect-error error.name does exist here
-    if (error.name === 'ConditionalCheckFailedException') {
-      logger.warn(
-        `User already exists in org ${user.organization}, this is weird - but it is okay.`,
-        {
-          values: { userId: user.id, orgId: user.organization },
-        }
-      );
-
-      return null;
-    } else {
-      // TODO: Alert - this is bad
-      logger.error('Fatal: Failed to add user to org', {
-        values: { user, orgId: user.organization, error },
-      });
-      throw error;
-    }
-  }
-}
-
-/**
- * TODO: This will be moved to the api-post-join-org-by-id endpoint
- * For now it works.
- */
-async function addUserToOrgInSmartContractHelper(user: User) {
-  try {
-    logger.info('Attempting to add user to org in smart contract', {
-      values: { user },
-    });
-    // TODO: Make sure we don't copy this.  We want to kill off user.organization
-    const org = await getOrgById(user.organization, dynamoClient);
-    const governanceContractAddress = org?.avax_contract?.address || '';
-    const orgDevWallet = getEthersWallet(
-      org?.seeder.privateKeyWithLeadingHex || ''
-    );
-
-    const governanceContract = getJacksPizzaGovernanceContract(
-      governanceContractAddress,
-      orgDevWallet
-    );
-
-    // eslint-disable-next-line
-    const txn = (await governanceContract.addEmployee(
-      user.walletAddressC
-    )) as Transaction;
-    logger.info('Successfully called contract to add employee to contract', {
-      values: { txn, address: user.walletAddressC },
-    });
-
-    return txn;
-  } catch (error) {
-    logger.error('Failed to add user to org in smart contract', {
-      values: { user, error },
-    });
-    return null;
-    // throw error;
-  }
-}
-
 export const handler = async (
   event: PostConfirmationTriggerEvent | PreSignUpAdminCreateUserTriggerEvent,
   context?: AuthResponseContext
@@ -177,7 +96,7 @@ export const handler = async (
     try {
       logger.verbose('Checking if user exists in DB', { values: { userId } });
       const existingUser = await getUserById(userId, dynamoClient);
-      logger.info('User exists in DB', { values: { existingUser } });
+      logger.info('Does user exist in DB', { values: { existingUser } });
 
       if (
         existingUser &&
@@ -199,24 +118,12 @@ export const handler = async (
 
     const walletAddressC = await usersWallet.ethersWallet.getAddress();
 
-    /**
-     * TODO: Have users actually join an org and not be added to one automagically
-     */
-    const TEMP_JACKS_PIZZA_ORG = 'jacks-pizza-pittsfield';
-    const TEMP_JACKS_PIZZA_DEFAULT_ROLE = 'worker';
     const user: User = {
       id: userId,
       email: userAttributes.email,
       first_name: userAttributes['given_name'],
       last_name: userAttributes['family_name'],
-      organization: TEMP_JACKS_PIZZA_ORG,
-      organizations: [
-        {
-          orgId: TEMP_JACKS_PIZZA_ORG,
-          role: TEMP_JACKS_PIZZA_DEFAULT_ROLE,
-        },
-      ],
-      role: TEMP_JACKS_PIZZA_DEFAULT_ROLE,
+      organizations: [],
       walletPrivateKeyWithLeadingHex: usersPrivateKey.evmKeyWithLeadingHex,
       walletAddressC,
       walletAddressP: 'N/A',
@@ -224,13 +131,6 @@ export const handler = async (
     };
 
     await insertUserHelper(user);
-    /**
-     * TODO: This will go away once we start using the endpoint and users join orgs manually
-     * This is okay for jacks pizza, right now
-     */
-    await addUserToOrgInSmartContractHelper(user);
-
-    await addUserToOrgInDbHelper(user);
 
     return event;
   } catch (error) {
