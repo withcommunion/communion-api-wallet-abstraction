@@ -122,7 +122,7 @@ async function sendSmsToAllUsersHelper(
   logger.info('Sending notifications');
   const sentTextMessages = await Promise.all(
     toUsers.map(async (user) => {
-      if (user.phone_number) {
+      if (user.phone_number && user.allow_sms) {
         const url =
           process.env.STAGE === 'prod'
             ? 'https://withcommunion.com'

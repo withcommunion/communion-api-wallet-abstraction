@@ -52,6 +52,7 @@ export const MOCK_USER_SELF = {
     '0xa3a06515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
   email: 'local-invoke-self@gmail.com',
   phone_number: '987654321',
+  allow_sms: true,
 };
 
 export const MOCK_USER_A = {
@@ -68,6 +69,7 @@ export const MOCK_USER_A = {
     '0x00006515345e15ef210c71533d2b17bbae01c02397fc4d57fd0d9203082f82cb',
   email: 'local-invoke-user-a@gmail.com',
   phone_number: '123456789',
+  allow_sms: true,
 };
 
 export const MOCK_USER_SEEDER = {

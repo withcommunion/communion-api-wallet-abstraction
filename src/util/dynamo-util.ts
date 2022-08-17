@@ -38,6 +38,7 @@ export interface User {
   id: string;
   email?: string;
   phone_number?: string;
+  allow_sms?: boolean;
   first_name: string;
   last_name: string;
   organization?: string;

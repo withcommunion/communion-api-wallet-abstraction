@@ -110,13 +110,28 @@ describe('api-post-self-multisend', () => {
       );
     });
 
-    it('Should call sensSms for the users with a phone number', async () => {
+    it('Should call sendSms for the users with a phone number and allow_sms as true', async () => {
       await handler(MOCK_EVENT);
       expect(sendSmsSpy).toHaveBeenCalledTimes(1);
       expect(sendSmsSpy).toHaveBeenCalledWith(
         MOCK_USER_A.phone_number,
         expect.any(String)
       );
+    });
+
+    describe('When allow_sms is false for the user', () => {
+      it('Should call not call sendSms', async () => {
+        // @ts-expect-error it's okay
+        batchGetUsersByIdSpy.mockImplementationOnce(async () => [
+          { ...MOCK_USER_A, allow_sms: false },
+        ]);
+        await handler(MOCK_EVENT);
+        expect(sendSmsSpy).toHaveBeenCalledTimes(0);
+        expect(sendSmsSpy).not.toHaveBeenCalledWith(
+          MOCK_USER_A.phone_number,
+          expect.any(String)
+        );
+      });
     });
 
     describe('When isManagerMode is true in the body', () => {
