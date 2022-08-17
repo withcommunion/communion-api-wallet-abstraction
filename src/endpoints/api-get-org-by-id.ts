@@ -34,6 +34,7 @@ function removePrivateDataFromUsersHelper(
         ...user,
         email: undefined,
         walletPrivateKeyWithLeadingHex: undefined,
+        phone_number: undefined,
       } as UserWithPublicData)
   );
 
