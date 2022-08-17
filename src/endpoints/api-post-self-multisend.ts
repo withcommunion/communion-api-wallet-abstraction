@@ -18,6 +18,8 @@ import {
   OrgWithPrivateData,
 } from '../util/dynamo-util';
 
+import { sendSms } from '../util/twilio-util';
+
 const dynamoClient = initDynamoClient();
 
 async function fetchUsersHelper(userIds: string[]) {
@@ -110,6 +112,39 @@ async function multisendTokenHelper(
   logger.verbose('Transferred tokens', { values: { transaction } });
 
   return transaction;
+}
+
+async function sendSmsToAllUsersHelper(
+  fromUser: User,
+  toUsers: User[],
+  amounts: number[]
+) {
+  logger.info('Sending notifications');
+  const sentTextMessages = await Promise.all(
+    toUsers.map(async (user) => {
+      if (user.phone_number && user.allow_sms) {
+        const url =
+          process.env.STAGE === 'prod'
+            ? 'https://withcommunion.com'
+            : 'https://dev.withcommunion.com';
+
+        logger.verbose('Sending notif to user', { values: { user } });
+
+        return sendSms(
+          user.phone_number,
+          `🎊 Congrats ${user.first_name}! You just received ${
+            amounts[toUsers.indexOf(user)]
+          } tokens from ${fromUser.first_name} ${fromUser.last_name}
+            
+Check it out on the app: ${url}
+            `
+        );
+      }
+    })
+  );
+
+  logger.verbose('Sent text messages', { values: { sentTextMessages } });
+  return sentTextMessages;
 }
 
 interface ExpectedPostBody {
@@ -255,6 +290,11 @@ export const handler = async (
       orgGovernanceContract,
       isManagerModeEnabled
     );
+
+    /**
+     * Send twilio notif to each user
+     */
+    await sendSmsToAllUsersHelper(fromUser, toUsers, amounts);
 
     logger.info('Returning 200', {
       values: { transaction, txnHash: transaction.hash },

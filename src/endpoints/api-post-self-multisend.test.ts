@@ -1,7 +1,9 @@
 jest.mock('../util/dynamo-util.ts');
+jest.mock('../util/twilio-util.ts');
 import { handler } from './api-post-self-multisend';
 import * as dynamoUtil from '../util/dynamo-util';
 import * as avaxWalletUtil from '../util/avax-wallet-util';
+import * as twilioUtil from '../util/twilio-util';
 import { generateApiGatewayEvent } from '../util/jest-mock-util';
 import {
   MOCK_USER_SELF,
@@ -50,6 +52,10 @@ const batchGetUsersByIdSpy = jest.spyOn(dynamoUtil, 'batchGetUsersById');
 batchGetUsersByIdSpy.mockImplementation(async () => [MOCK_USER_A]);
 
 const getUserByIdSpy = jest.spyOn(dynamoUtil, 'getUserById');
+
+const sendSmsSpy = jest.spyOn(twilioUtil, 'sendSms');
+// @ts-expect-error it's okay
+sendSmsSpy.mockImplementation(async () => []);
 
 describe('api-post-self-multisend', () => {
   beforeEach(() => {
@@ -103,6 +109,31 @@ describe('api-post-self-multisend', () => {
         ['1']
       );
     });
+
+    it('Should call sendSms for the users with a phone number and allow_sms as true', async () => {
+      await handler(MOCK_EVENT);
+      expect(sendSmsSpy).toHaveBeenCalledTimes(1);
+      expect(sendSmsSpy).toHaveBeenCalledWith(
+        MOCK_USER_A.phone_number,
+        expect.any(String)
+      );
+    });
+
+    describe('When allow_sms is false for the user', () => {
+      it('Should call not call sendSms', async () => {
+        // @ts-expect-error it's okay
+        batchGetUsersByIdSpy.mockImplementationOnce(async () => [
+          { ...MOCK_USER_A, allow_sms: false },
+        ]);
+        await handler(MOCK_EVENT);
+        expect(sendSmsSpy).toHaveBeenCalledTimes(0);
+        expect(sendSmsSpy).not.toHaveBeenCalledWith(
+          MOCK_USER_A.phone_number,
+          expect.any(String)
+        );
+      });
+    });
+
     describe('When isManagerMode is true in the body', () => {
       const MANAGER_MODE_EVENT = generateApiGatewayEvent({
         userId: MOCK_USER_SELF.id,

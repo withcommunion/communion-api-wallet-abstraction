@@ -37,6 +37,8 @@ export function initDynamoClient(region: string = REGION) {
 export interface User {
   id: string;
   email?: string;
+  phone_number?: string;
+  allow_sms?: boolean;
   first_name: string;
   last_name: string;
   organization?: string;
@@ -51,6 +53,7 @@ export interface User {
 export interface UserWithPublicData extends User {
   walletPrivateKeyWithLeadingHex: undefined;
   email: undefined;
+  phone_number: undefined;
 }
 
 export interface Self extends User {
