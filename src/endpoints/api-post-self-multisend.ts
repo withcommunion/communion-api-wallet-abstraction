@@ -294,7 +294,9 @@ export const handler = async (
     /**
      * Send twilio notif to each user
      */
-    await sendSmsToAllUsersHelper(fromUser, toUsers, amounts);
+    if (process.env.STAGE !== 'prod') {
+      await sendSmsToAllUsersHelper(fromUser, toUsers, amounts);
+    }
 
     logger.info('Returning 200', {
       values: { transaction, txnHash: transaction.hash },
