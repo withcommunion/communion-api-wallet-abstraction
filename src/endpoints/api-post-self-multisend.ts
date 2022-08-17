@@ -18,7 +18,7 @@ import {
   OrgWithPrivateData,
 } from '../util/dynamo-util';
 
-import { sendSms } from '../util/twilio-utils';
+import { sendSms } from '../util/twilio-util';
 
 const dynamoClient = initDynamoClient();
 
