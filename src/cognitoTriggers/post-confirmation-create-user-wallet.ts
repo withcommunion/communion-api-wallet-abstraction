@@ -124,6 +124,7 @@ export const handler = async (
       first_name: userAttributes['given_name'],
       last_name: userAttributes['family_name'],
       phone_number: userAttributes['phone_number'] || '',
+      // NOTE: We are assuming that since a user supplied phone #, they will allow SMS from us
       allow_sms: Boolean(userAttributes['phone_number']),
       organizations: [],
       walletPrivateKeyWithLeadingHex: usersPrivateKey.evmKeyWithLeadingHex,
