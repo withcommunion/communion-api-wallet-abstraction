@@ -123,7 +123,7 @@ export const handler = async (
       email: userAttributes.email,
       first_name: userAttributes['given_name'],
       last_name: userAttributes['family_name'],
-      phone_number: userAttributes['phone_number'],
+      phone_number: userAttributes['phone_number'] || '',
       allow_sms: Boolean(userAttributes['phone_number']),
       organizations: [],
       walletPrivateKeyWithLeadingHex: usersPrivateKey.evmKeyWithLeadingHex,
