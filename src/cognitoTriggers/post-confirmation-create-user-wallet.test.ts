@@ -25,6 +25,7 @@ const MOCK_EVENT: PostConfirmationTriggerEvent = {
     userAttributes: {
       sub: '21f56d21-45ff-40a9-9041-1f3d3b864df5',
       email_verified: 'true',
+      phone_number: '+11234567890',
       'cognito:user_status': 'CONFIRMED',
       'cognito:email_alias': 'someUser@gmail.com',
       'custom:organization': 'test-org',
@@ -107,8 +108,6 @@ describe('postConfirmationCreateUserWallet', () => {
     describe('Inserting user into the database', () => {
       it('should call inserUser with user parsed from event', async () => {
         await handler(MOCK_EVENT);
-        // TODO This is a hack for now, as all users are in jacks pizza
-
         expect(insertUser).toHaveBeenCalledTimes(1);
         expect(insertUser).toHaveBeenCalledWith(
           {
@@ -117,6 +116,8 @@ describe('postConfirmationCreateUserWallet', () => {
             first_name: 'Mike',
             last_name: 'A',
             organizations: [],
+            allow_sms: true,
+            phone_number: MOCK_EVENT.request.userAttributes.phone_number,
             walletAddressC: expect.any(String),
             walletAddressP: expect.any(String),
             walletAddressX: expect.any(String),
