@@ -75,7 +75,7 @@ export const handler = async (
       generateReturn(500, { message: 'Failed to parse body', error });
     }
 
-    if (typeof allowSms !== 'boolean' && !phoneNumber) {
+    if (typeof allowSms !== 'boolean' && phoneNumber === undefined) {
       return generateReturn(400, {
         message: 'Nothing to update',
         fields: { phoneNumber, allowSms },
@@ -93,11 +93,20 @@ export const handler = async (
     }
 
     const shouldUpdateAllowSms = typeof allowSms === 'boolean';
+    /**
+     * Essentially we don't want to overwrite the users phonenumber
+     * If it's not included in the body
+     * We want to clear a users phone number if `null` is passed in or a purposeful empty string
+     */
+    const shouldUpdatePhoneNumber = typeof phoneNumber !== undefined;
     const allowSmsVal = shouldUpdateAllowSms ? allowSms : user.allow_sms;
+    const phoneNumberVal = shouldUpdatePhoneNumber
+      ? phoneNumber
+      : user.phone_number;
 
     const updateUserPhoneFieldsResp = await updateUserPhoneFields(
       userId,
-      phoneNumber || user.phone_number,
+      phoneNumberVal,
       allowSmsVal,
       dynamoClient
     );
