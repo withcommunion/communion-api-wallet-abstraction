@@ -69,7 +69,7 @@ functions:
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
   patchSelf:
-    name: getSelf-${sls:stage}
+    name: patchSelf-${sls:stage}
     handler: src/endpoints/api-patch-self.handler
     events:
       # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
