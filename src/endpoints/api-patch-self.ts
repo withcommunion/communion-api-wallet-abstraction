@@ -60,7 +60,7 @@ export const handler = async (
     try {
       if (!event.body) {
         return generateReturn(400, {
-          message: 'No body provided, need amount',
+          message: 'No body provided, need phoneNumber or allowSms',
           body: event.body,
         });
       }
@@ -75,7 +75,7 @@ export const handler = async (
       generateReturn(500, { message: 'Failed to parse body', error });
     }
 
-    if (!allowSms || !phoneNumber) {
+    if (typeof allowSms !== 'boolean' && !phoneNumber) {
       return generateReturn(400, {
         message: 'Nothing to update',
         fields: { phoneNumber, allowSms },
@@ -84,18 +84,18 @@ export const handler = async (
 
     const user = await fetchUserHelper(userId);
     if (!user) {
-      logger.error('We could not find the user', {
+      logger.error('We could not find the user to update', {
         values: { userId, user },
       });
       return generateReturn(404, {
-        message: 'Could not find user - this is weird',
+        message: 'Could not find user to update',
       });
     }
 
     const updateUserPhoneFieldsResp = await updateUserPhoneFields(
       userId,
-      phoneNumber,
-      allowSms,
+      phoneNumber || user.phone_number,
+      allowSms || user.allow_sms,
       dynamoClient
     );
 

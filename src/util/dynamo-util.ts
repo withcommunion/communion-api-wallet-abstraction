@@ -83,8 +83,8 @@ export async function insertUser(
 
 export async function updateUserPhoneFields(
   userId: string,
-  phoneNumber: string,
-  allowSms: boolean,
+  phoneNumber: string | undefined,
+  allowSms: boolean | undefined,
   ddbClient: DynamoDBDocumentClient
 ): Promise<User> {
   /**
