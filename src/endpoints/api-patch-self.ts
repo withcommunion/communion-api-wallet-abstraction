@@ -112,12 +112,11 @@ export const handler = async (
     );
 
     logger.info('Returning 200', {
-      values: { updateUserPhoneFieldsResp },
+      values: { phoneNumber, allowSms },
     });
     return generateReturn(200, {
-      phoneNumber,
-      allowSms,
-      updateUserPhoneFieldsResp,
+      phoneNumber: updateUserPhoneFieldsResp.phone_number,
+      allowSms: updateUserPhoneFieldsResp.allow_sms,
     });
   } catch (error) {
     logger.error('Failed to Redeem rewards', { values: { error } });
