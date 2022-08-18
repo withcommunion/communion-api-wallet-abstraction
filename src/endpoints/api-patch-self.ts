@@ -92,10 +92,13 @@ export const handler = async (
       });
     }
 
+    const shouldUpdateAllowSms = typeof allowSms === 'boolean';
+    const allowSmsVal = shouldUpdateAllowSms ? allowSms : user.allow_sms;
+
     const updateUserPhoneFieldsResp = await updateUserPhoneFields(
       userId,
       phoneNumber || user.phone_number,
-      allowSms || user.allow_sms,
+      allowSmsVal,
       dynamoClient
     );
 
