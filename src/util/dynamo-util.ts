@@ -81,6 +81,35 @@ export async function insertUser(
   return res;
 }
 
+export async function updateUserPhoneFields(
+  userId: string,
+  phoneNumber: string | undefined,
+  allowSms: boolean | undefined,
+  ddbClient: DynamoDBDocumentClient
+): Promise<User> {
+  /**
+   * TODO: This fn will infinitely append to the list of organizations.
+   * Maybe GET the user and see if they already have the org in JS
+   */
+  const params = new UpdateCommand({
+    TableName: usersTable,
+    Key: {
+      id: userId,
+    },
+    ReturnValues: 'ALL_NEW',
+    UpdateExpression: 'SET phone_number = :phoneNumber, allow_sms = :allowSms',
+    ExpressionAttributeValues: {
+      ':phoneNumber': phoneNumber,
+      ':allowSms': allowSms,
+    },
+  });
+
+  const resp = await ddbClient.send(params);
+  const user = resp.Attributes as User;
+
+  return user;
+}
+
 export async function addOrgToUser(
   userId: string,
   orgId: string,

@@ -68,6 +68,16 @@ functions:
           path: /user/self
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
+  patchSelf:
+    name: patchSelf-${sls:stage}
+    handler: src/endpoints/api-patch-self.handler
+    events:
+      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+      - httpApi:
+          method: PATCH
+          path: /user/self
+          authorizer:
+            name: cognitoJwtAuthorizer-${sls:stage}
   postSeedSelf:
     name: postSeedSelf-${sls:stage}
     handler: src/endpoints/api-post-seed-self.handler
