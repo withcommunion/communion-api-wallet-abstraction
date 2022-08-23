@@ -14,6 +14,7 @@ const stage = process.env.STAGE || 'dev';
 
 export const usersTable = `usersTable-${stage}`;
 export const orgsTable = `orgsTable-${stage}`;
+export const txnsTable = `transactionsTable-${stage}`;
 export const REGION = 'us-east-1';
 
 export function initDynamoClient(region: string = REGION) {
@@ -263,4 +264,29 @@ export async function addUserToOrg(
   const org = resp.Attributes as OrgWithPrivateData;
 
   return org;
+}
+
+interface Transaction {
+  fromUserId: string;
+  txnHash: string;
+  toUserId: string;
+  orgId: string;
+  message?: string;
+  amount: string;
+  created_at: number;
+}
+
+export async function insertTransaction(
+  txn: Transaction,
+  ddbClient: DynamoDBDocumentClient
+): Promise<PutCommandOutput> {
+  const itemToInsert = new PutCommand({
+    TableName: txnsTable,
+    Item: {
+      ...txn,
+    },
+  });
+
+  const res = await ddbClient.send(itemToInsert);
+  return res;
 }
