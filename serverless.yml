@@ -214,6 +214,26 @@ resources:
         BillingMode: PAY_PER_REQUEST
         SSESpecification:
           SSEEnabled: true
+    transactionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: transactionsTable-${sls:stage}
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: txnHash
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: txnHash
+            KeyType: RANGE
+        TimeToLiveSpecification:
+          AttributeName: expiration_time
+          Enabled: true
+        BillingMode: PAY_PER_REQUEST
+        SSESpecification:
+          SSEEnabled: true
     # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpool.html
     cognitoCommunionUsersDemo:
       Type: AWS::Cognito::UserPool
