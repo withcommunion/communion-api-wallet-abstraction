@@ -298,6 +298,8 @@ export const handler = async (
       await sendSmsToAllUsersHelper(fromUser, toUsers, amounts);
     }
 
+    // await storeTransactionsHelper(fromUser, toUsers, amounts);
+
     logger.info('Returning 200', {
       values: { transaction, txnHash: transaction.hash },
     });
