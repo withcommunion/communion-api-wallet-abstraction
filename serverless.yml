@@ -219,12 +219,12 @@ resources:
       Properties:
         TableName: transactionsTable-${sls:stage}
         AttributeDefinitions:
-          - AttributeName: userId
+          - AttributeName: fromUserId
             AttributeType: S
           - AttributeName: txnHash
             AttributeType: S
         KeySchema:
-          - AttributeName: userId
+          - AttributeName: fromUserId
             KeyType: HASH
           - AttributeName: txnHash
             KeyType: RANGE
