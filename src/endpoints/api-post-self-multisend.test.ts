@@ -119,6 +119,8 @@ describe('api-post-self-multisend', () => {
           // eslint-disable-next-line
           created_at: expect.any(Number),
           from_user_id: 'local-mock-user-self',
+          from_user_to_user_txn_hash_urn:
+            'local-mock-user-self:local-invoke-mock-user-a:0x12345325252',
           message: undefined,
           org_id: 'jacks-pizza-1',
           to_user_id: 'local-invoke-mock-user-a',
