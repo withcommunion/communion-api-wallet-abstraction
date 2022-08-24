@@ -8,6 +8,7 @@ import {
   GetCommand,
   BatchGetCommand,
   UpdateCommand,
+  QueryCommand,
 } from '@aws-sdk/lib-dynamodb';
 
 const stage = process.env.STAGE || 'dev';
@@ -241,6 +242,26 @@ export async function getOrgById(
   return org;
 }
 
+export async function batchGetOrgsById(
+  orgIds: string[],
+  ddbClient: DynamoDBDocumentClient
+): Promise<OrgWithPrivateData[]> {
+  const batchItemsToGet = new BatchGetCommand({
+    RequestItems: {
+      [orgsTable]: {
+        Keys: orgIds.map((orgId) => ({ id: orgId })),
+      },
+    },
+  });
+
+  const res = await ddbClient.send(batchItemsToGet);
+  if (res.Responses && res.Responses[orgsTable]) {
+    return res.Responses[orgsTable] as OrgWithPrivateData[];
+  } else {
+    return [];
+  }
+}
+
 export async function addUserToOrg(
   userId: string,
   orgId: string,
@@ -294,4 +315,42 @@ export async function insertTransaction(
 
   const res = await ddbClient.send(itemToInsert);
   return res;
+}
+
+export async function getTxsToUserInOrg(
+  orgId: string,
+  toUserId: string,
+  ddbClient: DynamoDBDocumentClient
+) {
+  const params = new QueryCommand({
+    TableName: txnsTable,
+    KeyConditionExpression:
+      'orgId = :orgId AND toUserIdTxnHashUrn begins_with :toUserId',
+    ExpressionAttributeValues: {
+      ':orgId': orgId,
+      ':toUserId': toUserId,
+    },
+  });
+
+  const res = await ddbClient.send(params);
+  return res.Items as Transaction[];
+}
+
+export async function getTxsFromUserInOrg(
+  orgId: string,
+  fromUserId: string,
+  ddbClient: DynamoDBDocumentClient
+) {
+  const params = new QueryCommand({
+    TableName: txnsTable,
+    KeyConditionExpression: 'orgId = :orgId',
+    ExpressionAttributeValues: {
+      ':orgId': orgId,
+      ':fromUserId': fromUserId,
+    },
+    FilterExpression: 'fromUserId = :fromUserId',
+  });
+
+  const res = await ddbClient.send(params);
+  return res.Items as Transaction[];
 }
