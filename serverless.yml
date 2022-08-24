@@ -219,14 +219,14 @@ resources:
       Properties:
         TableName: transactionsTable-${sls:stage}
         AttributeDefinitions:
-          - AttributeName: fromUserId
+          - AttributeName: orgId
             AttributeType: S
-          - AttributeName: txnHash
+          - AttributeName: toUserTxnHashUrn
             AttributeType: S
         KeySchema:
-          - AttributeName: fromUserId
+          - AttributeName: orgId
             KeyType: HASH
-          - AttributeName: txnHash
+          - AttributeName: toUserIdTxnHashUrn
             KeyType: RANGE
         TimeToLiveSpecification:
           AttributeName: expiration_time
