@@ -5,9 +5,8 @@ import {
   initDynamoClient,
   Self,
   batchGetOrgsById,
-  // getTxsToUserInOrg,
-  // getTxsFromUserInOrg,
-  getAllUsersTxsInOrg,
+  getUserReceivedTxsInOrg,
+  getUserSentTxsInOrg,
 } from '../util/dynamo-util';
 import logger, {
   setDefaultLoggerMetaForApi,
@@ -63,29 +62,28 @@ export const handler = async (
     }
 
     //  * query for to
-    // const txsToSelf = await getTxsToUserInOrg(
-    //   orgs[0].id,
-    //   self.id,
-    //   dynamoClient
-    // );
+    const receivedTxs = await getUserReceivedTxsInOrg(
+      orgs[1].id,
+      self.id,
+      dynamoClient
+    );
     //  * query for from
 
-    // const txsFromSelf = await getTxsFromUserInOrg(
-    //   orgs[0].id,
-    //   self.id,
-    //   dynamoClient
-    // );
-
-    const allSelfTxs = await getAllUsersTxsInOrg(
+    const sentTxs = await getUserSentTxsInOrg(
       orgs[1].id,
       self.id,
       dynamoClient
     );
 
-    // console.log('txsToSelf', txsToSelf);
-    // console.log('txsFromSelf', txsFromSelf);
-    console.log('allSelfTxs', allSelfTxs);
-    //  *  Make 1 query for both?
+    // const allSelfTxs = await getAllUsersTxsInOrg(
+    //   orgs[1].id,
+    //   self.id,
+    //   dynamoClient
+    // );
+
+    console.log('receivedTxs', receivedTxs);
+    console.log('sentTxs', sentTxs);
+    // console.log('allSelfTxs', allSelfTxs);
     //  * Fetch all users
     //  *  100 is MAX
     //  *  If more, need to loop (can add todo for this)

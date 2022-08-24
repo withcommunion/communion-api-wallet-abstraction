@@ -318,7 +318,7 @@ export async function insertTransaction(
   return res;
 }
 
-export async function getTxsToUserInOrg(
+export async function getUserReceivedTxsInOrg(
   orgId: string,
   toUserId: string,
   ddbClient: DynamoDBDocumentClient
@@ -337,7 +337,7 @@ export async function getTxsToUserInOrg(
   return res.Items as Transaction[];
 }
 
-export async function getTxsFromUserInOrg(
+export async function getUserSentTxsInOrg(
   orgId: string,
   fromUserId: string,
   ddbClient: DynamoDBDocumentClient
@@ -346,7 +346,7 @@ export async function getTxsFromUserInOrg(
     TableName: txnsTable,
     IndexName: 'fromToUserIndex',
     KeyConditionExpression:
-      'org_id = :orgId AND begins_with (to_user_id_txn_hash_urn, :toUserId)',
+      'org_id = :orgId AND begins_with (from_user_to_user_txn_hash_urn, :fromUserId)',
     ExpressionAttributeValues: {
       ':orgId': orgId,
       ':fromUserId': fromUserId,
