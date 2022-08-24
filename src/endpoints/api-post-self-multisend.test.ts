@@ -36,7 +36,6 @@ const getJacksPizzaGovernanceContractSpy = jest.spyOn(
   'getJacksPizzaGovernanceContract'
 );
 
-// eslint-disable-next-line
 const MOCK_HASH = '0x12345325252';
 const multisendEmployeeTokensSpy = jest.fn(() => ({ hash: MOCK_HASH }));
 // @ts-expect-error it's okay
@@ -52,6 +51,7 @@ const batchGetUsersByIdSpy = jest.spyOn(dynamoUtil, 'batchGetUsersById');
 batchGetUsersByIdSpy.mockImplementation(async () => [MOCK_USER_A]);
 
 const getUserByIdSpy = jest.spyOn(dynamoUtil, 'getUserById');
+const insertTransactionSpy = jest.spyOn(dynamoUtil, 'insertTransaction');
 
 const sendSmsSpy = jest.spyOn(twilioUtil, 'sendSms');
 // @ts-expect-error it's okay
@@ -107,6 +107,24 @@ describe('api-post-self-multisend', () => {
         MOCK_USER_SELF.walletAddressC,
         [MOCK_USER_A.walletAddressC],
         ['1']
+      );
+    });
+
+    it('Should call insertTransactionSpy with the performed transactions', async () => {
+      await handler(MOCK_EVENT);
+      expect(insertTransactionSpy).toHaveBeenCalledTimes(1);
+      expect(insertTransactionSpy).toHaveBeenCalledWith(
+        {
+          amount: '1',
+          // eslint-disable-next-line
+          created_at: expect.any(Number),
+          fromUserId: 'local-mock-user-self',
+          message: undefined,
+          orgId: 'jacks-pizza-1',
+          toUserId: 'local-invoke-mock-user-a',
+          toUserIdTxnHashUrn: 'local-invoke-mock-user-a:0x12345325252',
+        },
+        {}
       );
     });
 

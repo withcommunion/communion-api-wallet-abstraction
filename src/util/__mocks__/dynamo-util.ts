@@ -86,6 +86,16 @@ export const MOCK_USER_SEEDER = {
   email: 'local-invoke-user-seeder@gmail.com',
 };
 
+export const MOCK_TRANSACTION = {
+  orgId: 'communion-test-org',
+  toUserIdTxnHashUrn:
+    '913745df-7f8c-45c4-899f-e94cd376bce3:0xe00385de435d646f67a1f419516c47a529d81c075d58077ff184ece8caa04047',
+  amount: 1,
+  created_at: 1661360225.815,
+  fromUserId: '6c2110a5-d42c-4e93-aa70-26ebbdd1f867',
+  toUserId: '913745df-7f8c-45c4-899f-e94cd376bce3',
+};
+
 export const awsSdkPromiseResponse = jest
   .fn()
   .mockReturnValue(Promise.resolve(true));
@@ -118,3 +128,4 @@ export const batchGetUsersById = jest.fn(async () => [
 export const getOrgById = jest.fn(async () => MOCK_ORG);
 export const addUserToOrg = jest.fn(async () => MOCK_USER_SELF);
 export const addOrgToUser = jest.fn(async () => MOCK_ORG);
+export const insertTransaction = jest.fn(async () => MOCK_TRANSACTION);
