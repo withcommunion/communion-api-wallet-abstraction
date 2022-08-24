@@ -22,7 +22,7 @@ export function initDynamoClient(region: string = REGION) {
 
   const marshallOptions = {
     convertEmptyValues: false,
-    removeUndefinedValues: false,
+    removeUndefinedValues: true,
     convertClassInstanceToMap: false,
   };
 

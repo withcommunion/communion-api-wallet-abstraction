@@ -43,6 +43,32 @@ async function fetchUsersHelper(userIds: string[]) {
   }
 }
 
+function mapUserToUserIdHelper(
+  toUsers: User[],
+  toUserIdAndAmountObjs: { userId: string; amount: number; message?: string }[]
+) {
+  return toUserIdAndAmountObjs.map((toUserIdAndAmount) => {
+    const toUser = toUsers.find(
+      (toUser) => toUser.id === toUserIdAndAmount.userId
+    );
+
+    if (!toUser) {
+      logger.error('We failed to map a User from the DB to their found User', {
+        values: { toUserIdAndAmountObjs, toUserIdAndAmount, toUsers },
+      });
+      throw new Error(
+        'A toUserId wasnt able to be matched to a user in the DB, something is wrong here'
+      );
+    }
+
+    return {
+      toUser,
+      amount: toUserIdAndAmount.amount,
+      message: toUserIdAndAmount.message,
+    };
+  });
+}
+
 async function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
   try {
     const governanceContractAddress = org?.avax_contract?.address; // contract address with multisend fn: 0xbA3FF6a903869A9fb40d5cEE8EdF44AdD0932f8e
@@ -71,39 +97,30 @@ async function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
   }
 }
 
-async function constructUserPropertyArrays(
-  toUsers: User[]
-): Promise<{ userIds: string[]; toUsersAddresses: string[] }> {
-  const userIds = toUsers.map((user) => user.id);
-  const toUsersAddresses = toUsers.map((user) => user.walletAddressC);
-  return { userIds, toUsersAddresses };
-}
-
 async function multisendTokenHelper(
   fromUser: User | { id: string; walletAddressC: string },
-  toUsers: User[],
-  amounts: number[],
+  toUsersAndAmounts: {
+    toUser: User;
+    amount: number;
+    message: string | undefined;
+  }[],
   governanceContract: Contract,
   isManagerMode?: boolean
 ) {
-  const { userIds, toUsersAddresses } = await constructUserPropertyArrays(
-    toUsers
-  );
-
-  const toUsersIdsAddressesAndAmounts = userIds.map((id, index) => ({
-    id,
-    address: toUsersAddresses[index],
-    amount: amounts[index],
-  }));
-
   logger.info('Multisending tokens', {
     values: {
       fromUser: { id: fromUser.id, address: fromUser.walletAddressC },
-      toUsers: toUsersIdsAddressesAndAmounts,
+      toUsersAndAmounts,
       isManagerMode,
     },
   });
 
+  const toUsersAddresses = toUsersAndAmounts.map(
+    (toUserAndAmount) => toUserAndAmount.toUser.walletAddressC
+  );
+  const amounts = toUsersAndAmounts.map(
+    (toUserAndAmount) => toUserAndAmount.amount
+  );
   // eslint-disable-next-line
   const transaction = (await governanceContract.multisendEmployeeTokens(
     fromUser.walletAddressC,
@@ -118,40 +135,40 @@ async function multisendTokenHelper(
 
 async function storeTransactionsHelper(
   orgId: string,
+  toUserAndAmountMap: {
+    toUser: User;
+    amount: number;
+    message: string | undefined;
+  }[],
   fromUser: User,
-  toUsers: User[],
-  amounts: number[],
   transaction: EthersTxn
 ) {
   logger.info('Storing transactions in TransactionsTable');
   logger.verbose('Values to store in TxnTable', {
     values: {
       orgId,
-      fromUser,
-      toUsers,
-      amounts,
+      toUserAndAmountMap,
       transaction,
     },
   });
   try {
-    const txns: Transaction[] = toUsers.map((toUser, idx) => ({
-      orgId,
-      /**
-       * TODO: This may be bad - the hash should always be there though.  Keep an eye out for ones without
-       */
-      toUserIdTxnHashUrn: `${toUser.id}:${
-        transaction.hash || `RANDOM:${Math.random()}`
-      }`,
-      toUserId: toUser.id,
-      fromUserId: fromUser.id,
-      amount: amounts[idx],
-      // Store in seconds because expiry time uses seconds, let's stay consistent
-      created_at: Date.now() / 1000,
-      /**
-       * TODO: Refactor to include messages - pass the whole map
-       */
-      message: '',
-    }));
+    const txns: Transaction[] = toUserAndAmountMap.map(
+      ({ toUser, amount, message }) => ({
+        orgId,
+        /**
+         * TODO: This may be bad - the hash should always be there though.  Keep an eye out for ones without
+         */
+        toUserIdTxnHashUrn: `${toUser.id}:${
+          transaction.hash || `RANDOM:${Math.random()}`
+        }`,
+        toUserId: toUser.id,
+        fromUserId: fromUser.id,
+        amount,
+        // Store in seconds because expiry time uses seconds, let's stay consistent
+        created_at: Math.floor(Date.now() / 1000),
+        message,
+      })
+    );
 
     const insertResps = await Promise.all(
       txns.map((txn) => insertTransaction(txn, dynamoClient))
@@ -169,12 +186,12 @@ async function storeTransactionsHelper(
         args: {
           orgId,
           fromUser,
-          toUsers,
-          amounts,
+          toUserAndAmountMap,
           transaction,
         },
       },
     });
+    console.error(error);
   }
 }
 
@@ -232,7 +249,11 @@ export const handler = async (
       (claims.username as string) || (claims['cognito:username'] as string);
 
     let orgId = '';
-    let toUserIdAndAmountObjs: { userId: string; amount: number }[] = [];
+    let toUserIdAndAmountObjs: {
+      userId: string;
+      amount: number;
+      message?: string;
+    }[] = [];
     let isManagerModeInBody = false;
     try {
       if (!event.body) {
@@ -263,15 +284,24 @@ export const handler = async (
       });
     }
 
-    const toUserIds = toUserIdAndAmountObjs.map((obj) => obj.userId);
-    const amounts = toUserIdAndAmountObjs.map((obj) => obj.amount);
+    // const toUserIds = toUserIdAndAmountObjs.map((obj) => obj.userId);
+    // const amounts = toUserIdAndAmountObjs.map((obj) => obj.amount);
 
-    const areAllAmountsValid = amounts.every((amount) => amount && amount > 0);
+    const areAllAmountsValid = toUserIdAndAmountObjs.every(
+      (userIdAndAmount) => userIdAndAmount.amount && userIdAndAmount.amount > 0
+    );
     if (!areAllAmountsValid) {
+      const invalidUserIdAndAmount = toUserIdAndAmountObjs.find(
+        (toUserIdAndAmount) =>
+          !toUserIdAndAmount.amount || toUserIdAndAmount.amount <= 0
+      );
       logger.error('At least 1 amount is invalid', {
-        values: { toUserIds, amounts },
+        values: { toUserIdAndAmountObjs },
       });
-      return generateReturn(400, { message: 'At least 1 amount is invalid' });
+      return generateReturn(400, {
+        message: 'At least 1 amount is invalid',
+        invalidUserIdAndAmount,
+      });
     }
 
     const fromUser = await getUserById(fromUserId, dynamoClient);
@@ -289,7 +319,9 @@ export const handler = async (
         message: 'You are do not have the role of "manager" in this org',
       });
     }
-
+    const toUserIds = toUserIdAndAmountObjs.map(
+      (toUserIdAndAmountObj) => toUserIdAndAmountObj.userId
+    );
     const isManagerModeEnabled = isManagerModeInBody && isFromUserManager;
     const isManagerModeSendingToSelf =
       isManagerModeEnabled && toUserIds.includes(fromUserId);
@@ -320,6 +352,11 @@ export const handler = async (
       return generateReturn(404, { message: 'Could not find users' });
     }
 
+    const toUsersAndAmounts = mapUserToUserIdHelper(
+      toUsers,
+      toUserIdAndAmountObjs
+    );
+
     const areAllUsersInRequestedOrg = [fromUser, ...toUsers].every((user) =>
       Boolean(user.organizations.find((org) => org.orgId === orgId))
     );
@@ -348,8 +385,7 @@ export const handler = async (
 
     const transaction = await multisendTokenHelper(
       userToSendTokensFrom,
-      toUsers,
-      amounts,
+      toUsersAndAmounts,
       orgGovernanceContract,
       isManagerModeEnabled
     );
@@ -358,14 +394,13 @@ export const handler = async (
      * Send twilio notif to each user
      */
     if (process.env.STAGE !== 'prod') {
-      await sendSmsToAllUsersHelper(fromUser, toUsers, amounts);
+      await sendSmsToAllUsersHelper(fromUser, toUsers, [1, 2]);
     }
 
     await storeTransactionsHelper(
       orgId,
+      toUsersAndAmounts,
       fromUser,
-      toUsers,
-      amounts,
       transaction
     );
 
