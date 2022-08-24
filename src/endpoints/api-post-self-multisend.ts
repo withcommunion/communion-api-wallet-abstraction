@@ -135,7 +135,7 @@ async function multisendTokenHelper(
 
 async function storeTransactionsHelper(
   orgId: string,
-  toUserAndAmountMap: {
+  toUsersAndAmounts: {
     toUser: User;
     amount: number;
     message: string | undefined;
@@ -147,12 +147,12 @@ async function storeTransactionsHelper(
   logger.verbose('Values to store in TxnTable', {
     values: {
       orgId,
-      toUserAndAmountMap,
+      toUsersAndAmounts,
       transaction,
     },
   });
   try {
-    const txns: Transaction[] = toUserAndAmountMap.map(
+    const txns: Transaction[] = toUsersAndAmounts.map(
       ({ toUser, amount, message }) => ({
         orgId,
         /**
@@ -186,7 +186,7 @@ async function storeTransactionsHelper(
         args: {
           orgId,
           fromUser,
-          toUserAndAmountMap,
+          toUsersAndAmounts,
           transaction,
         },
       },
