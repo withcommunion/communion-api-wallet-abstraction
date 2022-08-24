@@ -38,6 +38,7 @@ export const handler = async (
 
     const returnValue = generateReturn(200, {
       ...user,
+      walletPrivateKeyWithLeadingHex: undefined,
     });
     logger.info('Returning', { values: returnValue });
 
