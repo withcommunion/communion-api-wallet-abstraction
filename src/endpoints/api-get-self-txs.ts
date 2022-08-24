@@ -5,8 +5,9 @@ import {
   initDynamoClient,
   Self,
   batchGetOrgsById,
-  getTxsToUserInOrg,
-  getTxsFromUserInOrg,
+  // getTxsToUserInOrg,
+  // getTxsFromUserInOrg,
+  getAllUsersTxsInOrg,
 } from '../util/dynamo-util';
 import logger, {
   setDefaultLoggerMetaForApi,
@@ -62,21 +63,28 @@ export const handler = async (
     }
 
     //  * query for to
-    // @ts-expect-error just to commit
-    // eslint-disable-next-line
-    const txsToSelf = await getTxsToUserInOrg(
-      orgs[0].id,
-      self.id,
-      dynamoClient
-    );
+    // const txsToSelf = await getTxsToUserInOrg(
+    //   orgs[0].id,
+    //   self.id,
+    //   dynamoClient
+    // );
     //  * query for from
-    // @ts-expect-error just to commit
-    // eslint-disable-next-line
-    const txsFromSelf = await getTxsFromUserInOrg(
-      orgs[0].id,
+
+    // const txsFromSelf = await getTxsFromUserInOrg(
+    //   orgs[0].id,
+    //   self.id,
+    //   dynamoClient
+    // );
+
+    const allSelfTxs = await getAllUsersTxsInOrg(
+      orgs[1].id,
       self.id,
       dynamoClient
     );
+
+    // console.log('txsToSelf', txsToSelf);
+    // console.log('txsFromSelf', txsFromSelf);
+    console.log('allSelfTxs', allSelfTxs);
     //  *  Make 1 query for both?
     //  * Fetch all users
     //  *  100 is MAX
@@ -94,11 +102,11 @@ export const handler = async (
 
     return returnValue;
   } catch (error) {
-    logger.error('Failed to get wallet', {
+    logger.error('Failed to get self txs', {
       values: { error },
     });
     return generateReturn(500, {
-      message: 'Something went wrong trying to get the wallet',
+      message: 'Something went wrong trying to fetch your txs',
       error: error,
     });
   }
