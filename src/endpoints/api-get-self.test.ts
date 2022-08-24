@@ -21,6 +21,9 @@ describe('api-get-self', () => {
   it('Should return the user', async () => {
     const res = await handler(MOCK_EVENT);
 
-    expect(JSON.parse(res.body)).toEqual(MOCK_USER_SELF);
+    expect(JSON.parse(res.body)).toEqual({
+      ...MOCK_USER_SELF,
+      walletPrivateKeyWithLeadingHex: undefined,
+    });
   });
 });
