@@ -284,9 +284,6 @@ export const handler = async (
       });
     }
 
-    // const toUserIds = toUserIdAndAmountObjs.map((obj) => obj.userId);
-    // const amounts = toUserIdAndAmountObjs.map((obj) => obj.amount);
-
     const areAllAmountsValid = toUserIdAndAmountObjs.every(
       (userIdAndAmount) => userIdAndAmount.amount && userIdAndAmount.amount > 0
     );
