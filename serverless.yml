@@ -218,17 +218,30 @@ resources:
     transactionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: transactionsTable-${sls:stage}
+        TableName: transactionsTableTmp-${sls:stage}
         AttributeDefinitions:
           - AttributeName: org_id
             AttributeType: S
           - AttributeName: to_user_id_txn_hash_urn
+            AttributeType: S
+          - AttributeName: from_user_to_user_txn_hash_urn
             AttributeType: S
         KeySchema:
           - AttributeName: org_id
             KeyType: HASH
           - AttributeName: to_user_id_txn_hash_urn
             KeyType: RANGE
+        LocalSecondaryIndexes:
+          # This will fit 10GB MAX per Partition key
+          # With the current items we are looking at around 37million txns PER org
+          - IndexName: fromToUserIndex
+            KeySchema:
+              - AttributeName: org_id
+                KeyType: HASH
+              - AttributeName: from_user_to_user_txn_hash_urn
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
         TimeToLiveSpecification:
           AttributeName: expiration_time
           Enabled: true

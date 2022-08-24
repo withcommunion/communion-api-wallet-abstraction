@@ -153,21 +153,24 @@ async function storeTransactionsHelper(
   });
   try {
     const txns: Transaction[] = toUsersAndAmounts.map(
-      ({ toUser, amount, message }) => ({
-        org_id: orgId,
+      ({ toUser, amount, message }) => {
         /**
-         * TODO: This may be bad - the hash should always be there though.  Keep an eye out for ones without
+         * TODO: This may be bad - the hash should always be there though.
+         * Keep an eye out for ones without
          */
-        to_user_id_txn_hash_urn: `${toUser.id}:${
-          transaction.hash || `RANDOM:${Math.random()}`
-        }`,
-        to_user_id: toUser.id,
-        from_user_id: fromUser.id,
-        amount,
-        // Store in seconds because expiry time uses seconds, let's stay consistent
-        created_at: Math.floor(Date.now() / 1000),
-        message,
-      })
+        const hash = transaction.hash || `RANDOM:${Math.random()}`;
+        return {
+          org_id: orgId,
+          to_user_id_txn_hash_urn: `${toUser.id}:${hash}`,
+          from_user_to_user_txn_hash_urn: `${fromUser.id}:${toUser.id}:${hash}`,
+          to_user_id: toUser.id,
+          from_user_id: fromUser.id,
+          amount,
+          // Store in seconds because expiry time uses seconds, let's stay consistent
+          created_at: Math.floor(Date.now() / 1000),
+          message,
+        };
+      }
     );
 
     const insertResps = await Promise.all(

@@ -269,6 +269,7 @@ export async function addUserToOrg(
 export interface Transaction {
   org_id: string;
   to_user_id_txn_hash_urn: string;
+  from_user_to_user_txn_hash_urn: string;
   to_user_id: string;
   from_user_id: string;
   amount: number;
