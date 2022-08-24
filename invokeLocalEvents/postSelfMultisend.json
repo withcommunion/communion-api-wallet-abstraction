@@ -1,5 +1,5 @@
 {
-  "body": "{\n    \"orgId\": \"jacks-pizza-pittsfield\",\n    \"toUserIdAndAmountObjs\": [\n    \t{\n    \t\t\"userId\": \"be400000f3c21-06f8-495d-81c3-a6d43849e7de\",\n    \t\t\"amount\": 1\n    \t},\n    \t{\n    \t\t\"userId\": \"18d9c3c8-0b5a-4115-b481-c9d55ca1df2d\",\n    \t\t\"amount\": 10\n    \t}\n    ],\n    \"amount\": 1\n}",
+  "body": "{\n    \"orgId\": \"communion-test-org\",\n    \"toUserIdAndAmountObjs\": [\n     \t{\n    \t\t\"userId\": \"6281d918-df36-48bf-b8a4-3ee1f2b8305e\",\n    \t\t\"amount\": 10\n    \t},\n \t{\n    \t\t\"userId\": \"6c2110a5-d42c-4e93-aa70-26ebbdd1f867\",\n    \t\t\"amount\": 5\n    \t}    ],\n    \"amount\": 1\n}",
   "headers": {
     "accept": "*/*",
     "accept-encoding": "gzip, deflate, br",
@@ -34,7 +34,7 @@
         "claims": {
           "aud": "4eerlu1taf72c8r20pv2tmmvmt",
           "auth_time": "1658352281",
-          "cognito:username": "18d9c3c8-0b5a-4115-b481-c9d55ca1df2d",
+          "cognito:username": "6281d918-df36-48bf-b8a4-3ee1f2b8305e",
           "custom:organization": "jacks-pizza-pittsfield",
           "custom:role": "worker",
           "email": "ziminhang+1@gmail.com",

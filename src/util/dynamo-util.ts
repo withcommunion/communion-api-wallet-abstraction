@@ -266,20 +266,25 @@ export async function addUserToOrg(
   return org;
 }
 
-interface Transaction {
-  fromUserId: string;
-  txnHash: string;
-  toUserId: string;
+export interface Transaction {
   orgId: string;
-  message?: string;
-  amount: string;
+  toUserIdTxnHashUrn: string;
+  toUserId: string;
+  fromUserId: string;
+  amount: number;
   created_at: number;
+  message?: string;
 }
 
 export async function insertTransaction(
   txn: Transaction,
   ddbClient: DynamoDBDocumentClient
 ): Promise<PutCommandOutput> {
+  /**
+   * TODO: As we scale - change to BatchInsert
+   * I would do this now, but it maxes out on 25 items in batch - will need to loop anyway
+   * For now PutCommand is easier but less efficient
+   * */
   const itemToInsert = new PutCommand({
     TableName: txnsTable,
     Item: {

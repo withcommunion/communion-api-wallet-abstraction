@@ -4,7 +4,7 @@ import { generateReturn } from '../util/api-util';
 import logger, {
   setDefaultLoggerMetaForApi,
 } from '../util/winston-logger-util';
-import { Contract, Transaction } from 'ethers';
+import { Contract, Transaction as EthersTxn } from 'ethers';
 import {
   getEthersWallet,
   getJacksPizzaGovernanceContract,
@@ -16,6 +16,8 @@ import {
   initDynamoClient,
   getOrgById,
   OrgWithPrivateData,
+  Transaction,
+  insertTransaction,
 } from '../util/dynamo-util';
 
 import { sendSms } from '../util/twilio-util';
@@ -107,11 +109,73 @@ async function multisendTokenHelper(
     fromUser.walletAddressC,
     toUsersAddresses,
     amounts
-  )) as Transaction;
+  )) as EthersTxn;
 
   logger.verbose('Transferred tokens', { values: { transaction } });
 
   return transaction;
+}
+
+async function storeTransactionsHelper(
+  orgId: string,
+  fromUser: User,
+  toUsers: User[],
+  amounts: number[],
+  transaction: EthersTxn
+) {
+  logger.info('Storing transactions in TransactionsTable');
+  logger.verbose('Values to store in TxnTable', {
+    values: {
+      orgId,
+      fromUser,
+      toUsers,
+      amounts,
+      transaction,
+    },
+  });
+  try {
+    const txns: Transaction[] = toUsers.map((toUser, idx) => ({
+      orgId,
+      /**
+       * TODO: This may be bad - the hash should always be there though.  Keep an eye out for ones without
+       */
+      toUserIdTxnHashUrn: `${toUser.id}:${
+        transaction.hash || `RANDOM:${Math.random()}`
+      }`,
+      toUserId: toUser.id,
+      fromUserId: fromUser.id,
+      amount: amounts[idx],
+      // Store in seconds because expiry time uses seconds, let's stay consistent
+      created_at: Date.now() / 1000,
+      /**
+       * TODO: Refactor to include messages - pass the whole map
+       */
+      message: '',
+    }));
+
+    const insertResps = await Promise.all(
+      txns.map((txn) => insertTransaction(txn, dynamoClient))
+    );
+
+    logger.verbose('Stored txns in TransactionsTable', {
+      values: { insertResps },
+    });
+
+    return insertResps;
+  } catch (error) {
+    logger.error('Failed to store transactions in table', {
+      values: {
+        error,
+        args: {
+          orgId,
+          fromUser,
+          toUsers,
+          amounts,
+          transaction,
+        },
+      },
+    });
+  }
 }
 
 async function sendSmsToAllUsersHelper(
@@ -148,9 +212,8 @@ Check it out on the app: ${url}
 }
 
 interface ExpectedPostBody {
-  toUserIdAndAmountObjs: { userId: string; amount: number }[];
+  toUserIdAndAmountObjs: { userId: string; amount: number; message?: string }[];
   orgId: string;
-  amount: number;
   isManagerMode?: boolean;
 }
 
@@ -298,7 +361,13 @@ export const handler = async (
       await sendSmsToAllUsersHelper(fromUser, toUsers, amounts);
     }
 
-    // await storeTransactionsHelper(fromUser, toUsers, amounts);
+    await storeTransactionsHelper(
+      orgId,
+      fromUser,
+      toUsers,
+      amounts,
+      transaction
+    );
 
     logger.info('Returning 200', {
       values: { transaction, txnHash: transaction.hash },
