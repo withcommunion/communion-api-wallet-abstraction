@@ -230,14 +230,14 @@ resources:
       Properties:
         TableName: transactionsTable-${sls:stage}
         AttributeDefinitions:
-          - AttributeName: orgId
+          - AttributeName: org_id
             AttributeType: S
-          - AttributeName: toUserIdTxnHashUrn
+          - AttributeName: to_user_id_txn_hash_urn
             AttributeType: S
         KeySchema:
-          - AttributeName: orgId
+          - AttributeName: org_id
             KeyType: HASH
-          - AttributeName: toUserIdTxnHashUrn
+          - AttributeName: to_user_id_txn_hash_urn
             KeyType: RANGE
         TimeToLiveSpecification:
           AttributeName: expiration_time

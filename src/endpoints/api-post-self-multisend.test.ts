@@ -118,11 +118,11 @@ describe('api-post-self-multisend', () => {
           amount: '1',
           // eslint-disable-next-line
           created_at: expect.any(Number),
-          fromUserId: 'local-mock-user-self',
+          from_user_id: 'local-mock-user-self',
           message: undefined,
-          orgId: 'jacks-pizza-1',
-          toUserId: 'local-invoke-mock-user-a',
-          toUserIdTxnHashUrn: 'local-invoke-mock-user-a:0x12345325252',
+          org_id: 'jacks-pizza-1',
+          to_user_id: 'local-invoke-mock-user-a',
+          to_user_id_txn_hash_urn: 'local-invoke-mock-user-a:0x12345325252',
         },
         {}
       );

@@ -288,10 +288,10 @@ export async function addUserToOrg(
 }
 
 export interface Transaction {
-  orgId: string;
-  toUserIdTxnHashUrn: string;
-  toUserId: string;
-  fromUserId: string;
+  org_id: string;
+  to_user_id_txn_hash_urn: string;
+  to_user_id: string;
+  from_user_id: string;
   amount: number;
   created_at: number;
   message?: string;
