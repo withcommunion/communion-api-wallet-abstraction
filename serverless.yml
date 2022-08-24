@@ -218,7 +218,7 @@ resources:
     transactionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: transactionsTable1-${sls:stage}
+        TableName: transactionsTable-${sls:stage}
         AttributeDefinitions:
           - AttributeName: org_id
             AttributeType: S
