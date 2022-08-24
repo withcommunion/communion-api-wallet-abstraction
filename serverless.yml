@@ -217,7 +217,7 @@ resources:
     transactionsTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: transactionsTable-${sls:stage}
+        TableName: transactionsTableTmp-${sls:stage}
         AttributeDefinitions:
           - AttributeName: fromUserId
             AttributeType: S
