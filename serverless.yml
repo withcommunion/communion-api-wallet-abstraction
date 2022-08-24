@@ -221,7 +221,7 @@ resources:
         AttributeDefinitions:
           - AttributeName: orgId
             AttributeType: S
-          - AttributeName: toUserTxnHashUrn
+          - AttributeName: toUserIdTxnHashUrn
             AttributeType: S
         KeySchema:
           - AttributeName: orgId
