@@ -41,6 +41,7 @@ provider:
           Resource:
             - Fn::GetAtt: [usersTable, Arn]
             - Fn::GetAtt: [orgsTable, Arn]
+            - Fn::GetAtt: [transactionsTable, Arn]
 
   environment:
     STAGE: ${sls:stage}

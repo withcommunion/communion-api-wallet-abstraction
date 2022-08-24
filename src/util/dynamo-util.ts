@@ -14,6 +14,7 @@ const stage = process.env.STAGE || 'dev';
 
 export const usersTable = `usersTable-${stage}`;
 export const orgsTable = `orgsTable-${stage}`;
+export const txnsTable = `transactionsTable-${stage}`;
 export const REGION = 'us-east-1';
 
 export function initDynamoClient(region: string = REGION) {
@@ -21,7 +22,7 @@ export function initDynamoClient(region: string = REGION) {
 
   const marshallOptions = {
     convertEmptyValues: false,
-    removeUndefinedValues: false,
+    removeUndefinedValues: true,
     convertClassInstanceToMap: false,
   };
 
@@ -263,4 +264,34 @@ export async function addUserToOrg(
   const org = resp.Attributes as OrgWithPrivateData;
 
   return org;
+}
+
+export interface Transaction {
+  orgId: string;
+  toUserIdTxnHashUrn: string;
+  toUserId: string;
+  fromUserId: string;
+  amount: number;
+  created_at: number;
+  message?: string;
+}
+
+export async function insertTransaction(
+  txn: Transaction,
+  ddbClient: DynamoDBDocumentClient
+): Promise<PutCommandOutput> {
+  /**
+   * TODO: As we scale - change to BatchInsert
+   * I would do this now, but it maxes out on 25 items in batch - will need to loop anyway
+   * For now PutCommand is easier but less efficient
+   * */
+  const itemToInsert = new PutCommand({
+    TableName: txnsTable,
+    Item: {
+      ...txn,
+    },
+  });
+
+  const res = await ddbClient.send(itemToInsert);
+  return res;
 }
