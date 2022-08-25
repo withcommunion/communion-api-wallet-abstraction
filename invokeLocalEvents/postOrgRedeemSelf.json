@@ -1,5 +1,5 @@
 {
-  "body": "{\n    \"amount\": 1\n}",
+  "body": "{\n    \"amount\": 1,\n \"message\": \"mug, 1 day pto\"\n}",
   "pathParameters": {
     "orgId": "jacks-pizza-pittsfield"
   },

@@ -7,6 +7,7 @@ import { MOCK_USER_SELF, MOCK_ORG } from '../util/__mocks__/dynamo-util';
 
 const MOCK_BODY_PARAMS = JSON.stringify({
   amount: 1,
+  message: '1 day pto, tuition',
 });
 const MOCK_EVENT = generateApiGatewayEvent({
   userId: MOCK_USER_SELF.id,
@@ -36,6 +37,7 @@ getJacksPizzaGovernanceContractSpy.mockImplementation(() => {
 
 const getOrgByIdSpy = jest.spyOn(dynamoUtil, 'getOrgById');
 const getUserByIdSpy = jest.spyOn(dynamoUtil, 'getUserById');
+const insertTransactionSpy = jest.spyOn(dynamoUtil, 'insertTransaction');
 
 describe('api-post-org-redeem-self', () => {
   beforeEach(() => {
@@ -86,6 +88,27 @@ describe('api-post-org-redeem-self', () => {
       expect(burnEmployeeTokensSpy).toHaveBeenCalledWith(
         MOCK_USER_SELF.walletAddressC,
         1
+      );
+    });
+
+    it('Should call insertTransaction', async () => {
+      await handler(MOCK_EVENT);
+      expect(insertTransactionSpy).toHaveBeenCalledTimes(1);
+      expect(insertTransactionSpy).toHaveBeenCalledWith(
+        {
+          amount: 1,
+          created_at: expect.any(Number),
+          from_user_id: 'local-mock-user-self',
+          from_user_to_user_txn_hash_urn:
+            'local-mock-user-self:0x0000000000000000000000000000000000000000:0x12345325252',
+          message: '1 day pto, tuition',
+          org_id: 'jacks-pizza-1',
+          to_user_id: '0x0000000000000000000000000000000000000000',
+          to_user_id_txn_hash_urn:
+            '0x0000000000000000000000000000000000000000:0x12345325252',
+          tx_hash: '0x12345325252',
+        },
+        {}
       );
     });
   });
