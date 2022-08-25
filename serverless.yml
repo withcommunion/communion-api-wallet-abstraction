@@ -42,6 +42,14 @@ provider:
             - Fn::GetAtt: [usersTable, Arn]
             - Fn::GetAtt: [orgsTable, Arn]
             - Fn::GetAtt: [transactionsTable, Arn]
+            - Fn::Join:
+                [
+                  '',
+                  [
+                    Fn::GetAtt: [transactionsTable, Arn],
+                    '/index/fromToUserIndex',
+                  ],
+                ]
 
   environment:
     STAGE: ${sls:stage}
