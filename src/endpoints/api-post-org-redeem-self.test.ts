@@ -7,6 +7,7 @@ import { MOCK_USER_SELF, MOCK_ORG } from '../util/__mocks__/dynamo-util';
 
 const MOCK_BODY_PARAMS = JSON.stringify({
   amount: 1,
+  message: '1 day pto, tuition',
 });
 const MOCK_EVENT = generateApiGatewayEvent({
   userId: MOCK_USER_SELF.id,
