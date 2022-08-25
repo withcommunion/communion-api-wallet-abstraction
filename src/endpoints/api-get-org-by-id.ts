@@ -236,6 +236,15 @@ export const handler = async (
       values: { userId: requestUserId },
     });
     const requestingUser = await getUserById(requestUserId, dynamoClient);
+    if (!requestingUser) {
+      logger.error(
+        'User not found on - something is wrong, user is Authd and exists in Cognito but not in our DB',
+        {
+          values: { requestUserId },
+        }
+      );
+      return generateReturn(404, { message: 'User not found' });
+    }
     logger.info('Received user', { values: { requestingUser } });
 
     const isRequestingUserManager =
