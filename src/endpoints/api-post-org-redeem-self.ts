@@ -4,7 +4,7 @@ import { generateReturn } from '../util/api-util';
 import logger, {
   setDefaultLoggerMetaForApi,
 } from '../util/winston-logger-util';
-import { Contract, Transaction } from 'ethers';
+import { Contract, Transaction as EthersTxn } from 'ethers';
 import {
   getEthersWallet,
   getJacksPizzaGovernanceContract,
@@ -15,6 +15,8 @@ import {
   getOrgById,
   OrgWithPrivateData,
   getUserById,
+  insertTransaction,
+  Transaction,
 } from '../util/dynamo-util';
 
 const dynamoClient = initDynamoClient();
@@ -90,7 +92,7 @@ async function burnTokensHelper(
     const transaction = (await governanceContract.burnEmployeeTokens(
       user.walletAddressC,
       amount
-    )) as Transaction;
+    )) as EthersTxn;
 
     logger.verbose('Burned tokens', { values: { transaction } });
 
@@ -103,8 +105,64 @@ async function burnTokensHelper(
   }
 }
 
+async function storeTransactionsHelper(
+  orgId: string,
+  fromUser: User,
+  message: string,
+  amount: number,
+  transaction: EthersTxn
+) {
+  logger.info('Storing transaction in TransactionsTable');
+  logger.verbose('Values to store in TxnTable', {
+    values: {
+      orgId,
+      fromUser,
+      transaction,
+    },
+  });
+  try {
+    const hash = transaction.hash || `RANDOM:${Math.random()}`;
+    const toId = transaction.to || '0x0000000000000000000000000000000000000000';
+    const txn = {
+      org_id: orgId,
+      to_user_id_txn_hash_urn: `${toId}:${hash}`,
+      from_user_to_user_txn_hash_urn: `${fromUser.id}:${toId}:${hash}`,
+      to_user_id: transaction.to,
+      from_user_id: fromUser.id,
+      tx_hash: hash,
+      amount,
+      // Store in seconds because expiry time uses seconds, let's stay consistent
+      created_at: Math.floor(Date.now() / 1000),
+      message,
+    } as Transaction;
+
+    const insertResps = await insertTransaction(txn, dynamoClient);
+
+    logger.verbose('Stored txn in TransactionsTable', {
+      values: { insertResps },
+    });
+
+    return insertResps;
+  } catch (error) {
+    logger.error('Failed to store transactions in table', {
+      values: {
+        error,
+        args: {
+          orgId,
+          fromUser,
+          message,
+          amount,
+          transaction,
+        },
+      },
+    });
+    console.error(error);
+  }
+}
+
 interface ExpectedPostBody {
   amount: number;
+  message: string;
 }
 
 export const handler = async (
@@ -125,6 +183,7 @@ export const handler = async (
     const orgId = event.pathParameters?.orgId;
 
     let amount = 0;
+    let message = '';
     try {
       if (!event.body) {
         return generateReturn(400, {
@@ -135,6 +194,7 @@ export const handler = async (
 
       const body = JSON.parse(event.body) as ExpectedPostBody;
       amount = body.amount;
+      message = body.message;
     } catch (error) {
       logger.error('Failed to parse body', {
         values: { error, body: event.body },
@@ -142,10 +202,10 @@ export const handler = async (
       generateReturn(500, { message: 'Failed to parse body', error });
     }
 
-    if (!orgId || !userId || !amount) {
+    if (!orgId || !userId || !amount || !message) {
       return generateReturn(400, {
         message: 'Missing required fields',
-        fields: { amount, orgId, userId },
+        fields: { amount, orgId, userId, message },
       });
     }
 
@@ -184,6 +244,8 @@ export const handler = async (
       amount,
       orgGovernanceContract
     );
+
+    await storeTransactionsHelper(orgId, user, message, amount, transaction);
 
     logger.info('Returning 200', {
       values: { transaction, txnHash: transaction.hash },
