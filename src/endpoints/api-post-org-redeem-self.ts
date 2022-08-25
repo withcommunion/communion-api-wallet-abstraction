@@ -122,7 +122,11 @@ async function storeTransactionsHelper(
   });
   try {
     const hash = transaction.hash || `RANDOM:${Math.random()}`;
-    const toId = transaction.to || '0x0000000000000000000000000000000000000000';
+    /**
+     * This is the burn address, where the token is actually going
+     * Would use transaction.to but that is to the contract and not for the token itself
+     */
+    const toId = '0x0000000000000000000000000000000000000000';
     const txn = {
       org_id: orgId,
       to_user_id_txn_hash_urn: `${toId}:${hash}`,
