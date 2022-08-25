@@ -155,7 +155,7 @@ async function storeTransactionsHelper(
     const txns: Transaction[] = toUsersAndAmounts.map(
       ({ toUser, amount, message }) => {
         /**
-         * TODO: This may be bad - the hash should always be there though.
+         * TODO: This may be bad - the hash should always there.
          * Keep an eye out for ones without
          */
         const hash = transaction.hash || `RANDOM:${Math.random()}`;
@@ -165,6 +165,7 @@ async function storeTransactionsHelper(
           from_user_to_user_txn_hash_urn: `${fromUser.id}:${toUser.id}:${hash}`,
           to_user_id: toUser.id,
           from_user_id: fromUser.id,
+          tx_hash: hash,
           amount,
           // Store in seconds because expiry time uses seconds, let's stay consistent
           created_at: Math.floor(Date.now() / 1000),
