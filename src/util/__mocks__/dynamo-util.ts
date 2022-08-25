@@ -87,13 +87,16 @@ export const MOCK_USER_SEEDER = {
 };
 
 export const MOCK_TRANSACTION = {
-  orgId: 'communion-test-org',
-  toUserIdTxnHashUrn:
-    '913745df-7f8c-45c4-899f-e94cd376bce3:0xe00385de435d646f67a1f419516c47a529d81c075d58077ff184ece8caa04047',
-  amount: 1,
-  created_at: 1661360225.815,
-  fromUserId: '6c2110a5-d42c-4e93-aa70-26ebbdd1f867',
-  toUserId: '913745df-7f8c-45c4-899f-e94cd376bce3',
+  org_id: 'communion-test-org',
+  to_user_id_txn_hash_urn:
+    '18d9c3c8-0b5a-4115-b481-c9d55ca1df2d:0x037972475373ff609701eb07232d51dd661b0c42914e4c371b0d7156fecb5873',
+  amount: 7,
+  created_at: 1661454745,
+  from_user_id: '6281d918-df36-48bf-b8a4-3ee1f2b8305e',
+  from_user_to_user_txn_hash_urn:
+    '6281d918-df36-48bf-b8a4-3ee1f2b8305e:18d9c3c8-0b5a-4115-b481-c9d55ca1df2d:0x037972475373ff609701eb07232d51dd661b0c42914e4c371b0d7156fecb5873',
+  to_user_id: '18d9c3c8-0b5a-4115-b481-c9d55ca1df2d',
+  tx_hash: '0x037972475373ff609701eb07232d51dd661b0c42914e4c371b0d7156fecb5873',
 };
 
 export const awsSdkPromiseResponse = jest
@@ -125,7 +128,37 @@ export const batchGetUsersById = jest.fn(async () => [
   MOCK_USER_A,
 ]);
 
+export const MOCK_TX_A = {
+  org_id: 'communion-test-org',
+  to_user_id_txn_hash_urn:
+    '18d9c3c8-0b5a-4115-b481-c9d55ca1df2d:0x037972475373ff609701eb07232d51dd661b0c42914e4c371b0d7156fecb5873',
+  amount: 7,
+  created_at: 1661454745,
+  from_user_id: MOCK_SELF_ID,
+  from_user_to_user_txn_hash_urn:
+    '6281d918-df36-48bf-b8a4-3ee1f2b8305e:18d9c3c8-0b5a-4115-b481-c9d55ca1df2d:0x037972475373ff609701eb07232d51dd661b0c42914e4c371b0d7156fecb5873',
+  to_user_id: MOCK_SELF_ID,
+  tx_hash: '0x037972475373ff609701eb07232d51dd661b0c42914e4c371b0d7156fecb5873',
+};
+
+export const MOCK_TX_B = {
+  org_id: 'communion-test-org',
+  to_user_id_txn_hash_urn:
+    '6281d918-df36-48bf-b8a4-3ee1f2b8305e:0x54600226bc20315802c4e179d82c53f2542dd2ec0a57b194bb7811bd6ee10fc6',
+  amount: 2,
+  created_at: 1661457691,
+  from_user_id: MOCK_SELF_ID,
+  from_user_to_user_txn_hash_urn:
+    '563ca6ea-53e0-42d9-932d-cf284fa2583f:6281d918-df36-48bf-b8a4-3ee1f2b8305e:0x54600226bc20315802c4e179d82c53f2542dd2ec0a57b194bb7811bd6ee10fc6',
+  to_user_id: MOCK_SELF_ID,
+  tx_hash: '0x54600226bc20315802c4e179d82c53f2542dd2ec0a57b194bb7811bd6ee10fc6',
+};
+
+export const batchGetOrgsById = jest.fn(async () => [MOCK_ORG]);
+
 export const getOrgById = jest.fn(async () => MOCK_ORG);
 export const addUserToOrg = jest.fn(async () => MOCK_USER_SELF);
 export const addOrgToUser = jest.fn(async () => MOCK_ORG);
 export const insertTransaction = jest.fn(async () => MOCK_TRANSACTION);
+export const getUserSentTxsInOrg = jest.fn(async () => [MOCK_TX_A]);
+export const getUserReceivedTxsInOrg = jest.fn(async () => [MOCK_TX_B]);

@@ -306,6 +306,15 @@ export const handler = async (
     }
 
     const fromUser = await getUserById(fromUserId, dynamoClient);
+    if (!fromUser) {
+      logger.error(
+        'User not found on - something is wrong, user is Authd and exists in Cognito but not in our DB',
+        {
+          values: { fromUserId },
+        }
+      );
+      return generateReturn(404, { message: 'User not found' });
+    }
 
     const isFromUserManager =
       fromUser.organizations.find((org) => org.orgId === orgId)?.role ===

@@ -9,6 +9,7 @@ interface GatewayEventParamOverrides {
   givenName?: string;
   email?: string;
   body?: string;
+  queryStringParameters?: { [key: string]: string };
 }
 export function generateApiGatewayEvent(
   paramOverrides: GatewayEventParamOverrides
@@ -26,6 +27,7 @@ export function generateApiGatewayEvent(
       ? `/org/${paramOverrides.orgId}`
       : '/org/jacks-pizza-1',
     rawQueryString: '',
+    queryStringParameters: paramOverrides.queryStringParameters || {},
     requestContext: {
       accountId: '143056416942',
       apiId: 'p0rddetfk8',
@@ -152,5 +154,26 @@ export function generateMockOrg(
       privateKeyWithLeadingHex: '0xf9c...294c',
       walletAddressC: '0xfE96DA...965f',
     },
+  };
+}
+
+interface MockTxParamOverrides {
+  to_user_id: string;
+  from_user_id: string;
+  org_id?: string;
+}
+export function generateMockTx(paramOverrides: MockTxParamOverrides) {
+  return {
+    org_id: paramOverrides.org_id || 'communion-test-org',
+    from_user_id: paramOverrides.from_user_id || 'local-mock-user-self',
+    to_user_id: paramOverrides.to_user_id || 'local-mock-user-self',
+    to_user_id_txn_hash_urn:
+      '6281d918-df36-48bf-b8a4-3ee1f2b8305e:0x54600226bc20315802c4e179d82c53f2542dd2ec0a57b194bb7811bd6ee10fc6',
+    amount: 2,
+    created_at: 1661457691,
+    from_user_to_user_txn_hash_urn:
+      '563ca6ea-53e0-42d9-932d-cf284fa2583f:6281d918-df36-48bf-b8a4-3ee1f2b8305e:0x54600226bc20315802c4e179d82c53f2542dd2ec0a57b194bb7811bd6ee10fc6',
+    tx_hash:
+      '0x54600226bc20315802c4e179d82c53f2542dd2ec0a57b194bb7811bd6ee10fc6',
   };
 }
