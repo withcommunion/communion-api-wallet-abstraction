@@ -294,6 +294,7 @@ export interface Transaction {
   to_user_id: string;
   from_user_id: string;
   amount: number;
+  tx_hash: string;
   created_at: number;
   message?: string;
 }
