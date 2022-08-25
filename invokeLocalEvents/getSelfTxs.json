@@ -3,6 +3,9 @@
   "routeKey": "GET /user/self",
   "rawPath": "/user/self",
   "rawQueryString": "",
+  "queryStringParameters": {
+    "orgId": "communion-test-org"
+  },
   "headers": {
     "accept": "application/json, text/plain, */*",
     "accept-encoding": "gzip, deflate, br",

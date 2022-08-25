@@ -1,15 +1,15 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { generateReturn } from '../util/api-util';
 import {
-  getUserById,
   initDynamoClient,
-  User,
-  OrgWithPrivateData,
-  batchGetOrgsById,
-  Transaction,
+  getUserById,
+  getOrgById,
   getUserReceivedTxsInOrg,
   getUserSentTxsInOrg,
   batchGetUsersById,
+  User,
+  Transaction,
+  OrgWithPrivateData,
 } from '../util/dynamo-util';
 import logger, {
   setDefaultLoggerMetaForApi,
@@ -32,10 +32,18 @@ export const handler = async (
     // For some reason it can come through in two seperate ways
     const userId =
       (claims.username as string) || (claims['cognito:username'] as string);
-    //  * Check for querystring param
-    const orgId = event.queryStringParameters?.orgId;
 
-    //  * Fetch user
+    const orgId = event.queryStringParameters?.orgId;
+    if (!orgId) {
+      logger.info('No orgId provided, returning 400', {
+        values: { orgId, qsp: event.queryStringParameters },
+      });
+      generateReturn(400, {
+        message:
+          'Please provide "orgId=" as a query string parameter.  For now only one org is supported.',
+      });
+    }
+
     logger.verbose('Fetching user', { values: { userId: userId } });
     const self = await getUserById(userId, dynamoClient);
     if (!self) {
@@ -49,12 +57,11 @@ export const handler = async (
     }
     logger.info('Received user', { values: self });
 
-    const orgIdsToFetch = orgId
-      ? [orgId]
-      : self.organizations.map((org) => org.orgId);
-    const orgs = await fetchOrgsHelper(orgIdsToFetch);
+    const orgIdToFetch = orgId ? orgId : self.organizations[0].orgId;
 
-    if (!orgs || !orgs.length) {
+    const org = await fetchOrgHelper(orgIdToFetch);
+
+    if (!org) {
       logger.info('User is not in any orgs', {
         values: { orgId, selfOrgs: self.organizations },
       });
@@ -64,35 +71,16 @@ export const handler = async (
       });
     }
 
-    //  * query for to
-    const receivedTxs = await getUserReceivedTxsInOrg(
-      orgs[1].id,
-      self.id,
-      dynamoClient
-    );
-    //  * query for from
+    const allTxs = await fetchSelfTxsInOrgHelper(org, self);
 
-    const sentTxs = await getUserSentTxsInOrg(
-      orgs[1].id,
-      self.id,
-      dynamoClient
-    );
-
-    const allTxs = [...receivedTxs, ...sentTxs];
-
-    //  * Fetch all users
     const allUsersTransactedWith = await fetchUsersInTxsHelper(allTxs);
-    //  * Map them together making the txn
-    //  *  Flag for received or sent
-    //  *  Flag for redeem
-    //  *  Flag for isFromBank
+
     const completeCommunionTxnsForUser = constructCompleteTxsForUserHelper(
       self,
       allTxs,
       allUsersTransactedWith,
-      orgs[1]
+      org
     ).sort((txA, txB) => txA.timeStampSeconds - txB.timeStampSeconds);
-    //  * Sort the array
 
     const returnValue = generateReturn(200, {
       txs: completeCommunionTxnsForUser,
@@ -111,13 +99,39 @@ export const handler = async (
   }
 };
 
-async function fetchOrgsHelper(orgIds: string[]) {
+async function fetchOrgHelper(orgId: string) {
   try {
-    logger.info('Fetching orgs');
-    const orgs = await batchGetOrgsById(orgIds, dynamoClient);
-    return orgs;
+    logger.info('Fetching org', { values: { orgId } });
+    const org = await getOrgById(orgId, dynamoClient);
+    logger.verbose('Received orgs', { values: { org } });
+    return org;
   } catch (error) {
-    logger.error('Failed to fetch orgs', { values: { error, orgIds } });
+    logger.error('Failed to fetch org', { values: { error, orgId } });
+  }
+}
+
+async function fetchSelfTxsInOrgHelper(org: OrgWithPrivateData, self: User) {
+  try {
+    logger.info('Fetching self txs in tx db', {
+      values: { orgId: org.id, selfId: self.id },
+    });
+    const receivedTxs = await getUserReceivedTxsInOrg(
+      org.id,
+      self.id,
+      dynamoClient
+    );
+
+    const sentTxs = await getUserSentTxsInOrg(org.id, self.id, dynamoClient);
+    logger.verbose('Received txs', {
+      values: { orgId: org.id, selfId: self.id, receivedTxs, sentTxs },
+    });
+
+    return [...receivedTxs, ...sentTxs];
+  } catch (error) {
+    logger.error('Failed to fetch users txs from db', {
+      values: { error, orgId: org.id, selfId: self.id },
+    });
+    throw error;
   }
 }
 
