@@ -131,7 +131,7 @@ async function storeTransactionsHelper(
       org_id: orgId,
       to_user_id_txn_hash_urn: `${toId}:${hash}`,
       from_user_to_user_txn_hash_urn: `${fromUser.id}:${toId}:${hash}`,
-      to_user_id: transaction.to,
+      to_user_id: toId,
       from_user_id: fromUser.id,
       tx_hash: hash,
       amount,
