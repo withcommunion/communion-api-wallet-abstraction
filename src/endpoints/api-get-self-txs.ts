@@ -38,7 +38,7 @@ export const handler = async (
       logger.info('No orgId provided, returning 400', {
         values: { orgId, qsp: event.queryStringParameters },
       });
-      generateReturn(400, {
+      return generateReturn(400, {
         message:
           'Please provide "orgId=" as a query string parameter.  For now only one org is supported.',
       });
@@ -57,18 +57,23 @@ export const handler = async (
     }
     logger.info('Received user', { values: self });
 
-    const orgIdToFetch = orgId ? orgId : self.organizations[0].orgId;
+    const org = await fetchOrgHelper(orgId);
+    const isUserInOrg = org?.member_ids.includes(self.id);
 
-    const org = await fetchOrgHelper(orgIdToFetch);
-
-    if (!org) {
-      logger.info('User is not in any orgs', {
+    if (!org || !isUserInOrg) {
+      logger.info('The requested org does not exist', {
         values: { orgId, selfOrgs: self.organizations },
       });
 
-      return generateReturn(404, {
-        message: 'User is not in any orgs, so there is nothing to fetch',
-      });
+      return !org
+        ? generateReturn(404, {
+            message: 'The requested org does not exist',
+            orgId,
+          })
+        : generateReturn(403, {
+            message: 'Access denied, the requesting user is not in the org',
+            orgId,
+          });
     }
 
     const allTxs = await fetchSelfTxsInOrgHelper(org, self);
@@ -253,7 +258,8 @@ function constructCompleteTxsForUserHelper(
       },
     });
     const userIdUserMap = {} as { [userId: string]: User };
-    [...allUsersTransactedWith, self].forEach((user) => {
+    // Includes self
+    allUsersTransactedWith.forEach((user) => {
       userIdUserMap[user.id] = user;
     });
 

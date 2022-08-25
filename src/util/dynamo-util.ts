@@ -145,7 +145,7 @@ export async function addOrgToUser(
 export async function getUserById(
   userId: string,
   ddbClient: DynamoDBDocumentClient
-): Promise<User> {
+): Promise<User | undefined> {
   const itemToGet = new GetCommand({
     TableName: usersTable,
     Key: {
@@ -155,6 +155,10 @@ export async function getUserById(
 
   const res = await ddbClient.send(itemToGet);
   const user = res.Item as User;
+  if (!user) {
+    return undefined;
+  }
+
   return user;
 }
 
