@@ -137,7 +137,9 @@ async function fetchSelfTxsInOrgHelper(org: OrgWithPrivateData, self: User) {
 
 async function fetchUsersInTxsHelper(allTxs: Transaction[]) {
   try {
-    logger.info('Fetching users in txs');
+    logger.info('Fetching users in txs', {
+      values: { allTxsLength: allTxs.length },
+    });
 
     const userMap = {} as { [userId: string]: boolean };
     allTxs.forEach((tx) => {
@@ -242,14 +244,32 @@ function constructCompleteTxsForUserHelper(
   allUsersTransactedWith: User[],
   org: OrgWithPrivateData
 ): CommunionTx[] {
-  const userIdUserMap = {} as { [userId: string]: User };
-  allUsersTransactedWith.forEach((user) => {
-    userIdUserMap[user.id] = user;
-  });
+  try {
+    logger.info('Constructing complete txs for user', {
+      values: {
+        selfId: self.id,
+        allTxsLength: allTxs,
+        allUsersTransactedWithLength: allUsersTransactedWith,
+      },
+    });
+    const userIdUserMap = {} as { [userId: string]: User };
+    [...allUsersTransactedWith, self].forEach((user) => {
+      userIdUserMap[user.id] = user;
+    });
 
-  const communionTxs = allTxs.map((tx) =>
-    constructCompleteTx(self, tx, userIdUserMap, org)
-  );
+    const communionTxs = allTxs.map((tx) =>
+      constructCompleteTx(self, tx, userIdUserMap, org)
+    );
+    logger.verbose('Constructed complete txs for user', {
+      values: { communionTxs },
+    });
 
-  return communionTxs;
+    return communionTxs;
+  } catch (error) {
+    console.error(error);
+    logger.error('Failed to construct complete txs for user', {
+      values: { error },
+    });
+    throw error;
+  }
 }
