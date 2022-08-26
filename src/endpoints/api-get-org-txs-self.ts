@@ -9,6 +9,8 @@ import {
   getOrgById,
   batchGetUsersById,
   OrgWithPrivateData,
+  insertTransaction,
+  Transaction,
 } from '../util/dynamo-util';
 import { getAddressTxHistory, HistoricalTxn } from '../util/avax-chain-util';
 import logger, {
@@ -17,11 +19,15 @@ import logger, {
 
 const dynamoClient = initDynamoClient();
 
+interface FullTxn extends HistoricalTxn {
+  fromUser: UserInTxn;
+  toUser: UserInTxn;
+}
 function createUserTxnHistoryHelper(
   rawUserTxs: HistoricalTxn[],
   txCandidates: User[],
   organization: OrgWithPrivateData
-) {
+): FullTxn[] {
   logger.verbose('Creating txAddress array');
   const txAddresses = rawUserTxs
     .reduce((acc, curr) => {
@@ -152,9 +158,19 @@ export const handler = async (
       org
     );
 
+    logger.info(`This user has [${txsWithUserData.length}] txns`);
+
+    const migrate = true;
+    if (migrate) {
+      const insertResp = await storeTransactionsHelper(orgId, txsWithUserData);
+      if (insertResp) {
+        return generateReturn(200, { inserts: insertResp?.length });
+      }
+    }
+
     const returnValue = generateReturn(200, { txs: txsWithUserData });
 
-    logger.info('Returning', { values: returnValue });
+    // logger.info('Returning', { values: returnValue });
 
     return returnValue;
   } catch (error) {
@@ -168,3 +184,52 @@ export const handler = async (
     });
   }
 };
+
+async function storeTransactionsHelper(orgId: string, transactions: FullTxn[]) {
+  logger.info('Storing transactions in TransactionsTable');
+  logger.verbose('Values to store in TxnTable', {
+    values: {
+      orgId,
+      transactions,
+    },
+  });
+  try {
+    const txns: Transaction[] = transactions.map(
+      ({ toUser, fromUser, timeStamp, hash, value }) => {
+        return {
+          org_id: orgId,
+          to_user_id_txn_hash_urn: `${toUser.id}:${hash}`,
+          from_user_to_user_txn_hash_urn: `${fromUser.id}:${toUser.id}:${hash}`,
+          to_user_id: toUser.id,
+          from_user_id: fromUser.id,
+          tx_hash: hash,
+          amount: parseInt(value),
+          // Store in seconds because expiry time uses seconds, let's stay consistent
+          created_at: parseInt(timeStamp),
+          message: '',
+        };
+      }
+    );
+
+    const insertResps = await Promise.all(
+      txns.map((txn) => insertTransaction(txn, dynamoClient))
+    );
+
+    logger.verbose('Stored txns in TransactionsTable', {
+      values: { insertResps },
+    });
+
+    return insertResps;
+  } catch (error) {
+    logger.error('Failed to store transactions in table', {
+      values: {
+        error,
+        args: {
+          orgId,
+          transactions,
+        },
+      },
+    });
+    console.error(error);
+  }
+}
