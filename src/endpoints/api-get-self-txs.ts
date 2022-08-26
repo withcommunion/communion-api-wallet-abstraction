@@ -196,17 +196,35 @@ function constructCompleteTx(
   tx: Transaction,
   userIdUserMap = {} as { [userId: string]: User },
   org: OrgWithPrivateData
-): CommunionTx {
+): CommunionTx | null {
   const rootExplorerUrl =
     process.env.STAGE === 'prod'
       ? `https://snowtrace.io`
       : `https://testnet.snowtrace.io`;
-  const fromUser = {
-    id: userIdUserMap[tx.from_user_id].id,
-    walletAddressC: userIdUserMap[tx.from_user_id].walletAddressC.toLowerCase(),
-    firstName: userIdUserMap[tx.from_user_id].first_name,
-    lastName: userIdUserMap[tx.from_user_id].last_name,
-  };
+
+  const isFromBank = tx.from_user_id === org.id;
+
+  if (
+    !isFromBank &&
+    (!userIdUserMap[tx.from_user_id] || !userIdUserMap[tx.from_user_id])
+  ) {
+    return null;
+  }
+
+  const fromUser = isFromBank
+    ? {
+        id: org.id,
+        walletAddressC: org.avax_contract.token_address,
+        firstName: org.id,
+        lastName: org.id,
+      }
+    : {
+        id: userIdUserMap[tx.from_user_id].id,
+        walletAddressC:
+          userIdUserMap[tx.from_user_id].walletAddressC.toLowerCase(),
+        firstName: userIdUserMap[tx.from_user_id].first_name,
+        lastName: userIdUserMap[tx.from_user_id].last_name,
+      };
   const toUser = {
     id: userIdUserMap[tx.to_user_id].id,
     walletAddressC: userIdUserMap[tx.to_user_id].walletAddressC.toLowerCase(),
@@ -263,9 +281,13 @@ function constructCompleteTxsForUserHelper(
       userIdUserMap[user.id] = user;
     });
 
-    const communionTxs = allTxs.map((tx) =>
-      constructCompleteTx(self, tx, userIdUserMap, org)
-    );
+    const communionTxs = allTxs
+      .map(
+        (tx) => constructCompleteTx(self, tx, userIdUserMap, org)
+        // Unsure why TS doesn't catch that this will remove all undefined
+      )
+      .filter((tx) => Boolean(tx)) as CommunionTx[];
+
     logger.verbose('Constructed complete txs for user', {
       values: { communionTxs },
     });
