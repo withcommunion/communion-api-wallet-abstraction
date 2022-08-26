@@ -203,10 +203,13 @@ function constructCompleteTx(
       : `https://testnet.snowtrace.io`;
 
   const isFromBank = tx.from_user_id === org.id;
+  console.log('From bank?');
+  console.log('From bank?');
+  console.log('From bank?');
 
   if (
     !isFromBank &&
-    (!userIdUserMap[tx.from_user_id] || !userIdUserMap[tx.from_user_id])
+    (!userIdUserMap[tx.from_user_id] || !userIdUserMap[tx.to_user_id])
   ) {
     return null;
   }
