@@ -160,7 +160,7 @@ export const handler = async (
 
     logger.info(`This user has [${txsWithUserData.length}] txns`);
 
-    const migrate = true;
+    const migrate = false;
     if (migrate) {
       const insertResp = await storeTransactionsHelper(orgId, txsWithUserData);
       if (insertResp) {
