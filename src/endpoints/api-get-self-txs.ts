@@ -85,7 +85,7 @@ export const handler = async (
       allTxs,
       allUsersTransactedWith,
       org
-    ).sort((txA, txB) => txA.timeStampSeconds - txB.timeStampSeconds);
+    ).sort((txA, txB) => txB.timeStampSeconds - txA.timeStampSeconds);
 
     const returnValue = generateReturn(200, {
       txs: completeCommunionTxnsForUser,
@@ -203,9 +203,6 @@ function constructCompleteTx(
       : `https://testnet.snowtrace.io`;
 
   const isFromBank = tx.from_user_id === org.id;
-  console.log('From bank?');
-  console.log('From bank?');
-  console.log('From bank?');
 
   if (
     !isFromBank &&
