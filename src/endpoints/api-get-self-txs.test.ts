@@ -115,6 +115,35 @@ describe('api-get-self-txs', () => {
       );
     });
 
+    describe('When managerMode is true', () => {
+      const MOCK_MANAGER_MODE_EVENT = {
+        ...MOCK_EVENT,
+        queryStringParameters: {
+          isManagerMode: 'true',
+          orgId: MOCK_ORG.id,
+        },
+      };
+      it('Should call getUserReceivedTxsInOrg with the org id for user', async () => {
+        await handler(MOCK_MANAGER_MODE_EVENT);
+        expect(getUserReceivedTxsInOrgSpy).toHaveBeenCalledTimes(1);
+        expect(getUserReceivedTxsInOrgSpy).toHaveBeenCalledWith(
+          MOCK_EVENT.queryStringParameters?.orgId,
+          MOCK_ORG.id,
+          {}
+        );
+      });
+
+      it('Should call getUserSentTxsInOrg with the org id for user', async () => {
+        await handler(MOCK_MANAGER_MODE_EVENT);
+        expect(getUserSentTxsInOrgSpy).toHaveBeenCalledTimes(1);
+        expect(getUserSentTxsInOrgSpy).toHaveBeenCalledWith(
+          MOCK_EVENT.queryStringParameters?.orgId,
+          MOCK_ORG.id,
+          {}
+        );
+      });
+    });
+
     it('Should call batchGetUsersById with array of userIds from txs', async () => {
       await handler(MOCK_EVENT);
       expect(batchGetUsersByIdSpy).toHaveBeenCalledWith(

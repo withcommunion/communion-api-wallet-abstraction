@@ -33,6 +33,11 @@ export const handler = async (
     const userId =
       (claims.username as string) || (claims['cognito:username'] as string);
 
+    const isManagerMode = event.queryStringParameters?.isManagerMode === 'true';
+    if (isManagerMode) {
+      logger.info('In Manager Mode', { values: { isManagerMode } });
+    }
+
     const orgId = event.queryStringParameters?.orgId;
     if (!orgId) {
       logger.info('No orgId provided, returning 400', {
@@ -76,7 +81,7 @@ export const handler = async (
           });
     }
 
-    const allTxs = await fetchSelfTxsInOrgHelper(org, self);
+    const allTxs = await fetchSelfTxsInOrgHelper(org, self, isManagerMode);
 
     const allUsersTransactedWith = await fetchUsersInTxsHelper(allTxs);
 
@@ -115,18 +120,29 @@ async function fetchOrgHelper(orgId: string) {
   }
 }
 
-async function fetchSelfTxsInOrgHelper(org: OrgWithPrivateData, self: User) {
+async function fetchSelfTxsInOrgHelper(
+  org: OrgWithPrivateData,
+  self: User,
+  isManagerMode: boolean
+) {
   try {
     logger.info('Fetching self txs in tx db', {
-      values: { orgId: org.id, selfId: self.id },
+      values: { orgId: org.id, selfId: self.id, isManagerMode },
     });
+
+    const idToFindTxns = isManagerMode ? org.id : self.id;
+
     const receivedTxs = await getUserReceivedTxsInOrg(
       org.id,
-      self.id,
+      idToFindTxns,
       dynamoClient
     );
 
-    const sentTxs = await getUserSentTxsInOrg(org.id, self.id, dynamoClient);
+    const sentTxs = await getUserSentTxsInOrg(
+      org.id,
+      idToFindTxns,
+      dynamoClient
+    );
     logger.verbose('Received txs', {
       values: { orgId: org.id, selfId: self.id, receivedTxs, sentTxs },
     });
