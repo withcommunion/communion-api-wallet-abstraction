@@ -255,7 +255,7 @@ function constructCompleteTx(
     tokenSymbol: org.avax_contract.token_symbol,
     value: tx.amount,
     txHash: tx.tx_hash,
-    txHashUrl: `https://${rootExplorerUrl}/tx/${tx.tx_hash}`,
+    txHashUrl: `${rootExplorerUrl}/tx/${tx.tx_hash}`,
     // TODO: We will want this when we deal with other statuses, rn only succeeded goes in DB
     txStatus: 'succeeded',
   };
