@@ -14,9 +14,12 @@
   },
   "isBase64Encoded": false,
   "pathParameters": {
-    "orgId": "jacks-pizza-pittsfield"
+    "orgId": "communion-test-org"
   },
-  "rawPath": "/org/jacks-pizza-pittsfield",
+  "queryStringParameters": {
+    "isMigration": true
+  },
+  "rawPath": "/org/communion-test-org",
   "rawQueryString": "",
   "requestContext": {
     "accountId": "143056416942",
@@ -26,7 +29,7 @@
         "claims": {
           "aud": "4eerlu1taf72c8r20pv2tmmvmt",
           "auth_time": "1655231244",
-          "cognito:username": "c7530d06-208a-45fe-a83d-147b146cb257",
+          "cognito:username": "6281d918-df36-48bf-b8a4-3ee1f2b8305e",
           "custom:organization": "jacks-pizza-pittsfield",
           "custom:role": "worker",
           "email": "mfalicea58+8@gmail.com",

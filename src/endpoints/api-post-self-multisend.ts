@@ -141,7 +141,8 @@ async function storeTransactionsHelper(
     message: string | undefined;
   }[],
   fromUser: User,
-  transaction: EthersTxn
+  transaction: EthersTxn,
+  isManagerModeEnabled: boolean
 ) {
   logger.info('Storing transactions in TransactionsTable');
   logger.verbose('Values to store in TxnTable', {
@@ -159,12 +160,13 @@ async function storeTransactionsHelper(
          * Keep an eye out for ones without
          */
         const hash = transaction.hash || `RANDOM:${Math.random()}`;
+        const fromUserId = isManagerModeEnabled ? `${orgId}` : fromUser.id;
         return {
           org_id: orgId,
           to_user_id_txn_hash_urn: `${toUser.id}:${hash}`,
-          from_user_to_user_txn_hash_urn: `${fromUser.id}:${toUser.id}:${hash}`,
+          from_user_to_user_txn_hash_urn: `${fromUserId}:${toUser.id}:${hash}`,
           to_user_id: toUser.id,
-          from_user_id: fromUser.id,
+          from_user_id: fromUserId,
           tx_hash: hash,
           amount,
           // Store in seconds because expiry time uses seconds, let's stay consistent
@@ -411,7 +413,8 @@ export const handler = async (
       orgId,
       toUsersAndAmounts,
       fromUser,
-      transaction
+      transaction,
+      isManagerModeEnabled
     );
 
     logger.info('Returning 200', {

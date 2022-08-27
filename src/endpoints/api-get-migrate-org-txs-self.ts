@@ -82,10 +82,13 @@ export const handler = async (
 ) => {
   try {
     setDefaultLoggerMetaForApi(event, logger);
-    const claims = event.requestContext.authorizer.jwt.claims;
+    // const claims = event.requestContext.authorizer.jwt.claims;
     // For some reason it can go through in two seperate ways
-    const requestUserId =
-      (claims.username as string) || (claims['cognito:username'] as string);
+    const requestUserId = event.queryStringParameters?.userId;
+    if (!requestUserId) {
+      return generateReturn(400, { message: 'No userId provided' });
+    }
+    // (claims.username as string) || (claims['cognito:username'] as string);
 
     const orgId = event.pathParameters?.orgId;
     const isManagerMode = event.queryStringParameters?.isManagerMode === 'true';
@@ -160,7 +163,7 @@ export const handler = async (
 
     logger.info(`This user has [${txsWithUserData.length}] txns`);
 
-    const migrate = false;
+    const migrate = true;
     if (migrate) {
       const insertResp = await storeTransactionsHelper(orgId, txsWithUserData);
       if (insertResp) {
