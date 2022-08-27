@@ -218,16 +218,14 @@ function constructCompleteTx(
       ? `https://snowtrace.io`
       : `https://testnet.snowtrace.io`;
 
+  const burnAddress = '0x0000000000000000000000000000000000000000';
+
   const isFromBank = tx.from_user_id === org.id;
 
-  if (
-    !isFromBank &&
-    (!userIdUserMap[tx.from_user_id] || !userIdUserMap[tx.to_user_id])
-  ) {
-    return null;
-  }
+  const isRedemptionTxn =
+    tx.to_user_id === '0x0000000000000000000000000000000000000000';
 
-  const fromUser = isFromBank
+  const bankOrRedemptionUser = isFromBank
     ? {
         id: org.id,
         walletAddressC: org.avax_contract.token_address,
@@ -235,21 +233,39 @@ function constructCompleteTx(
         lastName: org.id,
       }
     : {
+        id: burnAddress,
+        walletAddressC: burnAddress,
+        firstName: org.id,
+        lastName: org.id,
+      };
+
+  if (
+    !isFromBank &&
+    !isRedemptionTxn &&
+    (!userIdUserMap[tx.from_user_id] || !userIdUserMap[tx.to_user_id])
+  ) {
+    return null;
+  }
+
+  const fromUser = isFromBank
+    ? bankOrRedemptionUser
+    : {
         id: userIdUserMap[tx.from_user_id].id,
         walletAddressC:
           userIdUserMap[tx.from_user_id].walletAddressC.toLowerCase(),
         firstName: userIdUserMap[tx.from_user_id].first_name,
         lastName: userIdUserMap[tx.from_user_id].last_name,
       };
-  const toUser = {
-    id: userIdUserMap[tx.to_user_id].id,
-    walletAddressC: userIdUserMap[tx.to_user_id].walletAddressC.toLowerCase(),
-    firstName: userIdUserMap[tx.to_user_id].first_name,
-    lastName: userIdUserMap[tx.to_user_id].last_name,
-  };
+  const toUser = isRedemptionTxn
+    ? bankOrRedemptionUser
+    : {
+        id: userIdUserMap[tx.to_user_id].id,
+        walletAddressC:
+          userIdUserMap[tx.to_user_id].walletAddressC.toLowerCase(),
+        firstName: userIdUserMap[tx.to_user_id].first_name,
+        lastName: userIdUserMap[tx.to_user_id].last_name,
+      };
 
-  const isRedemptionTxn =
-    toUser.walletAddressC === '0x0000000000000000000000000000000000000000';
   const isReceivedTxn =
     toUser.walletAddressC === self.walletAddressC.toLowerCase();
 
@@ -288,7 +304,7 @@ function constructCompleteTxsForUserHelper(
       values: {
         selfId: self.id,
         allTxsLength: allTxs,
-        allUsersTransactedWithLength: allUsersTransactedWith,
+        allUsersTransactedWithLength: allUsersTransactedWith.length,
       },
     });
     const userIdUserMap = {} as { [userId: string]: User };
