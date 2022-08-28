@@ -188,6 +188,7 @@ interface CommunionTx {
   timeStampSeconds: number;
   tokenName: string;
   tokenSymbol: string;
+  message?: string;
   value: number;
   txHash: string;
   txHashUrl: string;
@@ -282,6 +283,7 @@ function constructCompleteTx(
     fromUser,
     toUser,
     txType,
+    message: tx.message,
     timeStampSeconds: tx.created_at,
     tokenName: org.avax_contract.token_name,
     tokenSymbol: org.avax_contract.token_symbol,
