@@ -203,28 +203,29 @@ async function storeTransactionsHelper(
 
 async function sendSmsToAllUsersHelper(
   fromUser: User,
-  toUsers: User[],
-  amounts: number[]
+  toUsersAndAmounts: {
+    toUser: User;
+    amount: number;
+    message: string | undefined;
+  }[]
 ) {
   logger.info('Sending notifications');
   const sentTextMessages = await Promise.all(
-    toUsers.map(async (user) => {
-      if (user.phone_number && user.allow_sms) {
+    toUsersAndAmounts.map(async ({ toUser, amount, message }) => {
+      if (toUser.phone_number && toUser.allow_sms) {
         const url =
           process.env.STAGE === 'prod'
             ? 'https://withcommunion.com'
             : 'https://dev.withcommunion.com';
 
-        logger.verbose('Sending notif to user', { values: { user } });
+        logger.verbose('Sending notif to user', { values: { toUser } });
 
+        const theySentMsg = message ? 'They sent you a message!' : '';
         return sendSms(
-          user.phone_number,
-          `🎊 Congrats ${user.first_name}! You just received ${
-            amounts[toUsers.indexOf(user)]
-          } tokens from ${fromUser.first_name} ${fromUser.last_name}
-            
-Check it out on the app: ${url}
-            `
+          toUser.phone_number,
+          `🎊 Congrats ${toUser.first_name}! You just received ${amount} tokens from ${fromUser.first_name} ${fromUser.last_name}
+${theySentMsg}
+Check it out on the app: ${url}`
         );
       }
     })
@@ -406,7 +407,7 @@ export const handler = async (
      * Send twilio notif to each user
      */
     if (process.env.STAGE !== 'prod') {
-      await sendSmsToAllUsersHelper(fromUser, toUsers, [1, 2]);
+      await sendSmsToAllUsersHelper(fromUser, toUsersAndAmounts);
     }
 
     await storeTransactionsHelper(
