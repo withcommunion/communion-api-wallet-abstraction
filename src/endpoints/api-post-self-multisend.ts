@@ -224,7 +224,9 @@ async function sendSmsToAllUsersHelper(
         return sendSms(
           toUser.phone_number,
           `🎊 Congrats ${toUser.first_name}! You just received ${amount} tokens from ${fromUser.first_name} ${fromUser.last_name}
+
 ${theySentMsg}
+
 Check it out on the app: ${url}`
         );
       }
@@ -403,12 +405,7 @@ export const handler = async (
       isManagerModeEnabled
     );
 
-    /**
-     * Send twilio notif to each user
-     */
-    if (process.env.STAGE !== 'prod') {
-      await sendSmsToAllUsersHelper(fromUser, toUsersAndAmounts);
-    }
+    await sendSmsToAllUsersHelper(fromUser, toUsersAndAmounts);
 
     await storeTransactionsHelper(
       orgId,
