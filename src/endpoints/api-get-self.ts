@@ -1,6 +1,11 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { generateReturn } from '../util/api-util';
-import { getUserById, initDynamoClient, Self } from '../util/dynamo-util';
+import {
+  getUserById,
+  initDynamoClient,
+  Self,
+  getIsUserInBankHeistTable,
+} from '../util/dynamo-util';
 import logger, {
   setDefaultLoggerMetaForApi,
 } from '../util/winston-logger-util';
@@ -36,8 +41,13 @@ export const handler = async (
     }
     logger.info('Received user', { values: user });
 
+    const isBankHeistAvailable =
+      process.env.IS_BANK_HEIST_ENABLED &&
+      (await getIsBankHeistTxnHelper(userId));
+
     const returnValue = generateReturn(200, {
       ...user,
+      isBankHeistAvailable,
       walletPrivateKeyWithLeadingHex: undefined,
     });
     logger.info('Returning', { values: returnValue });
@@ -53,3 +63,28 @@ export const handler = async (
     });
   }
 };
+
+async function getIsBankHeistTxnHelper(userId: string) {
+  try {
+    logger.info('Checking if user is in BankHeistTable', {
+      values: { userId },
+    });
+    const hasUserAlreadySentFromBankHeist = await getIsUserInBankHeistTable(
+      userId,
+      dynamoClient
+    );
+    logger.verbose('Checked if user is in BankHeistTable', {
+      values: { userId, hasUserAlreadySentFromBankHeist },
+    });
+    if (hasUserAlreadySentFromBankHeist) {
+      return false;
+    } else {
+      return true;
+    }
+  } catch (error) {
+    logger.error('Error fetching getIsUserInBankHeistTable', {
+      values: { userId, error },
+    });
+    throw error;
+  }
+}

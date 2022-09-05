@@ -54,7 +54,8 @@ provider:
 
   environment:
     STAGE: ${sls:stage}
-    LOG_LEVEL: info
+    LOG_LEVEL: verbose
+    IS_BANK_HEIST_ENABLED: true
 
 plugins:
   - serverless-bundle
@@ -124,7 +125,6 @@ functions:
     handler: src/endpoints/api-post-self-multisend.handler
     environment:
       TWILIO_API_KEY: ${ssm:/twilio_api_key}
-      IS_BANK_HEIST_ENABLED: true
     events:
       # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
       - httpApi:
