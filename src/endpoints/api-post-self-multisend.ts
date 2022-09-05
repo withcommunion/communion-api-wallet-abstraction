@@ -18,6 +18,8 @@ import {
   OrgWithPrivateData,
   Transaction,
   insertTransaction,
+  getIsUserInBankHeistTable,
+  insertUserToBankHeistTable,
 } from '../util/dynamo-util';
 
 import { sendSms } from '../util/twilio-util';
@@ -97,6 +99,24 @@ async function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
   }
 }
 
+async function getIsBankHeistTxnHelper(userId: string) {
+  try {
+    logger.info('Checking if user is in BankHeistTable', {
+      values: { userId },
+    });
+    const isBankHeist = await getIsUserInBankHeistTable(userId, dynamoClient);
+    logger.verbose('Checked if user is in BankHeistTable', {
+      values: { userId, isBankHeist },
+    });
+    return isBankHeist;
+  } catch (error) {
+    logger.error('Error fetching getIsUserInBankHeistTable', {
+      values: { userId, error },
+    });
+    throw error;
+  }
+}
+
 async function multisendTokenHelper(
   fromUser: User | { id: string; walletAddressC: string },
   toUsersAndAmounts: {
@@ -105,13 +125,15 @@ async function multisendTokenHelper(
     message: string | undefined;
   }[],
   governanceContract: Contract,
-  isManagerMode?: boolean
+  isManagerMode: boolean,
+  isBankHeist: boolean
 ) {
   logger.info('Multisending tokens', {
     values: {
       fromUser: { id: fromUser.id, address: fromUser.walletAddressC },
       toUsersAndAmounts,
       isManagerMode,
+      isBankHeist,
     },
   });
 
@@ -142,7 +164,8 @@ async function storeTransactionsHelper(
   }[],
   fromUser: User,
   transaction: EthersTxn,
-  isManagerModeEnabled: boolean
+  isManagerModeEnabled: boolean,
+  isBankHeist: boolean
 ) {
   logger.info('Storing transactions in TransactionsTable');
   logger.verbose('Values to store in TxnTable', {
@@ -172,6 +195,7 @@ async function storeTransactionsHelper(
           // Store in seconds because expiry time uses seconds, let's stay consistent
           created_at: Math.floor(Date.now() / 1000),
           message,
+          modifier: isBankHeist ? 'bankHeist' : undefined,
         };
       }
     );
@@ -235,6 +259,24 @@ Check it out on the app: ${url}`
 
   logger.verbose('Sent text messages', { values: { sentTextMessages } });
   return sentTextMessages;
+}
+
+async function storeBankHeistTxnHelper(userId: string, txnHash: string) {
+  try {
+    logger.info('Inserting bank heist txn', { values: { userId, txnHash } });
+    const insertResp = insertUserToBankHeistTable(
+      userId,
+      txnHash,
+      dynamoClient
+    );
+    logger.verbose('Inserted bank heist txn', { values: { insertResp } });
+    return insertResp;
+  } catch (error) {
+    logger.error('Error storing bank heist txn', {
+      values: { userId, txnHash, error },
+    });
+    throw error;
+  }
 }
 
 interface ExpectedPostBody {
@@ -394,15 +436,24 @@ export const handler = async (
 
     const orgGovernanceContract = await getOrgGovernanceContractHelper(org);
 
-    const userToSendTokensFrom = isManagerModeEnabled
-      ? { id: `${org.id}-seeder`, walletAddressC: org.seeder.walletAddressC }
-      : fromUser;
+    const isBankHeist =
+      Boolean(
+        process.env.IS_BANK_HEIST_ENABLED &&
+          toUsersAndAmounts.length === 1 &&
+          toUsersAndAmounts[0].amount === 5
+      ) && (await getIsBankHeistTxnHelper(fromUserId));
+
+    const userToSendTokensFrom =
+      isManagerModeEnabled || isBankHeist
+        ? { id: `${org.id}-seeder`, walletAddressC: org.seeder.walletAddressC }
+        : fromUser;
 
     const transaction = await multisendTokenHelper(
       userToSendTokensFrom,
       toUsersAndAmounts,
       orgGovernanceContract,
-      isManagerModeEnabled
+      isManagerModeEnabled,
+      isBankHeist
     );
 
     await sendSmsToAllUsersHelper(fromUser, toUsersAndAmounts);
@@ -412,8 +463,13 @@ export const handler = async (
       toUsersAndAmounts,
       fromUser,
       transaction,
-      isManagerModeEnabled
+      isManagerModeEnabled,
+      isBankHeist
     );
+
+    if (isBankHeist && transaction.hash) {
+      await storeBankHeistTxnHelper(fromUserId, transaction.hash);
+    }
 
     logger.info('Returning 200', {
       values: { transaction, txnHash: transaction.hash },
