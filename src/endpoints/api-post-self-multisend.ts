@@ -443,9 +443,12 @@ export const handler = async (
 
     const orgGovernanceContract = await getOrgGovernanceContractHelper(org);
 
+    const isOrgParticipatingInBankHeist =
+      orgId === 'jacks-pizza-pittsfield' || orgId === 'communion-test-org';
     const isBankHeist =
       Boolean(
         process.env.IS_BANK_HEIST_ENABLED &&
+          isOrgParticipatingInBankHeist &&
           toUsersAndAmounts.length === 1 &&
           toUsersAndAmounts[0].amount === 5
       ) && (await getIsBankHeistTxnHelper(fromUserId));
