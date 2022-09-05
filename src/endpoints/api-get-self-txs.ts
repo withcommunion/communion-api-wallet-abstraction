@@ -194,6 +194,7 @@ interface CommunionTx {
   txHashUrl: string;
   txStatus: 'succeeded' | 'failed';
   txType: 'received' | 'sent' | 'redemption';
+  modifier?: 'bankHeist';
   fromUser: {
     id: string;
     walletAddressC: string;
