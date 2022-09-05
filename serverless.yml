@@ -11,7 +11,7 @@ provider:
   apiName: ${sls:stage}-${self:service}
   memorySize: 512
   deploymentPrefix: serverless
-  versionFunctions: true
+  versionFunctions: false
   logRetentionInDays: 30
   # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
   # TODO View docs - we will want to make it only accept from our domain
