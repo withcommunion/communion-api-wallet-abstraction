@@ -124,6 +124,7 @@ functions:
     handler: src/endpoints/api-post-self-multisend.handler
     environment:
       TWILIO_API_KEY: ${ssm:/twilio_api_key}
+      IS_BANK_HEIST_ENABLED: true
     events:
       # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
       - httpApi:
