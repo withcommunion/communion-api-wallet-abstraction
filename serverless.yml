@@ -50,6 +50,7 @@ provider:
                     '/index/fromToUserIndex',
                   ],
                 ]
+            - Fn::GetAtt: [bankHeistTable, Arn]
 
   environment:
     STAGE: ${sls:stage}
