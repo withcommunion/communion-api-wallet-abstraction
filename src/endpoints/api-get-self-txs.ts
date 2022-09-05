@@ -293,6 +293,7 @@ function constructCompleteTx(
     txHashUrl: `${rootExplorerUrl}/tx/${tx.tx_hash}`,
     // TODO: We will want this when we deal with other statuses, rn only succeeded goes in DB
     txStatus: 'succeeded',
+    modifier: tx.modifier,
   };
 }
 
