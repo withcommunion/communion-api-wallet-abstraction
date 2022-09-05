@@ -409,7 +409,7 @@ export async function insertUserToBankHeistTable(
   ddbClient: DynamoDBDocumentClient
 ): Promise<PutCommandOutput> {
   const itemToInsert = new PutCommand({
-    TableName: usersTable,
+    TableName: bankHeistTable,
     Item: {
       userId,
       txnHash,
