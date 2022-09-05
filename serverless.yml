@@ -59,6 +59,7 @@ provider:
 
 plugins:
   - serverless-bundle
+  - serverless-prune-plugin
 
 custom:
   prune:
