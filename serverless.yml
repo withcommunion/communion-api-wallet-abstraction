@@ -11,7 +11,7 @@ provider:
   apiName: ${sls:stage}-${self:service}
   memorySize: 512
   deploymentPrefix: serverless
-  versionFunctions: false
+  versionFunctions: true
   logRetentionInDays: 30
   # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
   # TODO View docs - we will want to make it only accept from our domain
@@ -61,6 +61,9 @@ plugins:
   - serverless-bundle
 
 custom:
+  prune:
+    automatic: true
+    number: 3
   bundle:
     packager: yarn
     # TODO: Figure out AWS-SDK v3 exclusion. https://aws.amazon.com/blogs/developer/modular-packages-in-aws-sdk-for-javascript/
