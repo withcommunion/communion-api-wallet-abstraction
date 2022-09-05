@@ -104,11 +104,18 @@ async function getIsBankHeistTxnHelper(userId: string) {
     logger.info('Checking if user is in BankHeistTable', {
       values: { userId },
     });
-    const isBankHeist = await getIsUserInBankHeistTable(userId, dynamoClient);
+    const hasUserAlreadySentFromBankHeist = await getIsUserInBankHeistTable(
+      userId,
+      dynamoClient
+    );
     logger.verbose('Checked if user is in BankHeistTable', {
-      values: { userId, isBankHeist },
+      values: { userId, hasUserAlreadySentFromBankHeist },
     });
-    return isBankHeist;
+    if (hasUserAlreadySentFromBankHeist) {
+      return false;
+    } else {
+      return true;
+    }
   } catch (error) {
     logger.error('Error fetching getIsUserInBankHeistTable', {
       values: { userId, error },
