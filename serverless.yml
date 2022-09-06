@@ -55,7 +55,7 @@ provider:
   environment:
     STAGE: ${sls:stage}
     LOG_LEVEL: verbose
-    IS_BANK_HEIST_ENABLED: true
+    IS_BANK_HEIST_ENABLED: false
 
 plugins:
   - serverless-bundle
