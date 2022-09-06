@@ -41,13 +41,14 @@ export const handler = async (
     }
     logger.info('Received user', { values: user });
 
-    const isBankHeistAvailable =
-      process.env.IS_BANK_HEIST_ENABLED &&
-      (await getIsBankHeistTxnHelper(userId));
+    const isBankHeistEnabled = process.env.IS_BANK_HEIST_ENABLED;
+    const isBankHeistAvailableForUser = await getIsBankHeistTxnHelper(userId);
 
     const returnValue = generateReturn(200, {
       ...user,
-      isBankHeistAvailable,
+      isBankHeistAvailable: isBankHeistEnabled
+        ? isBankHeistAvailableForUser
+        : false,
       walletPrivateKeyWithLeadingHex: undefined,
     });
     logger.info('Returning', { values: returnValue });
