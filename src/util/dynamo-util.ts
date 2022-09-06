@@ -16,6 +16,7 @@ const stage = process.env.STAGE || 'dev';
 export const usersTable = `usersTable-${stage}`;
 export const orgsTable = `orgsTable-${stage}`;
 export const txnsTable = `transactionsTable-${stage}`;
+export const bankHeistTable = `bankHeistTable-${stage}`;
 export const REGION = 'us-east-1';
 
 export function initDynamoClient(region: string = REGION) {
@@ -301,6 +302,7 @@ export interface Transaction {
   tx_hash: string;
   created_at: number;
   message?: string;
+  modifier?: 'bankHeist';
 }
 
 export async function insertTransaction(
@@ -379,4 +381,42 @@ export async function getAllUsersTxsInOrg(
 
   const res = await ddbClient.send(params);
   return res.Items as Transaction[];
+}
+
+export async function getIsUserInBankHeistTable(
+  userId: string,
+  ddbClient: DynamoDBDocumentClient
+): Promise<boolean> {
+  const itemToGet = new GetCommand({
+    TableName: bankHeistTable,
+    Key: {
+      userId,
+    },
+  });
+
+  const res = await ddbClient.send(itemToGet);
+
+  if (!res || !res.Item) {
+    return false;
+  }
+
+  return true;
+}
+
+export async function insertUserToBankHeistTable(
+  userId: string,
+  txnHash: string,
+  ddbClient: DynamoDBDocumentClient
+): Promise<PutCommandOutput> {
+  const itemToInsert = new PutCommand({
+    TableName: bankHeistTable,
+    Item: {
+      userId,
+      txnHash,
+      created_at: Math.floor(Date.now() / 1000),
+    },
+  });
+  const res = await ddbClient.send(itemToInsert);
+
+  return res;
 }
