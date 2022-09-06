@@ -23,6 +23,7 @@ describe('api-get-self', () => {
 
     expect(JSON.parse(res.body)).toEqual({
       ...MOCK_USER_SELF,
+      isBankHeistAvailable: false,
       walletPrivateKeyWithLeadingHex: undefined,
     });
   });
