@@ -41,7 +41,7 @@ export const handler = async (
     }
     logger.info('Received user', { values: user });
 
-    const isBankHeistEnabled = process.env.IS_BANK_HEIST_ENABLED;
+    const isBankHeistEnabled = process.env.IS_BANK_HEIST_ENABLED === 'true';
     const isBankHeistAvailableForUser = await getIsBankHeistTxnHelper(userId);
 
     const returnValue = generateReturn(200, {

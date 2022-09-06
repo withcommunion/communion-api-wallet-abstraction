@@ -443,12 +443,14 @@ export const handler = async (
 
     const orgGovernanceContract = await getOrgGovernanceContractHelper(org);
 
-    const isBankHeistEnabled = process.env.IS_BANK_HEIST_ENABLED;
+    const isBankHeistEnabled = process.env.IS_BANK_HEIST_ENABLED === 'true';
     const isOrgParticipatingInBankHeist =
       orgId === 'jacks-pizza-pittsfield' || orgId === 'communion-test-org';
-    const isBankHeistAvailableForUser = await getIsBankHeistTxnHelper(
-      fromUserId
-    );
+
+    let isBankHeistAvailableForUser;
+    if (isBankHeistEnabled) {
+      isBankHeistAvailableForUser = await getIsBankHeistTxnHelper(fromUserId);
+    }
 
     const isBankHeist = isBankHeistEnabled
       ? Boolean(
