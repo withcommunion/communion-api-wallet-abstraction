@@ -1,9 +1,7 @@
 /**
- * TODO: Update to include adding user to the orgs governance contract
- * TODO: Add tests for this function
- * This is a shit show - but it works for now.
- * The manual role passing isn't good
+ * TODO: The manual role passing isn't good
  */
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import type { Transaction } from 'ethers';
 
@@ -181,7 +179,7 @@ export const handler = async (
       logger.error('Failed to parse body', {
         values: { error, body: event.body },
       });
-      generateReturn(500, { message: 'Failed to parse body' });
+      return generateReturn(500, { message: 'Failed to parse body' });
     }
 
     logger.info('Fetching org from db', { values: { orgId } });
@@ -233,6 +231,33 @@ export const handler = async (
     }
 
     const txn = await addUserToOrgInSmartContractHelper(org, user);
+
+    if (orgId === 'communion-test-org') {
+      // eslint-disable-next-line
+      const lambdaClient = new LambdaClient({
+        region: 'us-east-1',
+        maxAttempts: 2,
+      });
+      // eslint-disable-next-line
+      const command = new InvokeCommand({
+        FunctionName: `seedUserWithCtc-${process.env.STAGE || ''}`,
+        InvocationType: 'RequestResponse',
+        // @ts-expect-error - this is a valid type
+        Payload: JSON.stringify([
+          {
+            userId,
+            amount: 11,
+            message: 'Welcome to Communion!',
+          },
+        ]),
+      });
+      // eslint-disable-next-line
+      const response = await lambdaClient.send(command);
+      logger.info('Successfully invoked lambda', {
+        // eslint-disable-next-line
+        values: { response: response },
+      });
+    }
 
     return generateReturn(200, {
       userAddedInDb: true,
