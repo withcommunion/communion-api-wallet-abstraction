@@ -37,6 +37,11 @@ provider:
       statements:
         - Effect: 'Allow'
           Action:
+            - 'lambda:InvokeFunction'
+          Resource:
+            - '*'
+        - Effect: 'Allow'
+          Action:
             - 'dynamodb:*'
           Resource:
             - Fn::GetAtt: [usersTable, Arn]
@@ -179,6 +184,7 @@ functions:
   postJoinOrgById:
     name: postJoinOrgById-${sls:stage}
     handler: src/endpoints/api-post-join-org-by-id.handler
+    timeout: 30
     events:
       # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
       - httpApi:
@@ -206,7 +212,6 @@ functions:
           pool: communion-users-demo-${sls:stage}
           trigger: PostConfirmation
           existing: true
-
   newImageSeedUser:
     name: newImageSeedUser-${sls:stage}
     handler: src/dynamoTriggers/new-image-seed-user.handler
@@ -216,6 +221,12 @@ functions:
           type: dynamodb
           arn:
             Fn::GetAtt: [usersTable, StreamArn]
+  seedUserWithCtc:
+    name: seedUserWithCtc-${sls:stage}
+    handler: src/lambdas/seed-user-with-ctc.handler
+    timeout: 30
+    environment:
+      TWILIO_API_KEY: ${ssm:/twilio_api_key}
 
 resources:
   Resources:
