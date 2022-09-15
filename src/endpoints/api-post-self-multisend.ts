@@ -159,7 +159,11 @@ async function storeTransactionsHelper(
          * TODO: This may be bad - the hash should always there.
          * Keep an eye out for ones without
          */
-        const hash = transaction.hash || `RANDOM:${Math.random()}`;
+        const hash =
+          transaction.hash ||
+          // @ts-expect-error This value does exist, but TS doesnt know it
+          (transaction.transactionHash as string) ||
+          `RANDOM:${Math.random()}`;
         const fromUserId = isManagerModeEnabled ? `${orgId}` : fromUser.id;
         return {
           org_id: orgId,
