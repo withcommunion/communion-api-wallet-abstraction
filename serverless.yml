@@ -192,6 +192,17 @@ functions:
           path: /org/{orgId}/join
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
+  postOrgMintNft:
+    name: postOrgMintNft-${sls:stage}
+    handler: src/endpoints/api-post-org-mint-nft.handler
+    timeout: 30
+    events:
+      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
+      - httpApi:
+          method: POST
+          path: /org/{orgId}/mintNft
+          authorizer:
+            name: cognitoJwtAuthorizer-${sls:stage}
   postLogTxnError:
     name: postLogTxnError-${sls:stage}
     handler: src/endpoints/api-post-log-txn-error.handler
