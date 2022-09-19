@@ -67,7 +67,7 @@ plugins:
 custom:
   prune:
     automatic: true
-    number: 3
+    number: 5
   bundle:
     packager: yarn
     # TODO: Figure out AWS-SDK v3 exclusion. https://aws.amazon.com/blogs/developer/modular-packages-in-aws-sdk-for-javascript/
