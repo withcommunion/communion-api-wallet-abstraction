@@ -120,7 +120,7 @@ async function addUserToOrgInSmartContractHelper(
     logger.error('Failed to add user to org in smart contract', {
       values: { userWalletAddressC, error },
     });
-    throw error;
+    return { hasAddEmployeeMethod: false };
   }
 }
 
