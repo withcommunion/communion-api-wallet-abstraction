@@ -22,7 +22,8 @@
     "invoke:postSeedSelf": "NODE_ENV=local serverless invoke local --function postSeedSelf --stage dev --path ./invokeLocalEvents/postSeedSelf.json -e LOG_LEVEL=verbose",
     "invoke:postSelfTransfer": "NODE_ENV=local serverless invoke local --function postSelfTransfer --stage dev --path ./invokeLocalEvents/postSelfTransfer.json -e LOG_LEVEL=verbose",
     "invoke:postSelfMultisend": "NODE_ENV=local serverless invoke local --function postSelfMultisend --stage dev --path ./invokeLocalEvents/postSelfMultisend.json -e LOG_LEVEL=verbose",
-    "invoke:postJoinOrgById": "NODE_ENV=local serverless invoke local --function postJoinOrgById --stage dev --path ./invokeLocalEvents/postJoinOrgById.json -e LOG_LEVEL=verbose"
+    "invoke:postJoinOrgById": "NODE_ENV=local serverless invoke local --function postJoinOrgById --stage dev --path ./invokeLocalEvents/postJoinOrgById.json -e LOG_LEVEL=verbose",
+    "invoke:postOrgMintNft": "NODE_ENV=local serverless invoke local --function postOrgMintNft --stage dev --path ./invokeLocalEvents/postOrgMintNft.json -e LOG_LEVEL=verbose"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.163.0",
