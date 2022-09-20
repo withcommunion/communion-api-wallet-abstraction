@@ -16,7 +16,7 @@ import {
 
 import {
   getEthersWallet,
-  getJacksPizzaGovernanceContract,
+  getCommunionTestGovernanceContractWitNft,
 } from '../util/avax-wallet-util';
 import { Blob } from 'buffer';
 import { Stream } from 'stream';
@@ -24,10 +24,11 @@ import { Stream } from 'stream';
 const dynamoClient = initDynamoClient();
 const s3Client = new S3Client({
   region: 'us-east-1',
-  endpoint: 'https://communion-nft.s3.amazonaws.com',
 });
 
-const nftStorage = new NFTStorage({ token: process.env.NFT_STORAGE_KEY || '' });
+const nftStorage = new NFTStorage({
+  token: process.env.NFT_STORAGE_API_KEY || '',
+});
 
 interface ExpectedPostBody {
   tokenId: string;
@@ -116,7 +117,7 @@ export const handler = async (
     logger.info('Fetching user from db', { values: { userId } });
     const toUser = await getUserById(toUserId, dynamoClient);
     logger.verbose('Retrieved user from db', { values: { toUser } });
-    if (!fromUser) {
+    if (!toUser) {
       logger.info('To user not found', { values: { orgId } });
       return generateReturn(404, {
         message: 'toUser with given id in body does not exist',
@@ -135,8 +136,14 @@ export const handler = async (
       });
     }
 
-    const uri = (await uploadToNftStorageHelper(org, nftToMint)).url;
-    const mintTxn = await mintNftHelper(org, nftToMint, toUserId, uri);
+    // const uri = (await uploadToNftStorageHelper(org, nftToMint)).url;
+    const uri = `https://communion-nft.s3.amazonaws.com/orgs/${org.id}/${nftToMint.id}.json`;
+    const mintTxn = await mintNftHelper(
+      org,
+      nftToMint,
+      toUser.walletAddressC,
+      uri
+    );
     // * Mint NFT to user
     // * Store in nft.storage
     // * Store in S3
@@ -160,48 +167,68 @@ export const handler = async (
   }
 };
 
+/**
+ * TODO: Get this to work.
+ * Fuck this whole thing.
+ * Works locally, but not in lambda.
+ * WAY too many hours spent on this.
+ * Using S3 for now.
+ */
+// @ts-expect-error whatever
+// eslint-disable-next-line
 async function uploadToNftStorageHelper(
   org: OrgWithPrivateData,
   nftToMint: CommunionNft
 ) {
-  /**
-   * AWS V3 SDK sucks.
-   * https://github.com/aws/aws-sdk-js-v3/issues/1877
-   */
-  const streamToBuffer = (stream: Stream): Promise<Buffer> => {
-    return new Promise((resolve, reject) => {
-      // @ts-expect-error it's okay
-      const chunks = [];
-      stream.on('data', (chunk) => chunks.push(chunk));
-      stream.on('error', reject);
-      // @ts-expect-error it's okay
-      stream.on('end', () => resolve(Buffer.concat(chunks)));
-    });
-  };
-
-  const fileName = `${nftToMint.id}.jpg`;
-  const imageData = await s3Client.send(
-    new GetObjectCommand({
-      Bucket: 'communion-nft',
-      Key: `orgs/${org.id}/${fileName}`,
-    })
-  );
-
-  const contentType = imageData.ContentType || 'image/jpeg';
-
-  const imageBuffer = await streamToBuffer(imageData.Body as Stream);
-
-  const imageBlob = new Blob([imageBuffer], { type: contentType });
-
-  const uploadToken = await nftStorage.store({
-    ...nftToMint.erc721Meta.properties,
-    // eslint-disable-next-line
-    image: new File([imageBlob], fileName, {
-      type: contentType,
-    }),
+  logger.info('Uploading to nft.storage', {
+    values: { nftToMint, orgId: org.id },
   });
 
-  return uploadToken;
+  try {
+    /**
+     * AWS V3 SDK sucks.
+     * https://github.com/aws/aws-sdk-js-v3/issues/1877
+     */
+    const streamToBuffer = (stream: Stream): Promise<Buffer> => {
+      return new Promise((resolve, reject) => {
+        // @ts-expect-error it's okay
+        const chunks = [];
+        stream.on('data', (chunk) => chunks.push(chunk));
+        stream.on('error', reject);
+        // @ts-expect-error it's okay
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+      });
+    };
+
+    const imageData = await s3Client.send(
+      new GetObjectCommand({
+        Bucket: 'communion-nft',
+        Key: `orgs/${org.id}/${nftToMint.id}`,
+      })
+    );
+
+    // const contentType = imageData.ContentType || 'image/jpeg';
+
+    const imageBuffer = await streamToBuffer(imageData.Body as Stream);
+
+    const imageBlob = new Blob([imageBuffer], { type: imageData.ContentType });
+
+    const uploadToken = await nftStorage.store({
+      ...nftToMint.erc721Meta.properties,
+      // eslint-disable-next-line
+      image: new File([imageBlob], nftToMint.id + Math.random(), {
+        type: imageData.ContentType,
+      }),
+    });
+    logger.info('Uploaded to nft.storage', { values: { uploadToken } });
+
+    return uploadToken;
+  } catch (error) {
+    logger.error('Failed to upload to nft.storage', {
+      values: { error, nftToMint, orgId: org.id },
+    });
+    throw error;
+  }
 }
 
 async function mintNftHelper(
@@ -212,21 +239,36 @@ async function mintNftHelper(
 ) {
   logger.info('Minting NFT', {
     values: {
-      org,
       nftToMint,
+      orgId: org.id,
       toUserWalletAddressC,
     },
   });
   const governanceContract = getOrgGovernanceContractHelper(org);
 
-  // eslint-disable-next-line
-  const transaction = // eslint-disable-next-line
-    (await governanceContract.mintErc721(
-      toUserWalletAddressC,
-      uri
-    )) as EthersTxn;
+  try {
+    const transaction = // eslint-disable-next-line
+      (await governanceContract.mintErc721(
+        toUserWalletAddressC,
+        uri
+      )) as EthersTxn;
 
-  return transaction;
+    logger.verbose('Minted NFT', {
+      values: { transaction, hash: transaction.hash },
+    });
+
+    return transaction;
+  } catch (error) {
+    logger.error('Failed to mint NFT', {
+      values: {
+        error,
+        nftToMint,
+        orgId: org.id,
+        toUserWalletAddressC,
+      },
+    });
+    throw error;
+  }
 }
 
 function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
@@ -243,7 +285,7 @@ function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
     }
 
     const orgDevWallet = getEthersWallet(org.seeder.privateKeyWithLeadingHex);
-    const governanceContract = getJacksPizzaGovernanceContract(
+    const governanceContract = getCommunionTestGovernanceContractWitNft(
       governanceContractAddress,
       orgDevWallet
     );

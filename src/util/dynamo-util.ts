@@ -220,7 +220,7 @@ export interface CommunionNft {
 
 export interface OrgWithPrivateData {
   id: string;
-  // available_nfts?: CommunionNft[];
+  available_nfts?: CommunionNft[];
   actions: OrgAction[];
   redeemables: OrgRedeemables[];
   roles: Roles[];
