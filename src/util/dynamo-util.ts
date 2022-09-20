@@ -198,8 +198,29 @@ export interface OrgRedeemables {
   amount: string;
   allowed_roles: Roles[];
 }
+
+export interface CommunionNft {
+  id: string;
+  contractAddress?: string;
+  mintedTokenId?: string;
+  erc721Meta: {
+    title: string;
+    properties: {
+      name: string;
+      description: string;
+      image: string;
+      attributes: {
+        display_type: number;
+        trait_type: string;
+        value: number;
+      }[];
+    };
+  };
+}
+
 export interface OrgWithPrivateData {
   id: string;
+  // available_nfts?: CommunionNft[];
   actions: OrgAction[];
   redeemables: OrgRedeemables[];
   roles: Roles[];
