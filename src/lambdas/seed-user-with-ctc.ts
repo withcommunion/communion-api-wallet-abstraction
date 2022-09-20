@@ -126,7 +126,7 @@ async function addUserToOrgInSmartContractHelper(
     console.log('Failed to add user to org in smart contract', {
       values: { user, error },
     });
-    throw error;
+    return { hasAddEmployeeMethod: false, hash: 'N/A' };
   }
 }
 
