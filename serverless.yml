@@ -196,6 +196,8 @@ functions:
     name: postOrgMintNft-${sls:stage}
     handler: src/endpoints/api-post-org-mint-nft.handler
     timeout: 30
+    environment:
+      NFT_STORAGE_API_KEY: ${ssm:/nft_storage_api_key}
     events:
       # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
       - httpApi:
