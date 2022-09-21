@@ -79,7 +79,8 @@ export const handler = async (
     if (!toUserId || !requestedNftId) {
       return generateReturn(400, {
         message:
-          'Properties toUserId and requestedNftId are required in the body',
+          'Properties toUserId and communionNftId are required in the body',
+        givenBody: event.body,
       });
     }
 
