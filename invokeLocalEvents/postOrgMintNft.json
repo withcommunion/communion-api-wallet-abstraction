@@ -1,0 +1,38 @@
+{
+  "body": "{\n    \"tokenId\": \"viking-of-vibes\",\n    \"toUserId\": \"6281d918-df36-48bf-b8a4-3ee1f2b8305e\"\n}",
+  "isBase64Encoded": false,
+  "pathParameters": {
+    "orgId": "communion-test-org"
+  },
+  "rawPath": "/org/communion-test-org/mintNft",
+  "rawQueryString": "",
+  "requestContext": {
+    "accountId": "143056416942",
+    "apiId": "p0rddetfk8",
+    "authorizer": {
+      "jwt": {
+        "claims": {
+          "aud": "4eerlu1taf72c8r20pv2tmmvmt",
+          "auth_time": "1663094070",
+          "cognito:username": "6281d918-df36-48bf-b8a4-3ee1f2b8305e",
+          "custom:organization": "org-jacks-pizza-1",
+          "email": "mfalicea58@gmail.com",
+          "email_verified": "true",
+          "event_id": "6d8858b8-2105-4baf-9aaa-03fb335f892d",
+          "exp": "1663700209",
+          "family_name": "Alicea",
+          "given_name": "Mike",
+          "iat": "1663696609",
+          "iss": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_EXRZZF0cp",
+          "jti": "31bc47a7-d3c5-4a57-a517-b88074a7e1cf",
+          "origin_jti": "db0845b5-71bd-4a6b-a7d8-d9c0f55e4e09",
+          "sub": "6281d918-df36-48bf-b8a4-3ee1f2b8305e",
+          "token_use": "id"
+        },
+        "scopes": null
+      }
+    }
+  },
+  "routeKey": "POST /org/{orgId}/mintNft",
+  "version": "2.0"
+}

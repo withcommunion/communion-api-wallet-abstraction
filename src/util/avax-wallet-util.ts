@@ -2,6 +2,7 @@ import { ethers, Wallet } from 'ethers';
 // TODO: We'll likely want to store these in Dynamo or S3 or similar
 import { abi as JacksPizzaAbi } from '../contractAbi/jacksPizza/JacksPizzaGovernance.json';
 import { abi as CtcAbi } from '../contractAbi/communionTestCoin/CtcGovernance.json';
+import { abi as CtcWithNftAbi } from '../contractAbi/communionTestCoin/OrgGovernance.json';
 
 import { isProd } from '../util/env-util';
 export const prodAvaxRpcUrl = 'https://api.avax.network/ext/bc/C/rpc';
@@ -61,6 +62,19 @@ export function getCommunionTestGovernanceContract(
   signerWallet: Wallet
 ) {
   const contract = new ethers.Contract(contractAddress, CtcAbi, signerWallet);
+
+  return contract;
+}
+
+export function getCommunionTestGovernanceContractWitNft(
+  contractAddress: string,
+  signerWallet: Wallet
+) {
+  const contract = new ethers.Contract(
+    contractAddress,
+    CtcWithNftAbi,
+    signerWallet
+  );
 
   return contract;
 }

@@ -255,7 +255,6 @@ export const handler = async (
       values: { isRequestingUserManager },
     });
 
-    // TODO: Cleanup this whole flow, add tests, abstract into util fns
     await ensureMemberIsInOrgSmartContractHelper(requestingUser, org);
 
     const baseOrgWithPublicData = {
@@ -265,7 +264,9 @@ export const handler = async (
       member_ids: org.member_ids,
       redeemables: org.redeemables,
       avax_contract: org.avax_contract,
-    };
+      minted_nfts: org.minted_nfts,
+      available_nfts: org.available_nfts,
+    } as OrgWithPublicData;
 
     const orgWithPublicData: OrgWithManagerData | OrgWithPublicData =
       isRequestingUserManager
@@ -273,7 +274,7 @@ export const handler = async (
             ...baseOrgWithPublicData,
             join_code: org.join_code,
           } as OrgWithManagerData)
-        : (baseOrgWithPublicData as OrgWithPublicData);
+        : baseOrgWithPublicData;
 
     logger.info('Returning org with Public Data', {
       values: { orgWithPublicData },
