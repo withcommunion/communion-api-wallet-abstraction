@@ -218,9 +218,18 @@ export interface CommunionNft {
   };
 }
 
+export interface MintedNft {
+  nftId: string;
+  ownerUserId: string;
+  createdAt: number;
+  txnHash: string;
+  contractTokenId: string;
+}
+
 export interface OrgWithPrivateData {
   id: string;
   available_nfts?: CommunionNft[];
+  minted_nfts?: MintedNft[];
   actions: OrgAction[];
   redeemables: OrgRedeemables[];
   roles: Roles[];
@@ -310,6 +319,38 @@ export async function addUserToOrg(
   const org = resp.Attributes as OrgWithPrivateData;
 
   return org;
+}
+
+export async function addMintedNftToOrg(
+  org: OrgWithPrivateData,
+  mintedNft: MintedNft,
+  ddbClient: DynamoDBDocumentClient
+): Promise<User> {
+  const updateExpression = org.minted_nfts
+    ? 'SET #mintedNfts = list_append(#mintedNfts, :nftId)'
+    : 'SET #mintedNfts = :nftId';
+
+  const params = new UpdateCommand({
+    TableName: orgsTable,
+    Key: {
+      id: org.id,
+    },
+    ReturnValues: 'ALL_NEW',
+    UpdateExpression: updateExpression,
+    // UpdateExpression: 'SET #mintedNfts = list_append(#mintedNfts, :nftId)',
+    // UpdateExpression:
+    //   'SET #mintedNfts = list_append(if_not_exists(#mintedNfts, :nftId), :nftId)',
+    // UpdateExpression: 'SET #mintedNfts = :nftId',
+    ExpressionAttributeNames: { '#mintedNfts': 'minted_nfts' },
+    ExpressionAttributeValues: {
+      ':nftId': [mintedNft],
+    },
+  });
+
+  const resp = await ddbClient.send(params);
+  const user = resp.Attributes as User;
+
+  return user;
 }
 
 export interface Transaction {

@@ -12,6 +12,8 @@ import {
   getOrgById,
   OrgWithPrivateData,
   CommunionNft,
+  addMintedNftToOrg,
+  MintedNft,
 } from '../util/dynamo-util';
 
 import {
@@ -144,10 +146,14 @@ export const handler = async (
       toUser.walletAddressC,
       uri
     );
-    // * Mint NFT to user
-    // * Store in nft.storage
-    // * Store in S3
     // * Store in Org
+    await storeMintedNftInOrgHelper(
+      org,
+      nftToMint.id,
+      toUser.id,
+      mintTxn.hash || 'something-went-wrong'
+    );
+
     // * Store in User
 
     return generateReturn(200, {
@@ -294,6 +300,34 @@ function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
   } catch (error) {
     logger.error('Error fetching org governance contract', {
       values: { org, error },
+    });
+    throw error;
+  }
+}
+
+async function storeMintedNftInOrgHelper(
+  org: OrgWithPrivateData,
+  nftId: string,
+  ownerUserId: string,
+  txnHash: string
+) {
+  logger.info('Storing minted NFT in org', {
+    values: { orgId: org.id, nftId, ownerUserId, txnHash },
+  });
+  try {
+    const mintedNFt = {
+      nftId,
+      ownerUserId,
+      createdAt: Math.floor(Date.now()),
+      txnHash,
+      contractTokenId: '0',
+    } as MintedNft;
+    const resp = await addMintedNftToOrg(org, mintedNFt, dynamoClient);
+
+    return resp;
+  } catch (error) {
+    logger.error('Failed to store minted nft in org', {
+      values: { error, orgId: org.id, nftId, ownerUserId, txnHash },
     });
     throw error;
   }
