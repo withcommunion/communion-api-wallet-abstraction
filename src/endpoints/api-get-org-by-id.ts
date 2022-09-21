@@ -255,7 +255,6 @@ export const handler = async (
       values: { isRequestingUserManager },
     });
 
-    // TODO: Cleanup this whole flow, add tests, abstract into util fns
     await ensureMemberIsInOrgSmartContractHelper(requestingUser, org);
 
     const baseOrgWithPublicData = {
