@@ -13,7 +13,7 @@ import {
   OrgWithPrivateData,
   CommunionNft,
   addMintedNftToOrg,
-  MintedCommunionNft,
+  MintedNftDetails,
   User,
   addMintedNftToUser,
 } from '../util/dynamo-util';
@@ -35,7 +35,7 @@ const nftStorage = new NFTStorage({
 });
 
 interface ExpectedPostBody {
-  tokenId: string;
+  communionNftId: string;
   toUserId: string;
 }
 
@@ -60,14 +60,14 @@ export const handler = async (
     }
 
     let toUserId = '';
-    let tokenId = '';
+    let requestedNftId = '';
     try {
       const body = JSON.parse(event.body || '') as ExpectedPostBody;
       if (body.toUserId) {
         toUserId = body.toUserId;
       }
-      if (body.tokenId) {
-        tokenId = body.tokenId;
+      if (body.communionNftId) {
+        requestedNftId = body.communionNftId;
       }
     } catch (error) {
       logger.error('Failed to parse body', {
@@ -76,9 +76,10 @@ export const handler = async (
       return generateReturn(500, { message: 'Failed to parse body' });
     }
 
-    if (!toUserId || !tokenId) {
+    if (!toUserId || !requestedNftId) {
       return generateReturn(400, {
-        message: 'Properties toUserId and tokenId are required in the body',
+        message:
+          'Properties toUserId and requestedNftId are required in the body',
       });
     }
 
@@ -129,13 +130,16 @@ export const handler = async (
       });
     }
 
-    // * Fetch NFT from availabeNfts in org
-    const nftToMint = org.available_nfts?.find((nft) => nft.id === tokenId);
+    const nftToMint = org.available_nfts?.find(
+      (nft) => nft.id === requestedNftId
+    );
     if (!nftToMint) {
-      logger.info('NFT with given tokenId not found', { values: { tokenId } });
+      logger.info('NFT with given requestedNftId not found', {
+        values: { requestedNftId },
+      });
       return generateReturn(404, {
-        message: 'NFT with given tokenId not found in the org',
-        tokenId,
+        message: 'NFT with given requestedNftId not found in the org',
+        requestedNftId,
         availableNfts: org.available_nfts,
       });
     }
@@ -162,7 +166,7 @@ export const handler = async (
       contractAddress,
       orgId,
       createdAt: Math.floor(Date.now()),
-    } as MintedCommunionNft;
+    } as MintedNftDetails;
     await storeMintedNftInOrgHelper(org, mintedNft);
     await storeMintedNftInUserHelper(toUser, mintedNft);
 
@@ -314,6 +318,9 @@ function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
     }
 
     const orgDevWallet = getEthersWallet(org.seeder.privateKeyWithLeadingHex);
+    /**
+     * TODO: We need to get the ABI's more flexibly.
+     */
     const governanceContract = getCommunionTestGovernanceContractWitNft(
       governanceContractAddress,
       orgDevWallet
@@ -330,7 +337,7 @@ function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
 
 async function storeMintedNftInOrgHelper(
   org: OrgWithPrivateData,
-  mintedNft: MintedCommunionNft
+  mintedNft: MintedNftDetails
 ) {
   logger.info('Storing minted NFT in org', {
     values: { orgId: org.id, mintedNft },
@@ -349,7 +356,7 @@ async function storeMintedNftInOrgHelper(
 
 async function storeMintedNftInUserHelper(
   toUser: User,
-  mintedNft: MintedCommunionNft
+  mintedNft: MintedNftDetails
 ) {
   logger.info('Storing minted NFT in user', {
     values: { userId: toUser.id, mintedNft },

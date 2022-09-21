@@ -45,7 +45,7 @@ export interface User {
   last_name: string;
   organization?: string;
   organizations: { orgId: string; role: string }[];
-  owned_nfts?: MintedCommunionNft[];
+  owned_nfts?: MintedNftDetails[];
   role?: 'worker' | 'manager' | 'owner' | 'seeder' | string;
   walletPrivateKeyWithLeadingHex?: string;
   walletAddressC: string;
@@ -145,7 +145,7 @@ export async function addOrgToUser(
 
 export async function addMintedNftToUser(
   user: User,
-  mintedNft: MintedCommunionNft,
+  mintedNft: MintedNftDetails,
   ddbClient: DynamoDBDocumentClient
 ): Promise<User> {
   /**
@@ -251,7 +251,7 @@ export interface CommunionNft {
   };
 }
 
-export interface MintedCommunionNft {
+export interface MintedNftDetails {
   communionNftId: string;
   ownerUserId: string;
   mintedNftId: number;
@@ -265,7 +265,7 @@ export interface MintedCommunionNft {
 export interface OrgWithPrivateData {
   id: string;
   available_nfts?: CommunionNft[];
-  minted_nfts?: MintedCommunionNft[];
+  minted_nfts?: MintedNftDetails[];
   actions: OrgAction[];
   redeemables: OrgRedeemables[];
   roles: Roles[];
@@ -359,7 +359,7 @@ export async function addUserToOrg(
 
 export async function addMintedNftToOrg(
   org: OrgWithPrivateData,
-  mintedNft: MintedCommunionNft,
+  mintedNft: MintedNftDetails,
   ddbClient: DynamoDBDocumentClient
 ): Promise<OrgWithPrivateData> {
   const updateExpression = org.minted_nfts
