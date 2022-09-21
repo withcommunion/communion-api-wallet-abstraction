@@ -51,9 +51,13 @@ const addOrgToUserSpy = jest.spyOn(dynamoUtil, 'addOrgToUser');
 /**
  * TODO: Fill this in, this endpoint is critical
  */
-describe.skip('api-post-org-mint-nft', () => {
+describe('api-post-org-mint-nft', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('Should pass', () => {
+    expect(true).toEqual(true);
   });
   // eslint-disable-next-line
   describe('Happy path', () => {});
