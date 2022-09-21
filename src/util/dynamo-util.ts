@@ -45,6 +45,7 @@ export interface User {
   last_name: string;
   organization?: string;
   organizations: { orgId: string; role: string }[];
+  owned_nfts?: MintedCommunionNft[];
   role?: 'worker' | 'manager' | 'owner' | 'seeder' | string;
   walletPrivateKeyWithLeadingHex?: string;
   walletAddressC: string;
@@ -142,6 +143,38 @@ export async function addOrgToUser(
   return user;
 }
 
+export async function addMintedNftToUser(
+  user: User,
+  mintedNft: MintedCommunionNft,
+  ddbClient: DynamoDBDocumentClient
+): Promise<User> {
+  /**
+   * Without this check, an error will be thrown
+   * if the property doesn't already exist on the user
+   */
+  const updateExpression = user.owned_nfts
+    ? 'SET #ownedNftsProperty = list_append(#ownedNftsProperty, :mintedNft)'
+    : 'SET #ownedNftsProperty = :mintedNft';
+
+  const params = new UpdateCommand({
+    TableName: usersTable,
+    Key: {
+      id: user.id,
+    },
+    ReturnValues: 'ALL_NEW',
+    UpdateExpression: updateExpression,
+    ExpressionAttributeNames: { '#ownedNftsProperty': 'owned_nfts' },
+    ExpressionAttributeValues: {
+      ':mintedNft': [mintedNft],
+    },
+  });
+
+  const resp = await ddbClient.send(params);
+  const updatedUser = resp.Attributes as User;
+
+  return updatedUser;
+}
+
 export async function getUserById(
   userId: string,
   ddbClient: DynamoDBDocumentClient
@@ -218,18 +251,21 @@ export interface CommunionNft {
   };
 }
 
-export interface MintedNft {
-  nftId: string;
+export interface MintedCommunionNft {
+  communionNftId: string;
   ownerUserId: string;
-  createdAt: number;
+  mintedNftId: number;
+  mintedNftUri: string;
+  orgId: string;
   txnHash: string;
-  contractTokenId: string;
+  contractAddress: string;
+  createdAt: number;
 }
 
 export interface OrgWithPrivateData {
   id: string;
   available_nfts?: CommunionNft[];
-  minted_nfts?: MintedNft[];
+  minted_nfts?: MintedCommunionNft[];
   actions: OrgAction[];
   redeemables: OrgRedeemables[];
   roles: Roles[];
@@ -323,12 +359,12 @@ export async function addUserToOrg(
 
 export async function addMintedNftToOrg(
   org: OrgWithPrivateData,
-  mintedNft: MintedNft,
+  mintedNft: MintedCommunionNft,
   ddbClient: DynamoDBDocumentClient
-): Promise<User> {
+): Promise<OrgWithPrivateData> {
   const updateExpression = org.minted_nfts
-    ? 'SET #mintedNfts = list_append(#mintedNfts, :nftId)'
-    : 'SET #mintedNfts = :nftId';
+    ? 'SET #mintedNfts = list_append(#mintedNfts, :nft)'
+    : 'SET #mintedNfts = :nft';
 
   const params = new UpdateCommand({
     TableName: orgsTable,
@@ -343,12 +379,12 @@ export async function addMintedNftToOrg(
     // UpdateExpression: 'SET #mintedNfts = :nftId',
     ExpressionAttributeNames: { '#mintedNfts': 'minted_nfts' },
     ExpressionAttributeValues: {
-      ':nftId': [mintedNft],
+      ':nft': [mintedNft],
     },
   });
 
   const resp = await ddbClient.send(params);
-  const user = resp.Attributes as User;
+  const user = resp.Attributes as OrgWithPrivateData;
 
   return user;
 }

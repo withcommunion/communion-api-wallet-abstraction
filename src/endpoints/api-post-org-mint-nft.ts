@@ -1,7 +1,7 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { NFTStorage, File } from 'nft.storage';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-import { Transaction as EthersTxn } from 'ethers';
+import { ContractTransaction } from 'ethers';
 import { generateReturn } from '../util/api-util';
 import logger, {
   setDefaultLoggerMetaForApi,
@@ -13,7 +13,9 @@ import {
   OrgWithPrivateData,
   CommunionNft,
   addMintedNftToOrg,
-  MintedNft,
+  MintedCommunionNft,
+  User,
+  addMintedNftToUser,
 } from '../util/dynamo-util';
 
 import {
@@ -138,28 +140,36 @@ export const handler = async (
       });
     }
 
+    /**
+     * TODO: Figure this out, we want the NFTs on IPFS
+     * and we want to be able to fetch them from S3
+     */
     // const uri = (await uploadToNftStorageHelper(org, nftToMint)).url;
     const uri = `https://communion-nft.s3.amazonaws.com/orgs/${org.id}/${nftToMint.id}.json`;
-    const mintTxn = await mintNftHelper(
+    const { txn, mintedNftId, contractAddress } = await mintNftHelper(
       org,
       nftToMint,
       toUser.walletAddressC,
       uri
     );
-    // * Store in Org
-    await storeMintedNftInOrgHelper(
-      org,
-      nftToMint.id,
-      toUser.id,
-      mintTxn.hash || 'something-went-wrong'
-    );
 
-    // * Store in User
+    const mintedNft = {
+      communionNftId: nftToMint.id,
+      ownerUserId: toUser.id,
+      mintedNftId,
+      mintedNftUri: uri,
+      txnHash: txn.transactionHash,
+      contractAddress,
+      orgId,
+      createdAt: Math.floor(Date.now()),
+    } as MintedCommunionNft;
+    await storeMintedNftInOrgHelper(org, mintedNft);
+    await storeMintedNftInUserHelper(toUser, mintedNft);
 
     return generateReturn(200, {
       success: true,
-      mintTxn,
-      uri,
+      mintTxn: txn.transactionHash,
+      mintedNft,
     });
   } catch (error) {
     console.log(error);
@@ -253,17 +263,30 @@ async function mintNftHelper(
   const governanceContract = getOrgGovernanceContractHelper(org);
 
   try {
-    const transaction = // eslint-disable-next-line
+    const initialTxn = // eslint-disable-next-line
       (await governanceContract.mintErc721(
         toUserWalletAddressC,
         uri
-      )) as EthersTxn;
+      )) as ContractTransaction;
+
+    const waitedTxn = await initialTxn.wait();
 
     logger.verbose('Minted NFT', {
-      values: { transaction, hash: transaction.hash },
+      values: { waitedTxn, hash: waitedTxn.transactionHash },
     });
 
-    return transaction;
+    const mintedNftId =
+      waitedTxn.events && parseInt(waitedTxn.events[0].topics[3] || '0', 16);
+
+    const contractAddress = waitedTxn.events && waitedTxn.events[0].address;
+
+    if (!mintedNftId || !contractAddress) {
+      throw new Error(
+        'Failed to mint NFT - We have no mintedNftId or contractAddress'
+      );
+    }
+
+    return { mintedNftId, txn: waitedTxn, contractAddress };
   } catch (error) {
     logger.error('Failed to mint NFT', {
       values: {
@@ -307,27 +330,37 @@ function getOrgGovernanceContractHelper(org: OrgWithPrivateData) {
 
 async function storeMintedNftInOrgHelper(
   org: OrgWithPrivateData,
-  nftId: string,
-  ownerUserId: string,
-  txnHash: string
+  mintedNft: MintedCommunionNft
 ) {
   logger.info('Storing minted NFT in org', {
-    values: { orgId: org.id, nftId, ownerUserId, txnHash },
+    values: { orgId: org.id, mintedNft },
   });
   try {
-    const mintedNFt = {
-      nftId,
-      ownerUserId,
-      createdAt: Math.floor(Date.now()),
-      txnHash,
-      contractTokenId: '0',
-    } as MintedNft;
-    const resp = await addMintedNftToOrg(org, mintedNFt, dynamoClient);
+    const resp = await addMintedNftToOrg(org, mintedNft, dynamoClient);
 
     return resp;
   } catch (error) {
     logger.error('Failed to store minted nft in org', {
-      values: { error, orgId: org.id, nftId, ownerUserId, txnHash },
+      values: { error, orgId: org.id, mintedNft },
+    });
+    throw error;
+  }
+}
+
+async function storeMintedNftInUserHelper(
+  toUser: User,
+  mintedNft: MintedCommunionNft
+) {
+  logger.info('Storing minted NFT in user', {
+    values: { userId: toUser.id, mintedNft },
+  });
+  try {
+    const resp = await addMintedNftToUser(toUser, mintedNft, dynamoClient);
+
+    return resp;
+  } catch (error) {
+    logger.error('Failed to store minted nft in user', {
+      values: { error, userId: toUser.id, mintedNft },
     });
     throw error;
   }
