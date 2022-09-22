@@ -173,7 +173,7 @@ export const handler = async (
 
     return generateReturn(200, {
       success: true,
-      mintTxn: txn.transactionHash,
+      txnHash: txn.transactionHash,
       mintedNft,
     });
   } catch (error) {
