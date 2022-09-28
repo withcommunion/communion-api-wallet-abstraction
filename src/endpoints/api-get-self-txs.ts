@@ -272,6 +272,7 @@ function constructCompleteTx(
         };
 
     const isReceivedTxn =
+      tx.type !== 'nftMint' &&
       toUser.walletAddressC === self.walletAddressC.toLowerCase();
 
     let txType: CommunionTx['txType'];
