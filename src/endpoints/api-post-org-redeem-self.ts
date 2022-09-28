@@ -138,6 +138,7 @@ async function storeTransactionsHelper(
       // Store in seconds because expiry time uses seconds, let's stay consistent
       created_at: Math.floor(Date.now() / 1000),
       message,
+      type: 'redemption',
     } as Transaction;
 
     const insertResps = await insertTransaction(txn, dynamoClient);

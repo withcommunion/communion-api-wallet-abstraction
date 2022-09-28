@@ -193,7 +193,7 @@ interface CommunionTx {
   txHash: string;
   txHashUrl: string;
   txStatus: 'succeeded' | 'failed';
-  txType: 'received' | 'sent' | 'redemption';
+  txType: 'received' | 'sent' | 'redemption' | 'nftMint' | 'tokenSend';
   modifier?: 'bankHeist';
   fromUser: {
     id: string;
@@ -226,6 +226,8 @@ function constructCompleteTx(
     const isFromBank = tx.from_user_id === org.id;
 
     const isRedemptionTxn =
+      tx.type === 'redemption' ||
+      // Legacy
       tx.to_user_id === '0x0000000000000000000000000000000000000000';
 
     const bankOrRedemptionUser = isFromBank
@@ -277,6 +279,8 @@ function constructCompleteTx(
       txType = 'redemption';
     } else if (isReceivedTxn) {
       txType = 'received';
+    } else if (tx.type === 'nftMint') {
+      txType = 'nftMint';
     } else {
       txType = 'sent';
     }
