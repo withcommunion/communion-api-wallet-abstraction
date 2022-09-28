@@ -193,7 +193,7 @@ interface CommunionTx {
   txHash: string;
   txHashUrl: string;
   txStatus: 'succeeded' | 'failed';
-  txType: 'received' | 'sent' | 'redemption' | 'nftMint' | 'tokenSend';
+  txType: 'received' | 'sent' | 'redemption' | 'nftMint' | 'erc20Transfer';
   modifier?: 'bankHeist';
   fromUser: {
     id: string;

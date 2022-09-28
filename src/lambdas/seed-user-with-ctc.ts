@@ -212,7 +212,7 @@ async function storeTransactionsHelper(
           created_at: Math.floor(Date.now() / 1000),
           message,
           modifier: undefined,
-          type: 'tokenSend',
+          type: 'erc20Transfer',
         };
       }
     );

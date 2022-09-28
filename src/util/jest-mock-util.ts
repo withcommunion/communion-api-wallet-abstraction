@@ -168,7 +168,7 @@ export function generateMockTx(paramOverrides: MockTxParamOverrides) {
     org_id: paramOverrides.org_id || 'communion-test-org',
     from_user_id: paramOverrides.from_user_id || 'local-mock-user-self',
     to_user_id: paramOverrides.to_user_id || 'local-mock-user-self',
-    type: paramOverrides.type || 'tokenSend',
+    type: paramOverrides.type || 'erc20Transfer',
     to_user_id_txn_hash_urn:
       '6281d918-df36-48bf-b8a4-3ee1f2b8305e:0x54600226bc20315802c4e179d82c53f2542dd2ec0a57b194bb7811bd6ee10fc6',
     amount: 2,

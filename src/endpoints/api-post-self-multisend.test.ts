@@ -127,7 +127,7 @@ describe('api-post-self-multisend', () => {
           to_user_id_txn_hash_urn: 'local-invoke-mock-user-a:0x12345325252',
           tx_hash: '0x12345325252',
           modifier: undefined,
-          type: 'tokenSend',
+          type: 'erc20Transfer',
         },
         {}
       );

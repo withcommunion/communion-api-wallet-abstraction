@@ -389,7 +389,7 @@ export async function addMintedNftToOrg(
   return user;
 }
 
-export type TransactionType = 'tokenSend' | 'redemption' | 'nftMint';
+export type TransactionType = 'erc20Transfer' | 'redemption' | 'nftMint';
 export interface Transaction {
   org_id: string;
   to_user_id_txn_hash_urn: string;

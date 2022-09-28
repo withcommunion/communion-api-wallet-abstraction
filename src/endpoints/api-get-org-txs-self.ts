@@ -207,7 +207,7 @@ async function storeTransactionsHelper(orgId: string, transactions: FullTxn[]) {
           // Store in seconds because expiry time uses seconds, let's stay consistent
           created_at: parseInt(timeStamp),
           message: '',
-          type: 'tokenSend',
+          type: 'erc20Transfer',
         };
       }
     );
