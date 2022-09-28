@@ -2,6 +2,7 @@ import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { NFTStorage, File } from 'nft.storage';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { ContractReceipt, ContractTransaction } from 'ethers';
+import { sendSms } from '../util/twilio-util';
 import { generateReturn } from '../util/api-util';
 import logger, {
   setDefaultLoggerMetaForApi,
@@ -173,6 +174,7 @@ export const handler = async (
     await storeMintedNftInOrgHelper(org, mintedNft);
     await storeMintedNftInUserHelper(toUser, mintedNft);
     await storeTransactionsHelper(org.id, toUser, nftToMint.id, txn);
+    await sendSmsToUserHelper(toUser);
 
     return generateReturn(200, {
       success: true,
@@ -430,5 +432,27 @@ async function storeTransactionsHelper(
       },
     });
     console.error(error);
+  }
+}
+
+async function sendSmsToUserHelper(toUser: User) {
+  const url =
+    process.env.STAGE === 'prod'
+      ? 'https://withcommunion.com'
+      : 'https://dev.withcommunion.com';
+
+  logger.info('Sending notifications');
+  if (toUser.phone_number && toUser.allow_sms) {
+    logger.verbose('Sending notif to user', { values: { toUser } });
+
+    const sentTextMessage = sendSms(
+      toUser.phone_number,
+      `🎁 Congrats ${toUser.first_name}! You just received a NFT badge!
+
+Check it out on the app: ${url}`
+    );
+
+    logger.verbose('Sent text message', { values: { sentTextMessage } });
+    return sentTextMessage;
   }
 }

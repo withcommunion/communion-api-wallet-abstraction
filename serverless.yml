@@ -198,6 +198,7 @@ functions:
     timeout: 30
     environment:
       NFT_STORAGE_API_KEY: ${ssm:/nft_storage_api_key}
+      TWILIO_API_KEY: ${ssm:/twilio_api_key}
     events:
       # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
       - httpApi:
