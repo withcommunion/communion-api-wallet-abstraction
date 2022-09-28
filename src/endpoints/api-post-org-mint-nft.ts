@@ -1,7 +1,7 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 import { NFTStorage, File } from 'nft.storage';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-import { ContractTransaction } from 'ethers';
+import { ContractReceipt, ContractTransaction } from 'ethers';
 import { generateReturn } from '../util/api-util';
 import logger, {
   setDefaultLoggerMetaForApi,
@@ -16,6 +16,8 @@ import {
   MintedNftDetails,
   User,
   addMintedNftToUser,
+  insertTransaction,
+  Transaction,
 } from '../util/dynamo-util';
 
 import {
@@ -170,6 +172,7 @@ export const handler = async (
     } as MintedNftDetails;
     await storeMintedNftInOrgHelper(org, mintedNft);
     await storeMintedNftInUserHelper(toUser, mintedNft);
+    await storeTransactionsHelper(org.id, toUser, nftToMint.id, txn);
 
     return generateReturn(200, {
       success: true,
@@ -371,5 +374,61 @@ async function storeMintedNftInUserHelper(
       values: { error, userId: toUser.id, mintedNft },
     });
     throw error;
+  }
+}
+
+async function storeTransactionsHelper(
+  orgId: string,
+  toUser: User,
+  message: string,
+  transaction: ContractReceipt
+) {
+  logger.info('Storing transaction in TransactionsTable');
+  logger.verbose('Values to store in TxnTable', {
+    values: {
+      orgId,
+      toUser,
+      transaction,
+    },
+  });
+  try {
+    const hash = transaction.transactionHash || `RANDOM:${Math.random()}`;
+    /**
+     * This is the burn address, where the token is coming from
+     */
+    const txn = {
+      org_id: orgId,
+      to_user_id_txn_hash_urn: `${toUser.id}:${hash}`,
+      from_user_to_user_txn_hash_urn: `${orgId}:${toUser.id}:${hash}`,
+      to_user_id: toUser.id,
+      from_user_id: orgId,
+      tx_hash: hash,
+      amount: 1,
+      // Store in seconds because expiry time uses seconds, let's stay consistent
+      created_at: Math.floor(Date.now() / 1000),
+      message,
+      type: 'nftMint',
+    } as Transaction;
+
+    const insertResps = await insertTransaction(txn, dynamoClient);
+
+    logger.verbose('Stored txn in TransactionsTable', {
+      values: { insertResps },
+    });
+
+    return insertResps;
+  } catch (error) {
+    logger.error('Failed to store transactions in table', {
+      values: {
+        error,
+        args: {
+          orgId,
+          toUserId: toUser.id,
+          message,
+          transaction,
+        },
+      },
+    });
+    console.error(error);
   }
 }
