@@ -4,7 +4,8 @@
   "rawPath": "/user/self",
   "rawQueryString": "",
   "queryStringParameters": {
-    "orgId": "communion-test-org"
+    "orgId": "communion-test-org",
+    "isManagerMode": "true"
   },
   "headers": {
     "accept": "application/json, text/plain, */*",
