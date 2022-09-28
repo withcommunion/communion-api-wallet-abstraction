@@ -160,17 +160,6 @@ functions:
           path: /org/{orgId}/txs/self
           authorizer:
             name: cognitoJwtAuthorizer-${sls:stage}
-  getMigrateOrgTxsSelf:
-    name: getMigrateOrgTxsSelf-${sls:stage}
-    handler: src/endpoints/api-get-migrate-org-txs-self.handler
-    timeout: 30
-    events:
-      # http-api docs https://www.serverless.com/framework/docs/providers/aws/events/http-api
-      - httpApi:
-          method: GET
-          path: /org/{orgId}/txs/self/migrate
-          authorizer:
-            name: cognitoJwtAuthorizer-${sls:stage}
   postOrgRedeemSelf:
     name: postOrgRedeemSelf-${sls:stage}
     handler: src/endpoints/api-post-org-redeem-self.handler
