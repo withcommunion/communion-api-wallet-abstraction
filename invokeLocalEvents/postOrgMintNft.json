@@ -1,5 +1,5 @@
 {
-  "body": "{\n    \"tokenId\": \"viking-of-vibes\",\n    \"toUserId\": \"6281d918-df36-48bf-b8a4-3ee1f2b8305e\"\n}",
+  "body": "{\n    \"communionNftId\": \"viking-of-vibes\",\n    \"toUserId\": \"6281d918-df36-48bf-b8a4-3ee1f2b8305e\"\n}",
   "isBase64Encoded": false,
   "pathParameters": {
     "orgId": "communion-test-org"

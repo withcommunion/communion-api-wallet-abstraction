@@ -389,6 +389,7 @@ export async function addMintedNftToOrg(
   return user;
 }
 
+export type TransactionType = 'erc20Transfer' | 'redemption' | 'nftMint';
 export interface Transaction {
   org_id: string;
   to_user_id_txn_hash_urn: string;
@@ -399,6 +400,7 @@ export interface Transaction {
   tx_hash: string;
   created_at: number;
   message?: string;
+  type: TransactionType;
   modifier?: 'bankHeist';
 }
 

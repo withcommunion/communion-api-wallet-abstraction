@@ -193,7 +193,7 @@ interface CommunionTx {
   txHash: string;
   txHashUrl: string;
   txStatus: 'succeeded' | 'failed';
-  txType: 'received' | 'sent' | 'redemption';
+  txType: 'received' | 'sent' | 'redemption' | 'nftMint' | 'erc20Transfer';
   modifier?: 'bankHeist';
   fromUser: {
     id: string;
@@ -222,79 +222,90 @@ function constructCompleteTx(
 
   const burnAddress = '0x0000000000000000000000000000000000000000';
 
-  const isFromBank = tx.from_user_id === org.id;
+  try {
+    const isFromBank = tx.from_user_id === org.id;
 
-  const isRedemptionTxn =
-    tx.to_user_id === '0x0000000000000000000000000000000000000000';
+    const isRedemptionTxn =
+      tx.type === 'redemption' ||
+      // Legacy
+      tx.to_user_id === '0x0000000000000000000000000000000000000000';
 
-  const bankOrRedemptionUser = isFromBank
-    ? {
-        id: org.id,
-        walletAddressC: org.avax_contract.token_address,
-        firstName: org.id,
-        lastName: org.id,
-      }
-    : {
-        id: burnAddress,
-        walletAddressC: burnAddress,
-        firstName: org.id,
-        lastName: org.id,
-      };
+    const bankOrRedemptionUser = isFromBank
+      ? {
+          id: org.id,
+          walletAddressC: org.avax_contract.token_address,
+          firstName: org.id,
+          lastName: org.id,
+        }
+      : {
+          id: burnAddress,
+          walletAddressC: burnAddress,
+          firstName: org.id,
+          lastName: org.id,
+        };
 
-  if (
-    !isFromBank &&
-    !isRedemptionTxn &&
-    (!userIdUserMap[tx.from_user_id] || !userIdUserMap[tx.to_user_id])
-  ) {
+    if (
+      !isFromBank &&
+      !isRedemptionTxn &&
+      (!userIdUserMap[tx.from_user_id] || !userIdUserMap[tx.to_user_id])
+    ) {
+      return null;
+    }
+
+    const fromUser = isFromBank
+      ? bankOrRedemptionUser
+      : {
+          id: userIdUserMap[tx.from_user_id].id,
+          walletAddressC:
+            userIdUserMap[tx.from_user_id].walletAddressC.toLowerCase(),
+          firstName: userIdUserMap[tx.from_user_id].first_name,
+          lastName: userIdUserMap[tx.from_user_id].last_name,
+        };
+    const toUser = isRedemptionTxn
+      ? bankOrRedemptionUser
+      : {
+          id: userIdUserMap[tx.to_user_id].id,
+          walletAddressC:
+            userIdUserMap[tx.to_user_id].walletAddressC.toLowerCase(),
+          firstName: userIdUserMap[tx.to_user_id].first_name,
+          lastName: userIdUserMap[tx.to_user_id].last_name,
+        };
+
+    const isReceivedTxn =
+      tx.type !== 'nftMint' &&
+      toUser.walletAddressC === self.walletAddressC.toLowerCase();
+
+    let txType: CommunionTx['txType'];
+    if (isRedemptionTxn) {
+      txType = 'redemption';
+    } else if (isReceivedTxn) {
+      txType = 'received';
+    } else if (tx.type === 'nftMint') {
+      txType = 'nftMint';
+    } else {
+      txType = 'sent';
+    }
+
+    return {
+      fromUser,
+      toUser,
+      txType,
+      message: tx.message,
+      timeStampSeconds: tx.created_at,
+      tokenName: org.avax_contract.token_name,
+      tokenSymbol: org.avax_contract.token_symbol,
+      value: tx.amount,
+      txHash: tx.tx_hash,
+      txHashUrl: `${rootExplorerUrl}/tx/${tx.tx_hash}`,
+      // TODO: We will want this when we deal with other statuses, rn only succeeded goes in DB
+      txStatus: 'succeeded',
+      modifier: tx.modifier,
+    };
+  } catch (error) {
+    console.error('Failed to construct tx', { error, tx });
+    logger.error('Failed to construct tx', { values: { error, tx } });
     return null;
   }
-
-  const fromUser = isFromBank
-    ? bankOrRedemptionUser
-    : {
-        id: userIdUserMap[tx.from_user_id].id,
-        walletAddressC:
-          userIdUserMap[tx.from_user_id].walletAddressC.toLowerCase(),
-        firstName: userIdUserMap[tx.from_user_id].first_name,
-        lastName: userIdUserMap[tx.from_user_id].last_name,
-      };
-  const toUser = isRedemptionTxn
-    ? bankOrRedemptionUser
-    : {
-        id: userIdUserMap[tx.to_user_id].id,
-        walletAddressC:
-          userIdUserMap[tx.to_user_id].walletAddressC.toLowerCase(),
-        firstName: userIdUserMap[tx.to_user_id].first_name,
-        lastName: userIdUserMap[tx.to_user_id].last_name,
-      };
-
-  const isReceivedTxn =
-    toUser.walletAddressC === self.walletAddressC.toLowerCase();
-
-  let txType: CommunionTx['txType'];
-  if (isRedemptionTxn) {
-    txType = 'redemption';
-  } else if (isReceivedTxn) {
-    txType = 'received';
-  } else {
-    txType = 'sent';
-  }
-
-  return {
-    fromUser,
-    toUser,
-    txType,
-    message: tx.message,
-    timeStampSeconds: tx.created_at,
-    tokenName: org.avax_contract.token_name,
-    tokenSymbol: org.avax_contract.token_symbol,
-    value: tx.amount,
-    txHash: tx.tx_hash,
-    txHashUrl: `${rootExplorerUrl}/tx/${tx.tx_hash}`,
-    // TODO: We will want this when we deal with other statuses, rn only succeeded goes in DB
-    txStatus: 'succeeded',
-    modifier: tx.modifier,
-  };
 }
 
 function constructCompleteTxsForUserHelper(

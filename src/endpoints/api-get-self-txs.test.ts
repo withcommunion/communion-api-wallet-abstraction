@@ -23,10 +23,12 @@ const MOCK_EVENT = generateApiGatewayEvent({
 const MOCK_TX_SENT = generateMockTx({
   from_user_id: MOCK_USER_SELF.id,
   to_user_id: MOCK_USER_A.id,
+  type: 'erc20Transfer',
 });
 const MOCK_TX_RECEIVED = generateMockTx({
   from_user_id: MOCK_USER_A.id,
   to_user_id: MOCK_USER_SELF.id,
+  type: 'erc20Transfer',
 });
 
 const getUserByIdSpy = jest.spyOn(dynamoUtil, 'getUserById');

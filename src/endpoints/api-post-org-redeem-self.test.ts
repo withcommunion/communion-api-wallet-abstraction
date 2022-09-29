@@ -107,6 +107,8 @@ describe('api-post-org-redeem-self', () => {
           to_user_id_txn_hash_urn:
             '0x0000000000000000000000000000000000000000:0x12345325252',
           tx_hash: '0x12345325252',
+          modifier: undefined,
+          type: 'redemption',
         },
         {}
       );
