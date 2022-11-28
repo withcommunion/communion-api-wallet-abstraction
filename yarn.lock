@@ -11997,10 +11997,10 @@ tsutils@^3.21.0:
   dependencies:
     tslib "^1.8.1"
 
-twilio@^3.80.1:
-  version "3.82.0"
-  resolved "https://registry.yarnpkg.com/twilio/-/twilio-3.82.0.tgz#591c3964675ed01bd21f0a511f26c05f8033d564"
-  integrity sha512-7j21FIb0tq3udzlOitrnMaIBIMrnB0gO9sDzxHytNfZlMAZXWVIRSP3SodU9lxLTVjyZeFLfr7Qqs1Xafo36uQ==
+twilio@^3.83.3:
+  version "3.83.3"
+  resolved "https://registry.yarnpkg.com/twilio/-/twilio-3.83.3.tgz#5aec258aa433efa515c4302cb41ed35d72f2ac8f"
+  integrity sha512-uyYPXUmKIvpq54DGcq0elT0t2PLhDSwD7svu18SabiFSD6rmouws8gr9CZRix45IYSnIxTmOSr3i4vWR74/hQw==
   dependencies:
     axios "^0.26.1"
     dayjs "^1.8.29"
