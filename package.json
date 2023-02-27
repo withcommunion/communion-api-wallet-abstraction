@@ -37,7 +37,7 @@
     "lambda-log": "^3.1.0",
     "nanoid": "^4.0.0",
     "nft.storage": "^7.0.0",
-    "twilio": "^3.80.1",
+    "twilio": "^4.8.0",
     "winston": "^3.8.1"
   },
   "devDependencies": {
