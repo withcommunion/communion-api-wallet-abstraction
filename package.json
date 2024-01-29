@@ -41,7 +41,7 @@
     "winston": "^3.8.1"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.101",
+    "@types/aws-lambda": "^8.10.132",
     "@types/jest": "^28.1.7",
     "@types/node": "18.7.18",
     "@typescript-eslint/eslint-plugin": "^5.37.0",
